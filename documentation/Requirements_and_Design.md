@@ -381,3 +381,8 @@ The application targets university students, young professionals, and anyone see
     - **Purpose**: Provides push notification support for the Android front-end, enabling the application to send real-time updates and alerts to users (e.g., new group messages or task reminders).
     - **Reason**: The assignment specifically allows Firebase for push notifications. It is the industry standard for Android apps, integrates smoothly with Kotlin and Jetpack Compose, and is supported by Google Cloud for simplified setup.
 
+### **4.5. Dependencies Diagram**
+images/HighLevelDesign.webp
+![RoomSync high level design](images/HighLevelDesign.webp)
+
+**Dependency Relationships:** - Frontend calls Authentication Service, API Gateway - API Gateway routes to Group Management, Chat Service, Task Management Service - Authentication Service integrates with Google Auth API and User Database - Group Management Service accesses Group Database and User Database - Chat Service utilizes Chat Database and Firebase FCM for notifications - Task Management Service manages Task Database, integrates with Google Maps API for location-based features - All services can access Firebase FCM for push notifications
