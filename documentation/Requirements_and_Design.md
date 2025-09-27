@@ -65,7 +65,7 @@ The application targets university students, young professionals, and anyone see
 - Reviews will be auto reviewed on creation through the LLM but users can report reviews for manual review
 
 ### **3.2. Use Case Diagram**
-
+![RoomSync use case diagram](images/Use Case Diagram.jpg)
 
 ### **3.3. Actors Description**
 1. **Non-Group Member**: A registered user who is not currently part of any roommate group. Can create and edit their profile, create new groups, and join existing groups through invitation codes. Cannot access group-specific features like chat, task management, or rating systems since these require active group membership.
