@@ -147,7 +147,7 @@ The application targets university students, young professionals, and anyone see
 
 <a name="uc2"></a>
 
-#### Use Case 2: Create Roommate Group
+#### Use Case 6: Create Roommate Group
 
 **Description**: Non-group member establishes a new roommate group and receives invitation code to share with potential roommates.
 
@@ -173,7 +173,7 @@ The application targets university students, young professionals, and anyone see
 
 <a name="uc3"></a>
 
-#### Use Case 3: Group Chat Polling
+#### Use Case 14: Group Chat Polling
 
 **Description**: Group members can create and send polls for household decisions in group chat.
 
@@ -203,7 +203,7 @@ The application targets university students, young professionals, and anyone see
 
 <a name="uc4"></a>
 
-#### Use Case 4: Add tasks
+#### Use Case 15: Add tasks
 
 **Description**: A household task that will be equally distributed among all roommates is created. The system assigns tasks to group members using a fair allocation algorithm.
 
@@ -231,7 +231,7 @@ The application targets university students, young professionals, and anyone see
 
 <a name="uc5"></a>
 
-#### Use Case 5: Rate Roommates
+#### Use Case 18,19: Rate Roommates
 
 **Description**: Group members provide feedback on roommate performance after living together for a one month minimum period.
 
