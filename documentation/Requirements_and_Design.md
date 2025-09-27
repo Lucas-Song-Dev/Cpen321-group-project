@@ -385,4 +385,11 @@ The application targets university students, young professionals, and anyone see
 images/HighLevelDesign.webp
 ![RoomSync high level design](images/HighLevelDesign.webp)
 
-**Dependency Relationships:** - Frontend calls Authentication Service, API Gateway - API Gateway routes to Group Management, Chat Service, Task Management Service - Authentication Service integrates with Google Auth API and User Database - Group Management Service accesses Group Database and User Database - Chat Service utilizes Chat Database and Firebase FCM for notifications - Task Management Service manages Task Database, integrates with Google Maps API for location-based features - All services can access Firebase FCM for push notifications
+**Dependency Relationships:** 
+- Frontend calls Authentication Service, API Gateway
+- API Gateway routes to Group Management, Chat Service, Task Management Service
+- Authentication Service integrates with Google Auth API and User Database
+- Group Management Service accesses Group Database and User Database
+- Chat Service utilizes Chat Database and Firebase FCM for notifications
+- Task Management Service manages Task Database, integrates with Google Maps API for location-based features
+- All services can access Firebase FCM for push notifications
