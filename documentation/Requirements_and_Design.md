@@ -75,16 +75,16 @@ The application targets university students, young professionals, and anyone see
 3. **Group owner**: A group member with additional administrative privileges. Can perform all group member functions plus remove other group members from the group, delete the entire group, and transfer ownership to another group member. Also has rating privileges for roommates they have lived with for the required minimum period.
 
 ### **3.4. Use Case Description**
-- **Use cases for User Authentication**:
+ **Use cases for User Authentication**:
 1. **Create account**: Secure account creation using Google OAuth
 2. **Login to account**: Secure account login using Google OAuth
 
-- **Use cases for User Profile Management**:
+ **Use cases for User Profile Management**:
 3. **Update nickname and bio**: Users can choose a nickname and have a bio
 4. **Update living preferences**: Users can indicate living preferences by selecting descriptions that suit them best
 5. **Update profile picture**: Users can add, change or remove their profile picture
 
-- **Use cases for Group Management**:
+ **Use cases for Group Management**:
 6. **Create group**: Establish a new living group and generate a unique invitation code for prospective roommates
 7. **Join group**: Join an existing roommate group by entering unique invitation code
 8. **Edit/View group**: View members of group and group name
@@ -93,21 +93,21 @@ The application targets university students, young professionals, and anyone see
 11. **Remove group member**: Group owner can remove group members
 12. **Pass ownership to another user**: Group owner can pass admin position to a group member
 
-- **Use cases for Group Communication**:
+ **Use cases for Group Communication**:
 13. **Send messages**: Real-time messaging system for communication between all group members
 14. **Create and send polls**: A voting mechanism for group decisions regarding household policies and activities
 
-- **Use cases for Group Task Management**:
+ **Use cases for Group Task Management**:
 15. **Add tasks**: Create tasks to be shared among all roommates by setting task name and duration. After adding tasks, automatically distribute of household responsibilities among roommates
 16. **Delete tasks**: Delete tasks if task is no longer needed.
 17. **Set task status**: Monitor task completion status and track individual contributions to shared responsibilities
 
-- **Use cases for Roommate Rating System**:
+ **Use cases for Roommate Rating System**:
 18. **Give rating**: Rate roommate performance after completion of living arrangement
 19. **Write feedback**: Add comments about roommate performance after completion of living arrangement
 20. **View profile & ratings**: View other people's profiles, ratings and comments about that person.
 
-- **Use cases for User Moderation**:
+ **Use cases for User Moderation**:
 21. **Reports user**: Uses LLM to identify inappropriate users and messages
 
 ### **3.5. Formal Use Case Specifications (5 Most Major Use Cases)**
