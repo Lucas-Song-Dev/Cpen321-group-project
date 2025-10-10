@@ -17,6 +17,7 @@ import { User, Group, Task, Message, Rating } from './models';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
+import { protect } from './middleware/auth';
 
 // Load environment variables
 dotenv.config();
@@ -54,6 +55,19 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     database: dbStatus,
     version: '1.0.0'
+  });
+});
+
+// Protected test endpoint
+app.get('/api/protected', protect, (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'This is a protected route',
+    user: {
+      id: req.user?._id,
+      email: req.user?.email,
+      name: req.user?.fullName
+    }
   });
 });
 

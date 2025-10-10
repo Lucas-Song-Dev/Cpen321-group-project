@@ -1,5 +1,6 @@
 import express from 'express';
-import { asyncHandler } from '../middleware/errorHandler';
+import { asyncHandler, AppError } from '../middleware/errorHandler';
+import { verifyGoogleToken, findOrCreateUser, generateTokens } from '../services/authService';
 
 const router = express.Router();
 
@@ -7,10 +8,61 @@ const router = express.Router();
 // @route   POST /api/auth/google
 // @access  Public
 router.post('/google', asyncHandler(async (req, res) => {
-  // TODO: Implement Google OAuth
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    throw new AppError('Google ID token is required', 400);
+  }
+
+  try {
+    // Verify the Google ID token
+    const payload = await verifyGoogleToken(idToken);
+
+    // Find or create user
+    const user = await findOrCreateUser(payload);
+
+    // Generate JWT tokens
+    const tokens = generateTokens(user);
+
+    // Check if user needs to complete profile
+    const needsProfileCompletion = user.dateOfBirth.getFullYear() === 1900 || 
+                                   user.gender === 'prefer-not-to-say';
+
+    res.status(200).json({
+      success: true,
+      message: needsProfileCompletion ? 'User created, profile completion required' : 'Login successful',
+      data: {
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.fullName,
+          nickname: user.nickname,
+          profilePicture: user.profilePicture,
+          needsProfileCompletion
+        },
+        tokens
+      }
+    });
+  } catch (error) {
+    throw new AppError('Authentication failed', 401);
+  }
+}));
+
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh
+// @access  Public
+router.post('/refresh', asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    throw new AppError('Refresh token is required', 400);
+  }
+
+  // TODO: Implement refresh token logic
+  // For now, we'll just return an error since we're not using refresh tokens yet
   res.status(200).json({
-    success: true,
-    message: 'Google OAuth endpoint - to be implemented'
+    success: false,
+    message: 'Refresh token not implemented yet'
   });
 }));
 
@@ -18,10 +70,40 @@ router.post('/google', asyncHandler(async (req, res) => {
 // @route   POST /api/auth/logout
 // @access  Private
 router.post('/logout', asyncHandler(async (req, res) => {
-  // TODO: Implement logout logic
+  // TODO: Implement logout logic (token blacklisting)
+  // For now, just return success
   res.status(200).json({
     success: true,
-    message: 'Logout endpoint - to be implemented'
+    message: 'Logout successful'
+  });
+}));
+
+// @desc    Get current user info
+// @route   GET /api/auth/me
+// @access  Private
+router.get('/me', asyncHandler(async (req, res) => {
+  // This will be protected by middleware that sets req.user
+  const user = req.user;
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.fullName,
+        nickname: user.nickname,
+        bio: user.bio,
+        profilePicture: user.profilePicture,
+        livingPreferences: user.livingPreferences,
+        needsProfileCompletion: user.dateOfBirth.getFullYear() === 1900 || 
+                               user.gender === 'prefer-not-to-say'
+      }
+    }
   });
 }));
 

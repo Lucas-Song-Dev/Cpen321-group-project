@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { IUser } from '../types';
 import { asyncHandler, AppError } from './errorHandler';
+import { getUserFromToken } from '../services/authService';
 
 // Extend Request interface to include user
 declare global {
@@ -26,13 +26,14 @@ export const protect = asyncHandler(async (req: Request, res: Response, next: Ne
   }
 
   try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    // Get user from token
+    const user = await getUserFromToken(token);
     
-    // TODO: Get user from database
-    // For now, we'll just set a placeholder
-    req.user = decoded.user;
+    if (!user) {
+      return next(new AppError('User not found', 401));
+    }
     
+    req.user = user;
     next();
   } catch (err) {
     return next(new AppError('Not authorized to access this route', 401));
