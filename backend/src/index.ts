@@ -12,6 +12,9 @@ import groupRoutes from './routes/group';
 import taskRoutes from './routes/task';
 import ratingRoutes from './routes/rating';
 
+// Import models
+import { User, Group, Task, Message, Rating } from './models';
+
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
 
@@ -44,9 +47,13 @@ app.use('/api/rating', ratingRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  
   res.status(200).json({ 
     message: 'RoomSync Backend is running!', 
-    timestamp: new Date().toISOString() 
+    timestamp: new Date().toISOString(),
+    database: dbStatus,
+    version: '1.0.0'
   });
 });
 
