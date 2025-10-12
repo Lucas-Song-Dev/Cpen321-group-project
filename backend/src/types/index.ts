@@ -1,11 +1,13 @@
-import { Document } from 'mongoose';
+// import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
+
 
 // User related types
 export interface IUser extends Document {
   _id: string;
   googleId: string;
   email: string;
-  name: {
+  fullname: {
     firstName: string;
     lastName: string;
   };
@@ -30,9 +32,9 @@ export interface IGroup extends Document {
   _id: string;
   name: string;
   groupCode: string;
-  owner: string; // User ID
+  owner: Types.ObjectId; //USER ID - fixed
   members: Array<{
-    userId: string;
+    userId: Types.ObjectId;
     joinDate: Date;
     moveInDate?: Date;
   }>;
@@ -45,12 +47,12 @@ export interface ITask extends Document {
   _id: string;
   name: string;
   description?: string;
-  groupId: string;
-  createdBy: string; // User ID
+  groupId: Types.ObjectId; 
+  createdBy: Types.ObjectId;  // User ID
   difficulty: 1 | 2 | 3 | 4 | 5; // Weight of task
   recurrence: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'one-time';
   assignments: Array<{
-    userId: string;
+    userId: Types.ObjectId; 
     weekStart: Date;
     status: 'incomplete' | 'in-progress' | 'completed';
     completedAt?: Date;
@@ -62,15 +64,15 @@ export interface ITask extends Document {
 // Message related types
 export interface IMessage extends Document {
   _id: string;
-  groupId: string;
-  senderId: string;
+  groupId: Types.ObjectId;
+  senderId: Types.ObjectId;
   content: string;
   type: 'text' | 'poll';
   pollData?: {
     question: string;
     options: string[];
     votes: Array<{
-      userId: string;
+      userId: Types.ObjectId;
       option: string;
       timestamp: Date;
     }>;
@@ -82,10 +84,11 @@ export interface IMessage extends Document {
 // Rating related types
 export interface IRating extends Document {
   _id: string;
-  ratedUserId: string; // User being rated
-  raterUserId: string; // User giving the rating
-  groupId: string;
+  ratedUserId: Types.ObjectId; // User being rated
+  raterUserId: Types.ObjectId; // User giving the rating
+  groupId: Types.ObjectId;
   objectiveRating: {
+    overallScore: number; //we need to calculate this using ratings below
     taskCompletionRate: number; // 0-100%
     punctualityScore: number; // 1-5
     cleanlinessScore: number; // 1-5

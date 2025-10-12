@@ -12,7 +12,6 @@
   "keywords": ["roommate", "management", "nodejs", "typescript", "mongodb"],
   "author": "CPEN321 Group Project",
   "license": "MIT",
-  "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",

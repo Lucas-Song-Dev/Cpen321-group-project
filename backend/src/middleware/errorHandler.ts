@@ -1,8 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 
-export interface AppError extends Error {
+// export interface AppError extends Error {
+//   statusCode?: number;
+//   isOperational?: boolean;
+// }
+
+export class AppError extends Error {
   statusCode?: number;
   isOperational?: boolean;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.statusCode = statusCode;
+    Object.setPrototypeOf(this, AppError.prototype);
+  }
 }
 
 export const errorHandler = (

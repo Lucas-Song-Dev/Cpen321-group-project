@@ -66,7 +66,7 @@ app.get('/api/protected', protect, (req, res) => {
     user: {
       id: req.user?._id,
       email: req.user?.email,
-      name: req.user?.fullName
+      name: req.user?.fullname
     }
   });
 });
@@ -118,14 +118,16 @@ const connectDB = async () => {
   }
 };
 
-// Start server
+//start server
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
+  console.log("Starting backend server...");
+  console.log("Connecting to MongoDB with URI:", process.env.MONGODB_URI);
   await connectDB();
   server.listen(PORT, () => {
-    console.log(`🚀 RoomSync Backend running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`RoomSync Backend running on port ${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/api/health`);
   });
 };
 

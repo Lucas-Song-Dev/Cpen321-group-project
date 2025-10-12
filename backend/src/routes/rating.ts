@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 
@@ -10,7 +10,7 @@ router.use(protect);
 // @desc    Rate a roommate
 // @route   POST /api/rating
 // @access  Private
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', asyncHandler(async (req: Request, res: Response) => {
   // TODO: Implement rate roommate
   res.status(200).json({
     success: true,
@@ -21,7 +21,7 @@ router.post('/', asyncHandler(async (req, res) => {
 // @desc    Get ratings for a user
 // @route   GET /api/rating/:userId
 // @access  Public
-router.get('/:userId', asyncHandler(async (req, res) => {
+router.get('/:userId', asyncHandler(async (req: Request, res: Response) => {
   // TODO: Implement get user ratings
   res.status(200).json({
     success: true,

@@ -13,7 +13,7 @@ const GroupSchema = new Schema<IGroup>({
     required: true,
     unique: true,
     uppercase: true,
-    length: 8 // We'll generate 8-character codes
+    length: 8 //generated 8-character codes
   },
   owner: {
     type: Schema.Types.ObjectId,
@@ -50,10 +50,11 @@ GroupSchema.virtual('isFull').get(function() {
   return this.members.length >= 8;
 });
 
-// Index for faster queries
-GroupSchema.index({ groupCode: 1 });
-GroupSchema.index({ owner: 1 });
-GroupSchema.index({ 'members.userId': 1 });
+//I DON'T THINK WE NEED THIS- it creates an warning when: npm run dev
+// // Index for faster queries
+// GroupSchema.index({ groupCode: 1 });
+// GroupSchema.index({ owner: 1 });
+// GroupSchema.index({ 'members.userId': 1 });
 
 // Ensure maximum 8 members
 GroupSchema.pre('save', function(next) {

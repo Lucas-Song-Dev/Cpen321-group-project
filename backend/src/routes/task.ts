@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 
@@ -10,7 +10,7 @@ router.use(protect);
 // @desc    Create a new task
 // @route   POST /api/task
 // @access  Private
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', asyncHandler(async (req: Request, res: Response) => {
   // TODO: Implement create task
   res.status(200).json({
     success: true,
@@ -21,7 +21,7 @@ router.post('/', asyncHandler(async (req, res) => {
 // @desc    Get tasks for current group
 // @route   GET /api/task
 // @access  Private
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
   // TODO: Implement get tasks
   res.status(200).json({
     success: true,
@@ -32,7 +32,7 @@ router.get('/', asyncHandler(async (req, res) => {
 // @desc    Update task status
 // @route   PUT /api/task/:id/status
 // @access  Private
-router.put('/:id/status', asyncHandler(async (req, res) => {
+router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
   // TODO: Implement update task status
   res.status(200).json({
     success: true,

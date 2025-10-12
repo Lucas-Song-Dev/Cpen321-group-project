@@ -13,7 +13,7 @@ const UserSchema = new Schema<IUser>({
     unique: true,
     lowercase: true
   },
-  name: {
+  fullname: {
     firstName: {
       type: String,
       required: true,
@@ -81,20 +81,21 @@ const UserSchema = new Schema<IUser>({
 
 // Virtual for full name
 UserSchema.virtual('fullName').get(function() {
-  return `${this.name.firstName} ${this.name.lastName}`;
+  return `${this.fullname.firstName} ${this.fullname.lastName}`;
 });
 
 // Virtual for display name (nickname or full name)
 UserSchema.virtual('displayName').get(function() {
-  return this.nickname || this.fullName;
+  return this.nickname || this.fullname;
 });
 
-// Index for faster queries
-UserSchema.index({ email: 1 });
-UserSchema.index({ googleId: 1 });
-
-// Prevent duplicate nicknames
-UserSchema.index({ nickname: 1 }, { unique: true, sparse: true });
+//I DON'T THINK WE NEED THIS- it creates an warning when: npm run dev
+// // Index for faster queries
+// UserSchema.index({ email: 1 });
+// UserSchema.index({ googleId: 1 });
+//
+// // Prevent duplicate nicknames
+// UserSchema.index({ nickname: 1 }, { unique: true, sparse: true });
 
 const User = mongoose.model<IUser>('User', UserSchema);
 

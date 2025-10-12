@@ -99,7 +99,7 @@ RatingSchema.virtual('overallObjectiveScore').get(function() {
 
 // Virtual for combined score (objective + subjective)
 RatingSchema.virtual('combinedScore').get(function() {
-  return Math.round((this.overallObjectiveScore + this.subjectiveRating.overallScore) / 2);
+  return Math.round((this.objectiveRating.overallScore + this.subjectiveRating.overallScore) / 2);
 });
 
 // Index for faster queries

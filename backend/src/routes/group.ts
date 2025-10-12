@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 
@@ -10,7 +10,7 @@ router.use(protect);
 // @desc    Create a new group
 // @route   POST /api/group
 // @access  Private
-router.post('/', asyncHandler(async (req, res) => {
+router.post('/', asyncHandler(async (req: Request, res: Response) => {
   // TODO: Implement create group
   res.status(200).json({
     success: true,
@@ -21,7 +21,7 @@ router.post('/', asyncHandler(async (req, res) => {
 // @desc    Join an existing group
 // @route   POST /api/group/join
 // @access  Private
-router.post('/join', asyncHandler(async (req, res) => {
+router.post('/join', asyncHandler(async (req: Request, res: Response) => {
   // TODO: Implement join group
   res.status(200).json({
     success: true,
@@ -32,7 +32,7 @@ router.post('/join', asyncHandler(async (req, res) => {
 // @desc    Get user's current group
 // @route   GET /api/group
 // @access  Private
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
   // TODO: Implement get user group
   res.status(200).json({
     success: true,
@@ -43,7 +43,7 @@ router.get('/', asyncHandler(async (req, res) => {
 // @desc    Leave current group
 // @route   DELETE /api/group/leave
 // @access  Private
-router.delete('/leave', asyncHandler(async (req, res) => {
+router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
   // TODO: Implement leave group
   res.status(200).json({
     success: true,

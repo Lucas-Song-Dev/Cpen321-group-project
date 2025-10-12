@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { protect } from '../middleware/auth';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 import { User } from '../models';
@@ -11,7 +11,7 @@ router.use(protect);
 // @desc    Get current user profile
 // @route   GET /api/user/profile
 // @access  Private
-router.get('/profile', asyncHandler(async (req, res) => {
+router.get('/profile', asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;
 
   if (!user) {
@@ -24,7 +24,7 @@ router.get('/profile', asyncHandler(async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
+        name: user.fullname,
         dateOfBirth: user.dateOfBirth,
         gender: user.gender,
         nickname: user.nickname,
@@ -43,7 +43,7 @@ router.get('/profile', asyncHandler(async (req, res) => {
 // @desc    Complete user profile (mandatory fields)
 // @route   POST /api/user/profile/complete
 // @access  Private
-router.post('/profile/complete', asyncHandler(async (req, res) => {
+router.post('/profile/complete', asyncHandler(async (req: Request, res: Response) => {
   const { dateOfBirth, gender } = req.body;
   const user = req.user;
 
@@ -88,7 +88,7 @@ router.post('/profile/complete', asyncHandler(async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
+        name: user.fullname,
         dateOfBirth: user.dateOfBirth,
         gender: user.gender,
         nickname: user.nickname,
@@ -104,7 +104,7 @@ router.post('/profile/complete', asyncHandler(async (req, res) => {
 // @desc    Update user profile (optional fields)
 // @route   PUT /api/user/profile
 // @access  Private
-router.put('/profile', asyncHandler(async (req, res) => {
+router.put('/profile', asyncHandler(async (req: Request, res: Response) => {
   const { nickname, bio, profilePicture, livingPreferences } = req.body;
   const user = req.user;
 
@@ -171,7 +171,7 @@ router.put('/profile', asyncHandler(async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
+        name: user.fullname,
         dateOfBirth: user.dateOfBirth,
         gender: user.gender,
         nickname: user.nickname,
@@ -189,7 +189,7 @@ router.put('/profile', asyncHandler(async (req, res) => {
 // @desc    Get user profile by ID (for viewing other users)
 // @route   GET /api/user/profile/:userId
 // @access  Private
-router.get('/profile/:userId', asyncHandler(async (req, res) => {
+router.get('/profile/:userId', asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
 
   const user = await User.findById(userId).select('-googleId -email');
@@ -203,7 +203,7 @@ router.get('/profile/:userId', asyncHandler(async (req, res) => {
     data: {
       user: {
         id: user._id,
-        name: user.name,
+        name: user.fullname,
         nickname: user.nickname,
         bio: user.bio,
         profilePicture: user.profilePicture,

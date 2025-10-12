@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
-import { User, IUser } from '../models';
+import { User  } from '../models';
+import { IUser } from '../types';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 
 // Initialize Google OAuth client
@@ -53,12 +54,15 @@ export const generateTokens = (user: IUser): AuthTokens => {
   const payload = {
     userId: user._id,
     email: user.email,
-    name: user.fullName,
+    name: user.fullname,
   };
 
-  const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  });
+  // const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
+  //   expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  // });
+
+  const secret = process.env.JWT_SECRET as string;
+  const accessToken = jwt.sign(payload, secret, { expiresIn: '1h' });
 
   return { accessToken };
 };
