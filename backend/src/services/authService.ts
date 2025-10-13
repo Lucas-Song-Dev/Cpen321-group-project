@@ -5,7 +5,8 @@ import { IUser } from '../types';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 
 // Initialize Google OAuth client
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// Use Web Client ID for token verification (audience field)
+const client = new OAuth2Client('445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com');
 
 export interface GoogleTokenPayload {
   sub: string;
@@ -25,16 +26,20 @@ export interface AuthTokens {
 // Verify Google ID token
 export const verifyGoogleToken = async (idToken: string): Promise<GoogleTokenPayload> => {
   try {
+    console.log('Verifying Google token with audience:', '445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com');
+    
     const ticket = await client.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: '445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com',
     });
 
     const payload = ticket.getPayload();
     if (!payload) {
+      console.log('No payload received from Google token verification');
       throw new Error('Invalid token payload');
     }
 
+    console.log('Token verification successful for user:', payload.email);
     return {
       sub: payload.sub,
       email: payload.email!,
@@ -45,6 +50,7 @@ export const verifyGoogleToken = async (idToken: string): Promise<GoogleTokenPay
       email_verified: payload.email_verified || false,
     };
   } catch (error) {
+    console.error('Google token verification failed:', error);
     throw new AppError('Invalid Google token', 401);
   }
 };
@@ -70,8 +76,11 @@ export const generateTokens = (user: IUser): AuthTokens => {
 // Find or create user from Google payload
 export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUser> => {
   try {
+    console.log('Finding or creating user for:', payload.email);
+    
     // Try to find existing user by Google ID
     let user = await User.findOne({ googleId: payload.sub });
+    console.log('User found by Google ID:', !!user);
 
     if (user) {
       // Update user info if needed
@@ -79,24 +88,28 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
         user.email = payload.email;
         await user.save();
       }
+      console.log('Returning existing user by Google ID');
       return user;
     }
 
     // Try to find existing user by email
     user = await User.findOne({ email: payload.email });
+    console.log('User found by email:', !!user);
 
     if (user) {
       // Link Google account to existing user
       user.googleId = payload.sub;
       await user.save();
+      console.log('Linked Google account to existing user');
       return user;
     }
 
     // Create new user
+    console.log('Creating new user...');
     const newUser = new User({
       googleId: payload.sub,
       email: payload.email,
-      name: {
+      fullname: {
         firstName: payload.given_name,
         lastName: payload.family_name,
       },
@@ -106,8 +119,10 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
     });
 
     await newUser.save();
+    console.log('New user created successfully');
     return newUser;
   } catch (error) {
+    console.error('Error in findOrCreateUser:', error);
     throw new AppError('Failed to create or find user', 500);
   }
 };
