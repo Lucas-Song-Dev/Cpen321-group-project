@@ -2,9 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-
-    id("org.jetbrains.kotlin.kapt")
-    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -44,6 +41,8 @@ android {
     lint {
         disable += "NullSafeMutableLiveData"
         abortOnError = false
+        checkReleaseBuilds = false
+        checkDependencies = false
     }
 }
 
@@ -65,27 +64,13 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    //added
-    implementation("com.google.android.gms:play-services-auth:21.3.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+    // Navigation
     implementation("androidx.navigation:navigation-compose:2.9.5")
-    implementation("androidx.hilt:hilt-navigation-fragment:1.0.0")
-
-    implementation ("androidx.compose.ui:ui:1.7.2")
-    implementation ("androidx.compose.material3:material3:1.3.0")
-    implementation ("androidx.navigation:navigation-compose:2.8.0")
-
-    // --- Hilt ---
-    implementation("com.google.dagger:hilt-android:2.52")
-    kapt("com.google.dagger:hilt-compiler:2.52")
-
-    // Hilt navigation with Compose
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
     
-    // Networking
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    // Image loading and picking
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("androidx.activity:activity-compose:1.9.3")
 
 //    //THIS IS FROM M1
 //    // Navigation
