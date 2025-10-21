@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.cpen321.roomsync.ui.screens.AuthScreen
 import com.cpen321.roomsync.ui.screens.PersonalProfileScreen
 import com.cpen321.roomsync.ui.screens.OptionalProfileScreen
 import com.cpen321.roomsync.ui.screens.GroupSelectionScreen
@@ -14,7 +15,9 @@ import com.cpen321.roomsync.ui.screens.ChatScreen
 import com.cpen321.roomsync.ui.screens.TaskScreen
 import com.cpen321.roomsync.ui.screens.PollingScreen
 
+//screen destinations
 object NavRoutes {
+    const val AUTH = "auth"
     const val PERSONAL_PROFILE = "personal_profile"
     const val OPTIONAL_PROFILE = "optional_profile"
     const val GROUP_SELECTION = "group_selection"
@@ -32,8 +35,20 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.PERSONAL_PROFILE
+        startDestination = NavRoutes.AUTH
     ) {
+        composable(NavRoutes.AUTH) {
+            AuthScreen(
+                onSignUp = {
+                    navController.navigate(NavRoutes.PERSONAL_PROFILE)
+                },
+                onLogin = { userGroupName ->
+                    navController.navigate("${NavRoutes.HOME}?groupName=${userGroupName}")
+                }
+            )
+        }
+
+
         composable(NavRoutes.PERSONAL_PROFILE) {
             PersonalProfileScreen(
                 onContinue = {
