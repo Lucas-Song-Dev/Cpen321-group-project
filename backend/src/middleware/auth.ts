@@ -1,49 +1,19 @@
-import { Request, Response, NextFunction } from 'express';
-import { IUser } from '../types';
-import { asyncHandler, AppError } from './errorHandler';
-import { getUserFromToken } from '../services/authService';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { config } from "../config";
 
-// Extend Request interface to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: IUser;
-    }
-  }
-}
-
-export const protect = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  let token: string | undefined;
-
-  // Check for token in headers
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ success: false, message: "No token provided" });
   }
 
-  // Make sure token exists
-  if (!token) {
-    return next(new AppError('Not authorized to access this route', 401));
-  }
-
+  const token = authHeader.split(" ")[1];
   try {
-    // Get user from token
-    const user = await getUserFromToken(token);
-    
-    if (!user) {
-      return next(new AppError('User not found', 401));
-    }
-    
-    req.user = user;
+    const decoded = jwt.verify(token, config.JWT_SECRET);
+    (req as any).user = decoded; //Type assertion to bypass TS error
     next();
   } catch (err) {
-    return next(new AppError('Not authorized to access this route', 401));
+    return res.status(401).json({ success: false, message: "Invalid token" });
   }
-});
-
-export const authorize = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    // TODO: Implement role-based authorization
-    // For now, just pass through
-    next();
-  };
 };
