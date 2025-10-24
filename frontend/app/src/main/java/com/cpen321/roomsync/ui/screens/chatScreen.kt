@@ -468,9 +468,9 @@ fun CreatePollDialog(
 @Composable
 fun ChatScreen(
     groupName: String = "Group Chat",
-    groupId: String = "sample-group-id",
+    groupId: String = "68fb62f776137b62df6214d5",
     onBack: () -> Unit = {},
-    currentUserId: String = "current-user",
+    currentUserId: String = "68fb4f7cac22f6c9e5ac82b6",
     onNavigateToPolls: () -> Unit = {}
 ) {
     var messageText by remember { mutableStateOf("") }

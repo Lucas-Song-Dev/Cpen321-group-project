@@ -26,7 +26,7 @@ import java.util.*
 import com.cpen321.roomsync.ui.viewmodels.TaskViewModel
 import com.cpen321.roomsync.ui.viewmodels.TaskItem as ViewModelTaskItem
 import com.cpen321.roomsync.ui.viewmodels.TaskStatus as ViewModelTaskStatus
-import com.cpen321.roomsync.ui.viewmodels.GroupMember
+import com.cpen321.roomsync.ui.viewmodels.ViewModelGroupMember
 
 data class TaskItem(
     val id: String,
@@ -69,9 +69,9 @@ fun convertViewModelTask(viewModelTask: ViewModelTaskItem): TaskItem {
 @Composable
 fun TaskScreen(
     groupName: String = "Group Tasks",
-    groupId: String = "sample-group-id",
+    groupId: String = "68fb62f776137b62df6214d5",
     onBack: () -> Unit = {},
-    currentUserId: String = "current-user"
+    currentUserId: String = "68fb4f7cac22f6c9e5ac82b6"
 ) {
     // Use ViewModel
     val viewModel: TaskViewModel = viewModel { 
@@ -428,7 +428,7 @@ fun TaskStatusChip(
 fun AddTaskDialog(
     onDismiss: () -> Unit,
     onCreateTask: (String, String?, Int, String, List<String>) -> Unit,
-    groupMembers: List<GroupMember>
+    groupMembers: List<ViewModelGroupMember>
 ) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -518,7 +518,7 @@ fun AddTaskDialog(
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(groupMembers) { member: GroupMember ->
+                    items(groupMembers) { member: ViewModelGroupMember ->
                         FilterChip(
                             onClick = {
                                 selectedMembers = if (selectedMembers.contains(member.id)) {

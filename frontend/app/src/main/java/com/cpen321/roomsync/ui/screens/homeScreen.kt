@@ -19,7 +19,8 @@ fun HomeScreen(
     onViewGroupDetails: () -> Unit = {},
     onOpenChat: () -> Unit = {},
     onOpenTasks: () -> Unit = {},
-    onOpenPolls: () -> Unit = {}
+    onOpenPolls: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -279,6 +280,20 @@ fun HomeScreen(
                             Text(
                                 text = "View Polls",
                                 modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                        Divider()
+                        TextButton(
+                            onClick = {
+                                onLogout()
+                                showMenu = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Logout",
+                                modifier = Modifier.padding(16.dp),
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }

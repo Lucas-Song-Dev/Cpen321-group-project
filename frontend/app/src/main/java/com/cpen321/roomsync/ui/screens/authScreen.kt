@@ -110,6 +110,35 @@ fun AuthScreen(
 
         Spacer(Modifier.height(24.dp))
 
+        // Bypass buttons for testing
+        Button(
+            onClick = {
+                viewModel.bypassAuth()
+            },
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary
+            )
+        ) {
+            Text("Sign In User 1", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                viewModel.bypassAuthUser2()
+            },
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary
+            )
+        ) {
+            Text("Sign In User 2", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        }
+
+        Spacer(Modifier.height(24.dp))
+
         //FOR DEBUGGING: Display auth state messages
         authState?.let { state ->
             if (state.success) {

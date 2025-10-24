@@ -35,7 +35,7 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.AUTH
+        startDestination = NavRoutes.AUTH  // Start with auth screen
     ) {
         composable(NavRoutes.AUTH) {
             AuthScreen(
@@ -103,6 +103,11 @@ fun AppNavigation() {
                         },
                         onOpenPolls = {
                             navController.navigate("${NavRoutes.POLLING}?groupName=${groupName}")
+                        },
+                        onLogout = {
+                            navController.navigate(NavRoutes.AUTH) {
+                                popUpTo(NavRoutes.AUTH) { inclusive = true }
+                            }
                         }
                     )
                 }
@@ -121,7 +126,7 @@ fun AppNavigation() {
                     val groupName = backStackEntry.arguments?.getString("groupName") ?: "Group Chat"
                     ChatScreen(
                         groupName = groupName,
-                        groupId = "sample-group-id", // TODO: Get actual group ID
+                        groupId = "68fb62f776137b62df6214d5", // Real group ID from database
                         onBack = {
                             navController.popBackStack()
                         },
@@ -135,7 +140,7 @@ fun AppNavigation() {
                     val groupName = backStackEntry.arguments?.getString("groupName") ?: "Group Tasks"
                     TaskScreen(
                         groupName = groupName,
-                        groupId = "sample-group-id", // TODO: Get actual group ID
+                        groupId = "68fb62f776137b62df6214d5", // Real group ID from database
                         onBack = {
                             navController.popBackStack()
                         }
@@ -146,7 +151,7 @@ fun AppNavigation() {
                     val groupName = backStackEntry.arguments?.getString("groupName") ?: "Group Polls"
                     PollingScreen(
                         groupName = groupName,
-                        groupId = "sample-group-id", // TODO: Get actual group ID
+                        groupId = "68fb62f776137b62df6214d5", // Real group ID from database
                         onBack = {
                             navController.popBackStack()
                         }
