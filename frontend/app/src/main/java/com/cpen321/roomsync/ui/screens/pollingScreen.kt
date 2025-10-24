@@ -1,6 +1,9 @@
 package com.cpen321.roomsync.ui.screens
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -59,12 +63,25 @@ enum class PollType {
 @Composable
 fun PollingScreen(
     groupName: String = "Group Polls",
-    groupId: String = "sample-group-id",
+    groupId: String = "68fb62f776137b62df6214d5",
     onBack: () -> Unit = {},
-    currentUserId: String = "current-user"
+    currentUserId: String = "68fb4f7cac22f6c9e5ac82b6"
 ) {
     var showCreatePollDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    
+    // Animation for refresh button
+    val infiniteTransition = rememberInfiniteTransition(label = "refresh")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotation"
+    )
 
     val viewModel: PollingViewModel = viewModel {
         PollingViewModel(groupId, currentUserId)
@@ -149,13 +166,25 @@ fun PollingScreen(
                 }
                 
                 Button(
-                    onClick = { viewModel.refreshPolls() },
+                    onClick = { 
+                        isRefreshing = true
+                        viewModel.refreshPolls()
+                        // Stop animation after 2 seconds
+                        kotlinx.coroutines.GlobalScope.launch {
+                            delay(2000)
+                            isRefreshing = false
+                        }
+                    },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
+                    Icon(
+                        Icons.Default.Refresh, 
+                        contentDescription = null,
+                        modifier = if (isRefreshing) Modifier.rotate(rotation) else Modifier
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Refresh")
                 }
