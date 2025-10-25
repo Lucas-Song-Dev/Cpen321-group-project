@@ -25,16 +25,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.cpen321.roomsync.data.models.User
+import com.cpen321.roomsync.ui.viewmodels.PersonalProfileViewModel
 
+
+//    suspend fun updateOptionalProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
 @Composable
 fun OptionalProfileScreen(
+    user: User,
+    viewModel: PersonalProfileViewModel,
     onComplete: () -> Unit = {}
 ) {
-    var username by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     
-    // Living Preferences
+    //Living Preferences
     var morningNight by remember { mutableStateOf("") }
     var drinking by remember { mutableStateOf("") }
     var partying by remember { mutableStateOf("") }
@@ -148,23 +153,6 @@ fun OptionalProfileScreen(
                 }
             }
 
-            // Username field
-            Column {
-                Text(
-                    text = "Username:",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    placeholder = { Text("Choose a username") }
-                )
-            }
-
             // Bio field
             Column {
                 Text(
@@ -216,6 +204,11 @@ fun OptionalProfileScreen(
                         onClick = { morningNight = "Night" },
                         label = { Text("Night") },
                         selected = morningNight == "Night"
+                    )
+                    FilterChip(
+                        onClick = { morningNight = "Flexible" },
+                        label = { Text("Flexible") },
+                        selected = morningNight == "Flexible"
                     )
                 }
             }
@@ -347,60 +340,60 @@ fun OptionalProfileScreen(
                             modifier = Modifier.weight(1f)
                         )
                         FilterChip(
-                            onClick = { profession = "Professional" },
-                            label = { Text("Professional") },
-                            selected = profession == "Professional",
+                            onClick = { profession = "Unemployed" },
+                            label = { Text("Unemployed") },
+                            selected = profession == "Unemployed",
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    
-                    // Second row
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            onClick = { profession = "Entrepreneur" },
-                            label = { Text("Entrepreneur") },
-                            selected = profession == "Entrepreneur",
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            onClick = { profession = "Freelancer" },
-                            label = { Text("Freelancer") },
-                            selected = profession == "Freelancer",
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            onClick = { profession = "Artist" },
-                            label = { Text("Artist") },
-                            selected = profession == "Artist",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    
-                    // Third row
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            onClick = { profession = "Healthcare" },
-                            label = { Text("Healthcare") },
-                            selected = profession == "Healthcare",
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            onClick = { profession = "Tech" },
-                            label = { Text("Tech") },
-                            selected = profession == "Tech",
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            onClick = { profession = "Other" },
-                            label = { Text("Other") },
-                            selected = profession == "Other",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+//
+//                    // Second row
+//                    Row(
+//                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                    ) {
+//                        FilterChip(
+//                            onClick = { profession = "Entrepreneur" },
+//                            label = { Text("Entrepreneur") },
+//                            selected = profession == "Entrepreneur",
+//                            modifier = Modifier.weight(1f)
+//                        )
+//                        FilterChip(
+//                            onClick = { profession = "Freelancer" },
+//                            label = { Text("Freelancer") },
+//                            selected = profession == "Freelancer",
+//                            modifier = Modifier.weight(1f)
+//                        )
+//                        FilterChip(
+//                            onClick = { profession = "Artist" },
+//                            label = { Text("Artist") },
+//                            selected = profession == "Artist",
+//                            modifier = Modifier.weight(1f)
+//                        )
+//                    }
+//
+//                    // Third row
+//                    Row(
+//                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+//                    ) {
+//                        FilterChip(
+//                            onClick = { profession = "Healthcare" },
+//                            label = { Text("Healthcare") },
+//                            selected = profession == "Healthcare",
+//                            modifier = Modifier.weight(1f)
+//                        )
+//                        FilterChip(
+//                            onClick = { profession = "Tech" },
+//                            label = { Text("Tech") },
+//                            selected = profession == "Tech",
+//                            modifier = Modifier.weight(1f)
+//                        )
+//                        FilterChip(
+//                            onClick = { profession = "Other" },
+//                            label = { Text("Other") },
+//                            selected = profession == "Other",
+//                            modifier = Modifier.weight(1f)
+//                        )
+//                    }
                 }
             }
 

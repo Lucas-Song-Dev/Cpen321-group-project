@@ -30,9 +30,9 @@ class PersonalProfileViewModel(
                     )
                 )
 
-                Log.d("PersonalProfile", "Response code: ${response.code()}")
-                Log.d("PersonalProfile", "Response body: ${response.body()}")
-                Log.d("PersonalProfile", "Error body: ${response.errorBody()?.string()}")
+//                Log.d("PersonalProfile", "Response code: ${response.code()}")
+//                Log.d("PersonalProfile", "Response body: ${response.body()}")
+//                Log.d("PersonalProfile", "Error body: ${response.errorBody()?.string()}")
 
                 if (response.isSuccessful && response.body() != null) {
                     val profileResponse = response.body()!!

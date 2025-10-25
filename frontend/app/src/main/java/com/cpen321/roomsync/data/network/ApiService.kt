@@ -23,4 +23,7 @@ interface ApiService {
 
     @PUT("api/users/profile")
     suspend fun updateProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
+
+    @PUT("api/users/optionalProfile")
+    suspend fun updateOptionalProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
 }

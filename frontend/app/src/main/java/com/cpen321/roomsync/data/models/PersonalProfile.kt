@@ -11,3 +11,19 @@ data class ProfileResponse(
     val message: String,
     val user: User
 )
+
+data class ProfileUpdateRequest(
+    val email: String,
+    val bio: String?,
+    val profilePicture: String?,
+    val livingPreferences: LivingPreferences?,
+    val groupName: String?
+)
+
+data class LivingPreferences(
+    val schedule: String?,
+    val drinking: String?,
+    val partying: String?,
+    val noise: String?,
+    val profession: String?
+)
