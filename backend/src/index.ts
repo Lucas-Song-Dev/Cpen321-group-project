@@ -3,15 +3,18 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
+import { createServer } from "http";
 import { authRouter } from "./routes/auth";
 import { userRouter } from "./routes/user";
 import { authenticate } from "./middleware/auth";
 import groupRouter from "./routes/group";
 import taskRouter from "./routes/task";
 import chatRouter from "./routes/chat";
+import { SocketHandler } from "./socket/socketHandler";
 
 
 const app = express();
+const server = createServer(app);
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -78,7 +81,13 @@ mongoose
     process.exit(1);
   });
 
-app.listen(config.PORT, () => console.log(`Server running on port ${config.PORT}`));
+// Initialize Socket.IO
+const socketHandler = new SocketHandler(server);
+
+server.listen(config.PORT, () => {
+  console.log(`Server running on port ${config.PORT}`);
+  console.log(`Socket.IO server ready for real-time chat`);
+});
 //later need to switch to this for .env
 // const PORT = process.env.PORT || 5000;
 // app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

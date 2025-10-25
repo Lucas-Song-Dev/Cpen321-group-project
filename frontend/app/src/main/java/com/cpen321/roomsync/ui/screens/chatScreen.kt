@@ -35,6 +35,7 @@ import java.util.*
 import com.cpen321.roomsync.ui.viewmodels.ChatViewModel
 import com.cpen321.roomsync.ui.viewmodels.ChatMessage as ViewModelChatMessage
 import com.cpen321.roomsync.ui.viewmodels.PollType
+import com.cpen321.roomsync.ui.viewmodels.AuthViewModel
 
 data class ChatMessage(
     val id: String,
@@ -482,9 +483,14 @@ fun ChatScreen(
 
     println("ChatScreen: Received groupId: '$groupId', currentUserId: '$currentUserId'")
 
+    // Get auth token from AuthViewModel
+    val authViewModel: AuthViewModel = viewModel()
+    val authState by authViewModel.authState.collectAsState()
+    val authToken = authState?.token
+
     // Use ViewModel
     val viewModel: ChatViewModel = viewModel { 
-        ChatViewModel(groupId, currentUserId) 
+        ChatViewModel(groupId, currentUserId, authToken) 
     }
     val uiState by viewModel.uiState.collectAsState()
 

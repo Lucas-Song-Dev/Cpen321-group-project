@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cpen321.roomsync.data.models.Message as ApiMessage
 import com.cpen321.roomsync.data.repository.ChatRepository
+import com.cpen321.roomsync.data.network.SocketManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.util.*
 
 data class ChatMessage(
@@ -52,13 +54,14 @@ data class ChatUiState(
 class ChatViewModel(
     private val groupId: String,
     private val currentUserId: String,
+    private val authToken: String? = null,
     private val chatRepository: ChatRepository = ChatRepository()
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
     
-    private var socket: Any? = null // TODO: Replace with actual Socket.IO client
+    private val socketManager = SocketManager()
     
     init {
         connectToChat()
@@ -71,14 +74,19 @@ class ChatViewModel(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 
-                // TODO: Implement Socket.IO connection
-                // socket = IO.socket("ws://localhost:3000")
-                // socket?.on(Socket.EVENT_CONNECT) { 
-                //     _uiState.value = _uiState.value.copy(isConnected = true, isLoading = false)
-                //     socket?.emit("join-group", groupId)
-                // }
+                // Connect to Socket.IO with authentication token
+                socketManager.connect(token = authToken)
                 
-                // For now, simulate connection
+                // Wait a bit for connection to establish
+                kotlinx.coroutines.delay(500)
+                
+                // Join the group
+                socketManager.joinGroup(groupId)
+                
+                // Set up real-time listeners
+                setupSocketListeners()
+                
+                // Update connection state
                 _uiState.value = _uiState.value.copy(isConnected = true, isLoading = false)
                 
             } catch (e: Exception) {
@@ -87,6 +95,52 @@ class ChatViewModel(
                     isLoading = false
                 )
             }
+        }
+    }
+    
+    private fun setupSocketListeners() {
+        // Listen for new messages
+        socketManager.onNewMessage { messageData ->
+            viewModelScope.launch {
+                val newMessage = ChatMessage(
+                    id = messageData.getString("id"),
+                    content = messageData.getString("content"),
+                    senderName = messageData.getString("senderName"),
+                    senderId = messageData.getString("senderId"),
+                    timestamp = Date(messageData.getLong("timestamp")),
+                    isOwnMessage = messageData.getString("senderId") == currentUserId
+                )
+                
+                _uiState.value = _uiState.value.copy(
+                    messages = _uiState.value.messages + newMessage
+                )
+            }
+        }
+        
+        // Listen for poll updates
+        socketManager.onPollUpdate { pollData ->
+            viewModelScope.launch {
+                // Update poll in the chat
+                val pollId = pollData.getString("pollId")
+                val updatedMessages = _uiState.value.messages.map { message ->
+                    if (message.id == pollId) {
+                        // Update poll message with new vote counts
+                        message
+                    } else {
+                        message
+                    }
+                }
+                _uiState.value = _uiState.value.copy(messages = updatedMessages)
+            }
+        }
+        
+        // Listen for user join/leave events
+        socketManager.onUserJoined { userData ->
+            // Handle user joined event
+        }
+        
+        socketManager.onUserLeft { userData ->
+            // Handle user left event
         }
     }
     
@@ -139,22 +193,14 @@ class ChatViewModel(
         
         viewModelScope.launch {
             try {
-                val newMessage = ChatMessage(
-                    id = UUID.randomUUID().toString(),
-                    content = content.trim(),
-                    senderName = "You",
-                    senderId = currentUserId,
-                    timestamp = Date(),
-                    isOwnMessage = true
-                )
+                // Send message via Socket.IO for real-time delivery
+                socketManager.sendMessage(groupId, content.trim(), currentUserId)
                 
+                // Also send to backend for persistence
                 val response = chatRepository.sendMessage(groupId, content.trim())
-                if (response.success) {
-                    // Refresh messages after successful send
-                    loadMessages()
-                } else {
+                if (!response.success) {
                     _uiState.value = _uiState.value.copy(
-                        error = response.message ?: "Failed to send message"
+                        error = response.message ?: "Failed to save message"
                     )
                 }
                 
@@ -282,8 +328,14 @@ class ChatViewModel(
                     isLoading = false
                 )
                 
-                // TODO: Send poll to backend via Socket.IO
-                // socket?.emit("send-poll", pollMessage)
+                // Send poll via Socket.IO for real-time delivery
+                socketManager.createPoll(
+                    groupId = groupId,
+                    question = question,
+                    options = options,
+                    senderId = currentUserId,
+                    durationDays = durationDays
+                )
                 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -311,8 +363,8 @@ class ChatViewModel(
                     isLoading = false
                 )
                 
-                // TODO: Send vote to backend via Socket.IO
-                // socket?.emit("vote-poll", mapOf("pollId" to pollId, "option" to option))
+                // Send vote via Socket.IO for real-time updates
+                socketManager.voteOnPoll(pollId, option, currentUserId)
                 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -329,7 +381,8 @@ class ChatViewModel(
     
     override fun onCleared() {
         super.onCleared()
-        // TODO: Disconnect from Socket.IO
-        // socket?.disconnect()
+        // Leave group and disconnect from Socket.IO
+        socketManager.leaveGroup(groupId)
+        socketManager.disconnect()
     }
 }
