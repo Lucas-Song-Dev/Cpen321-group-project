@@ -60,6 +60,12 @@ class AuthViewModel(
                     _id = "test-user-id",
                     email = "test@example.com",
                     name = "Test User",
+                    dob = null,
+                    gender = null,
+                    profileComplete = false,
+                    bio = null,
+                    profilePicture = null,
+                    livingPreferences = null,
                     groupName = "Test Group"
                 ),
                 token = "bypass-token"
@@ -79,6 +85,12 @@ class AuthViewModel(
                     _id = "test2-user-id",
                     email = "test2@example.com",
                     name = "Test User 2",
+                    dob = null,
+                    gender = null,
+                    profileComplete = false,
+                    bio = null,
+                    profilePicture = null,
+                    livingPreferences = null,
                     groupName = ""
                 ),
                 token = "bypass-token-2"

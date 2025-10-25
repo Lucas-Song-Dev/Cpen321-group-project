@@ -2,8 +2,11 @@ package com.cpen321.roomsync.data.models
 
 data class ProfileSetRequest(
     val email: String,
-    val dob: String,
-    val gender: String
+    val dob: String? = null,
+    val gender: String? = null,
+    val bio: String? = null,
+    val profilePicture: String? = null,
+    val livingPreferences: LivingPreferences? = null
 )
 
 data class ProfileResponse(

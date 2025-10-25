@@ -95,11 +95,27 @@ fun AppNavigation() {
         }
 
         composable(NavRoutes.OPTIONAL_PROFILE) {
-            OptionalProfileScreen(
-                onComplete = {
-                    navController.navigate(NavRoutes.GROUP_SELECTION)
+            val authResponse by authViewModel.authState.collectAsState()
+            val user = authResponse?.user
+            val factory = PersonalProfileViewModelFactory(RetrofitInstance.api)
+            val personalProfileViewModel: PersonalProfileViewModel = viewModel(factory = factory)
+
+            if (user != null) {
+                OptionalProfileScreen(
+                    user = user,
+                    viewModel = personalProfileViewModel,
+                    onComplete = {
+                        navController.navigate(NavRoutes.GROUP_SELECTION)
+                    }
+                )
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
-            )
+            }
         }
 
                 composable(NavRoutes.GROUP_SELECTION) {
