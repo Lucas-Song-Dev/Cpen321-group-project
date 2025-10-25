@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "project_id": "YOUR_PROJECT_ID",
+    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "YOUR_MOBILE_SDK_APP_ID",
+        "android_client_info": {
+          "package_name": "com.cpen321.roomsync"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "445076519627-v9bt20bh9umis9frn1b5rhk20jkn987h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cpen321.roomsync",
+            "certificate_hash": "ff8e69b7e54754f9ad3ef46d5fb2f60e82538b9f"
+          }
+        },
+        {
+          "client_id": "445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "YOUR_API_KEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
