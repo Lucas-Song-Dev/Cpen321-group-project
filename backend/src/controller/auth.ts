@@ -12,12 +12,12 @@ async function verifyGoogleToken(idToken: string) {
   // Bypass for testing - if token is "bypass-token", return test user
   if (idToken === "bypass-token") {
     console.log(`[${timestamp}] GOOGLE_TOKEN: Using bypass token for testing`);
-    return { email: "test@example.com", name: "Test User" };
+    return { email: "test@example.com", name: "Test User", googleId: "bypass-google-id-1" };
   }
   
   if (idToken === "bypass-token-2") {
     console.log(`[${timestamp}] GOOGLE_TOKEN: Using bypass token 2 for testing`);
-    return { email: "test2@example.com", name: "Test User 2" };
+    return { email: "test2@example.com", name: "Test User 2", googleId: "bypass-google-id-2" };
   }
   
   console.log(`[${timestamp}] GOOGLE_TOKEN: Verifying with Google OAuth2Client`);
@@ -31,7 +31,7 @@ async function verifyGoogleToken(idToken: string) {
     throw new Error("Invalid token");
   }
   console.log(`[${timestamp}] GOOGLE_TOKEN: Token verified successfully:`, { email: payload.email, name: payload.name });
-  return { email: payload.email!, name: payload.name || "Unknown" };
+  return { email: payload.email!, name: payload.name || "Unknown", googleId: payload.sub! };
 }
 
 export const AuthController = {
@@ -48,10 +48,10 @@ export const AuthController = {
       }
 
       console.log(`[${timestamp}] AUTH SIGNUP: Verifying Google token`);
-      const { email, name } = await verifyGoogleToken(token);
+      const { email, name, googleId } = await verifyGoogleToken(token);
       console.log(`[${timestamp}] AUTH SIGNUP: Token verified, calling AuthService.signup`);
       
-      const result = await AuthService.signup(email, name);
+      const result = await AuthService.signup(email, name, googleId);
       console.log(`[${timestamp}] AUTH SIGNUP: Signup completed successfully`);
       return res.json(result);
     } catch (err) {
