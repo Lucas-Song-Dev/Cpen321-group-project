@@ -16,6 +16,7 @@ import com.cpen321.roomsync.ui.screens.ChatScreen
 import com.cpen321.roomsync.ui.screens.TaskScreen
 import com.cpen321.roomsync.ui.screens.PollingScreen
 import com.cpen321.roomsync.ui.viewmodels.TaskViewModel
+import com.cpen321.roomsync.ui.viewmodels.GroupViewModel
 
 
 //testing
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material3.CircularProgressIndicator
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModelFactory
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModel
+import androidx.compose.runtime.LaunchedEffect
 
 //screen destinations
 object NavRoutes {
@@ -65,7 +67,16 @@ fun AppNavigation() {
                     navController.navigate(NavRoutes.PERSONAL_PROFILE)
                 },
                 onLogin = { userGroupName ->
-                    navController.navigate("${NavRoutes.HOME}?groupName=${userGroupName}")
+                    // Check if user has a group
+                    if (userGroupName.isNotEmpty()) {
+                        navController.navigate(NavRoutes.HOME) {
+                            popUpTo(NavRoutes.AUTH) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(NavRoutes.GROUP_SELECTION) {
+                            popUpTo(NavRoutes.AUTH) { inclusive = true }
+                        }
+                    }
                 }
             )
         }
@@ -133,9 +144,11 @@ fun AppNavigation() {
 
                 composable(NavRoutes.CREATE_GROUP) {
                     CreateGroupScreen(
-                        onCreateGroup = { groupName ->
-                            // TODO: Create group with backend
-                            navController.navigate("${NavRoutes.HOME}?groupName=${groupName}")
+                        onCreateGroup = {
+                            // Navigate to home after successful group creation
+                            navController.navigate(NavRoutes.HOME) {
+                                popUpTo(NavRoutes.GROUP_SELECTION) { inclusive = true }
+                            }
                         },
                         onBack = {
                             navController.popBackStack()
@@ -143,78 +156,175 @@ fun AppNavigation() {
                     )
                 }
 
-                composable("${NavRoutes.HOME}?groupName={groupName}") { backStackEntry ->
-                    val groupName = backStackEntry.arguments?.getString("groupName") ?: "My Group"
+                composable(NavRoutes.HOME) {
+                    val groupViewModel: GroupViewModel = viewModel()
+                    val groupUiState by groupViewModel.uiState.collectAsState()
+                    val groupName = groupUiState.group?.name ?: "My Group"
+                    val authState by authViewModel.authState.collectAsState()
+                    
+                    // Monitor auth state for deletion success (when auth becomes null)
+                    LaunchedEffect(authState) {
+                        // If auth state becomes null and we're not in auth screen, go to auth
+                        if (authState == null) {
+                            println("Navigation: Auth state is null, navigating to AUTH screen")
+                        }
+                    }
+                    
                     HomeScreen(
                         groupName = groupName,
                         onViewGroupDetails = {
-                            navController.navigate("${NavRoutes.GROUP_DETAILS}?groupName=${groupName}")
+                            navController.navigate(NavRoutes.GROUP_DETAILS)
                         },
                         onOpenChat = {
-                            navController.navigate("${NavRoutes.CHAT}?groupName=${groupName}")
+                            navController.navigate(NavRoutes.CHAT)
                         },
                         onOpenTasks = {
-                            navController.navigate("${NavRoutes.TASKS}?groupName=${groupName}")
+                            navController.navigate(NavRoutes.TASKS)
                         },
                         onOpenPolls = {
-                            navController.navigate("${NavRoutes.POLLING}?groupName=${groupName}")
+                            navController.navigate(NavRoutes.POLLING)
                         },
                         onLogout = {
+                            println("Navigation: Logout called")
+                            authViewModel.logout()
                             navController.navigate(NavRoutes.AUTH) {
-                                popUpTo(NavRoutes.AUTH) { inclusive = true }
+                                popUpTo(0) { inclusive = true }
+                            }
+                        },
+                        onDeleteAccount = {
+                            println("Navigation: Delete account called")
+                            authViewModel.deleteUser()
+                            // Navigate after deletion completes
+                            navController.navigate(NavRoutes.AUTH) {
+                                popUpTo(0) { inclusive = true }
                             }
                         }
                     )
                 }
 
-                composable("${NavRoutes.GROUP_DETAILS}?groupName={groupName}") { backStackEntry ->
-                    val groupName = backStackEntry.arguments?.getString("groupName") ?: "My Group"
-                    val viewModel = androidx.lifecycle.viewmodel.compose.viewModel {
-                        TaskViewModel("68fb62f776137b62df6214d5", "68fb4f7cac22f6c9e5ac82b6")
+                composable(NavRoutes.GROUP_DETAILS) {
+                    val groupViewModel: GroupViewModel = viewModel()
+                    val groupUiState by groupViewModel.uiState.collectAsState()
+                    val authState by authViewModel.authState.collectAsState()
+                    
+                    val groupName = groupUiState.group?.name ?: "My Group"
+                    val groupId = groupUiState.group?.id ?: ""
+                    val currentUserId = authState?.user?._id ?: ""
+                    
+                    println("Navigation GROUP_DETAILS: groupId='$groupId', currentUserId='$currentUserId'")
+                    
+                    if (groupId.isNotEmpty() && currentUserId.isNotEmpty()) {
+                        val taskViewModel = androidx.lifecycle.viewmodel.compose.viewModel {
+                            TaskViewModel(groupId, currentUserId)
+                        }
+                        GroupDetailsScreen(
+                            groupName = groupName,
+                            viewModel = taskViewModel,
+                            onBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
-                    GroupDetailsScreen(
-                        groupName = groupName,
-                        viewModel = viewModel,
-                        onBack = {
-                            navController.popBackStack()
-                        }
-                    )
                 }
 
-                composable("${NavRoutes.CHAT}?groupName={groupName}") { backStackEntry ->
-                    val groupName = backStackEntry.arguments?.getString("groupName") ?: "Group Chat"
-                    ChatScreen(
-                        groupName = groupName,
-                        groupId = "68fb62f776137b62df6214d5", // Real group ID from database
-                        onBack = {
-                            navController.popBackStack()
-                        },
-                        onNavigateToPolls = {
-                            navController.navigate("${NavRoutes.POLLING}?groupName=${groupName}")
+                composable(NavRoutes.CHAT) {
+                    val groupViewModel: GroupViewModel = viewModel()
+                    val groupUiState by groupViewModel.uiState.collectAsState()
+                    val authState by authViewModel.authState.collectAsState()
+                    
+                    val groupName = groupUiState.group?.name ?: "Group Chat"
+                    val groupId = groupUiState.group?.id ?: ""
+                    val currentUserId = authState?.user?._id ?: ""
+                    
+                    println("Navigation CHAT: groupId='$groupId', currentUserId='$currentUserId'")
+                    
+                    if (groupId.isNotEmpty() && currentUserId.isNotEmpty()) {
+                        ChatScreen(
+                            groupName = groupName,
+                            groupId = groupId,
+                            currentUserId = currentUserId,
+                            onBack = {
+                                navController.popBackStack()
+                            },
+                            onNavigateToPolls = {
+                                navController.navigate(NavRoutes.POLLING)
+                            }
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
-                    )
+                    }
                 }
 
-                composable("${NavRoutes.TASKS}?groupName={groupName}") { backStackEntry ->
-                    val groupName = backStackEntry.arguments?.getString("groupName") ?: "Group Tasks"
-                    TaskScreen(
-                        groupName = groupName,
-                        groupId = "68fb62f776137b62df6214d5", // Real group ID from database
-                        onBack = {
-                            navController.popBackStack()
+                composable(NavRoutes.TASKS) {
+                    val groupViewModel: GroupViewModel = viewModel()
+                    val groupUiState by groupViewModel.uiState.collectAsState()
+                    val authState by authViewModel.authState.collectAsState()
+                    
+                    val groupName = groupUiState.group?.name ?: "Group Tasks"
+                    val groupId = groupUiState.group?.id ?: ""
+                    val currentUserId = authState?.user?._id ?: ""
+                    
+                    println("Navigation TASKS: groupId='$groupId', currentUserId='$currentUserId'")
+                    
+                    if (groupId.isNotEmpty() && currentUserId.isNotEmpty()) {
+                        TaskScreen(
+                            groupName = groupName,
+                            groupId = groupId,
+                            currentUserId = currentUserId,
+                            onBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
-                    )
+                    }
                 }
 
-                composable("${NavRoutes.POLLING}?groupName={groupName}") { backStackEntry ->
-                    val groupName = backStackEntry.arguments?.getString("groupName") ?: "Group Polls"
-                    PollingScreen(
-                        groupName = groupName,
-                        groupId = "68fb62f776137b62df6214d5", // Real group ID from database
-                        onBack = {
-                            navController.popBackStack()
+                composable(NavRoutes.POLLING) {
+                    val groupViewModel: GroupViewModel = viewModel()
+                    val groupUiState by groupViewModel.uiState.collectAsState()
+                    val authState by authViewModel.authState.collectAsState()
+                    
+                    val groupName = groupUiState.group?.name ?: "Group Polls"
+                    val groupId = groupUiState.group?.id ?: ""
+                    val currentUserId = authState?.user?._id ?: ""
+                    
+                    println("Navigation POLLING: groupId='$groupId', currentUserId='$currentUserId'")
+                    
+                    if (groupId.isNotEmpty() && currentUserId.isNotEmpty()) {
+                        PollingScreen(
+                            groupName = groupName,
+                            groupId = groupId,
+                            currentUserId = currentUserId,
+                            onBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
-                    )
+                    }
                 }
     }
 }

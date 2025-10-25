@@ -50,6 +50,29 @@ class AuthViewModel(
         _authState.value = null
     }
 
+    fun deleteUser() {
+        viewModelScope.launch {
+            try {
+                println("AuthViewModel: Starting deleteUser()")
+                val result = repository.deleteUser()
+                println("AuthViewModel: Delete user result - success: ${result.success}, message: ${result.message}")
+                
+                if (result.success) {
+                    // Clear auth token and state after successful deletion
+                    RetrofitInstance.setAuthToken(null)
+                    _authState.value = null
+                    println("AuthViewModel: User deleted successfully, auth cleared")
+                } else {
+                    println("AuthViewModel: Delete user failed: ${result.message}")
+                    _authState.value = AuthResponse(success = false, message = result.message ?: "Failed to delete user")
+                }
+            } catch (e: Exception) {
+                println("AuthViewModel: Exception during deleteUser: ${e.message}")
+                _authState.value = AuthResponse(success = false, message = "Error: ${e.message}")
+            }
+        }
+    }
+
     // Bypass authentication for testing
     fun bypassAuth() {
         viewModelScope.launch {

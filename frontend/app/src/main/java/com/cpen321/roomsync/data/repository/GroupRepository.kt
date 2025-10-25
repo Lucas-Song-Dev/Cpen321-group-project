@@ -9,18 +9,28 @@ class GroupRepository {
 
     suspend fun createGroup(name: String): GroupResponse {
         return try {
+            println("GroupRepository: Creating group with name: $name")
             val response = RetrofitInstance.api.createGroup(CreateGroupRequest(name))
+            println("GroupRepository: API response code: ${response.code()}")
+            
             if (response.isSuccessful) {
-                response.body() ?: GroupResponse(false, "Empty response from server")
+                val body = response.body()
+                println("GroupRepository: Response body: $body")
+                body ?: GroupResponse(false, "Empty response from server")
             } else {
                 val errorBody = response.errorBody()?.string()
+                println("GroupRepository: Error response: $errorBody")
                 GroupResponse(false, errorBody ?: "Create group failed: ${response.code()}")
             }
         } catch (e: IOException) {
+            println("GroupRepository: IOException: ${e.message}")
             GroupResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
+            println("GroupRepository: HttpException: ${e.code()} - ${e.message()}")
             GroupResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
         } catch (e: Exception) {
+            println("GroupRepository: Exception: ${e.message}")
+            e.printStackTrace()
             GroupResponse(false, "Unexpected error: ${e.message}")
         }
     }

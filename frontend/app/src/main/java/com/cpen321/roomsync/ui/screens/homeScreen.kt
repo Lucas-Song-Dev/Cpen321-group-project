@@ -20,9 +20,11 @@ fun HomeScreen(
     onOpenChat: () -> Unit = {},
     onOpenTasks: () -> Unit = {},
     onOpenPolls: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onDeleteAccount: () -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -211,94 +213,92 @@ fun HomeScreen(
             }
         }
 
-        // Dropdown menu - positioned outside the main content
-        if (showMenu) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(10f)
-            ) {
-                // Backdrop to close menu when tapped outside
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable { showMenu = false }
-                )
-                
-                // Menu card positioned over the backdrop
-                Card(
-                    modifier = Modifier
-                        .padding(start = 16.dp, top = 80.dp)
-                        .width(200.dp)
-                        .zIndex(11f),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-                ) {
-                    Column {
-                        TextButton(
-                            onClick = {
-                                onViewGroupDetails()
-                                showMenu = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "View Group Details",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                        TextButton(
-                            onClick = {
-                                onOpenChat()
-                                showMenu = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Open Chat",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                        TextButton(
-                            onClick = {
-                                onOpenTasks()
-                                showMenu = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "View Tasks",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                        TextButton(
-                            onClick = {
-                                onOpenPolls()
-                                showMenu = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "View Polls",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                        Divider()
-                        TextButton(
-                            onClick = {
-                                onLogout()
-                                showMenu = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Logout",
-                                modifier = Modifier.padding(16.dp),
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
+        // Dropdown menu
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false },
+            modifier = Modifier.width(250.dp)
+        ) {
+            DropdownMenuItem(
+                text = { Text("View Group Details") },
+                onClick = {
+                    onViewGroupDetails()
+                    showMenu = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Open Chat") },
+                onClick = {
+                    onOpenChat()
+                    showMenu = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("View Tasks") },
+                onClick = {
+                    onOpenTasks()
+                    showMenu = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("View Polls") },
+                onClick = {
+                    onOpenPolls()
+                    showMenu = false
+                }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { 
+                    Text(
+                        "Delete Account",
+                        color = MaterialTheme.colorScheme.error
+                    ) 
+                },
+                onClick = {
+                    showDeleteDialog = true
+                    showMenu = false
+                }
+            )
+            DropdownMenuItem(
+                text = { 
+                    Text(
+                        "Logout",
+                        color = MaterialTheme.colorScheme.error
+                    ) 
+                },
+                onClick = {
+                    onLogout()
+                    showMenu = false
+                }
+            )
+        }
+        
+        // Delete account confirmation dialog
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Delete Account") },
+                text = { Text("Are you sure you want to permanently delete your account? This action cannot be undone.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showDeleteDialog = false
+                            onDeleteAccount()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel")
                     }
                 }
-            }
+            )
         }
     }
 }

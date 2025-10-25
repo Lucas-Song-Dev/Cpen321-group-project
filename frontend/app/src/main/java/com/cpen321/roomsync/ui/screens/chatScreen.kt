@@ -480,6 +480,8 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
+    println("ChatScreen: Received groupId: '$groupId', currentUserId: '$currentUserId'")
+
     // Use ViewModel
     val viewModel: ChatViewModel = viewModel { 
         ChatViewModel(groupId, currentUserId) 

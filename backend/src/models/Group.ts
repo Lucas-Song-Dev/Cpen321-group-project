@@ -10,7 +10,7 @@ const GroupSchema = new Schema<IGroup>({
   },
   groupCode: {
     type: String,
-    required: true,
+    required: false, // Will be generated in pre-save hook
     unique: true,
     uppercase: true,
     length: 8 //generated 8-character codes

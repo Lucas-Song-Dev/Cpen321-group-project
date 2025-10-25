@@ -67,11 +67,12 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   await group.populate('members.userId', 'name email');
 
   console.log(`[${timestamp}] GROUP CREATE: Group creation completed successfully`);
+  console.log(`[${timestamp}] GROUP CREATE: Group code generated:`, group.groupCode);
+  console.log(`[${timestamp}] GROUP CREATE: Sending response with group data`);
   res.status(201).json({
     success: true,
-    data: {
-      group
-    }
+    message: 'Group created successfully',
+    data: group
   });
 }));
 
@@ -154,11 +155,11 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
   await group.populate('owner', 'name email');
   await group.populate('members.userId', 'name email');
 
+  console.log(`[${timestamp}] GROUP JOIN: Join successful, sending response`);
   res.status(200).json({
     success: true,
-    data: {
-      group
-    }
+    message: 'Joined group successfully',
+    data: group
   });
 }));
 
@@ -166,6 +167,9 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
 // @route   GET /api/group
 // @access  Private
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] GROUP GET: Getting group for user:`, req.user?._id);
+  
   const group = await Group.findOne({ 
     'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
   })
@@ -173,17 +177,17 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     .populate('members.userId', 'name email');
 
   if (!group) {
+    console.log(`[${timestamp}] GROUP GET: User is not a member of any group`);
     return res.status(404).json({
       success: false,
       message: 'User is not a member of any group'
     });
   }
 
+  console.log(`[${timestamp}] GROUP GET: Group found:`, group._id);
   res.status(200).json({
     success: true,
-    data: {
-      group
-    }
+    data: group
   });
 }));
 

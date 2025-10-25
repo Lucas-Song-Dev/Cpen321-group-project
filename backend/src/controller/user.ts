@@ -161,4 +161,38 @@ export const UserController = {
       return res.status(500).json({ success: false, message: 'Server error' });
     }
   },
+
+  deleteUser: async (req: Request, res: Response) => {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] DELETE USER: Starting user deletion`);
+    
+    try {
+      const userId = req.user?._id;
+      
+      if (!userId) {
+        console.log(`[${timestamp}] DELETE USER: No user ID found in request`);
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+
+      console.log(`[${timestamp}] DELETE USER: Deleting user with ID: ${userId}`);
+      
+      // Delete the user
+      const deletedUser = await UserModel.findByIdAndDelete(userId);
+      
+      if (!deletedUser) {
+        console.log(`[${timestamp}] DELETE USER: User not found`);
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      console.log(`[${timestamp}] DELETE USER: User deleted successfully`);
+      
+      return res.json({
+        success: true,
+        message: 'Account deleted successfully'
+      });
+    } catch (err) {
+      console.error(`[${timestamp}] DELETE USER: Error:`, err);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  },
 };

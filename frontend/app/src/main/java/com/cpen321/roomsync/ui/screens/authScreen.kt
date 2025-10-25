@@ -111,35 +111,6 @@ fun AuthScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // Bypass buttons for testing
-        Button(
-            onClick = {
-                viewModel.bypassAuth()
-            },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary
-            )
-        ) {
-            Text("Sign In User 1", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                viewModel.bypassAuthUser2()
-            },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.tertiary
-            )
-        ) {
-            Text("Sign In User 2", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-        }
-
-        Spacer(Modifier.height(24.dp))
-
         //FOR DEBUGGING: Display auth state messages
         authState?.let { state ->
             if (state.success) {
@@ -166,6 +137,11 @@ private fun handleSignInResult(
         val account = task.getResult(ApiException::class.java)
         val idToken = account?.idToken
 
+        println("=== Google Sign-In Debug ===")
+        println("Account: ${account?.email}")
+        println("ID Token: ${idToken?.substring(0, 20)}...")
+        println("===========================")
+
         if (idToken != null) {
             if (isSigningUp) {
                 viewModel.signup(idToken)
@@ -176,6 +152,10 @@ private fun handleSignInResult(
             viewModel.setError("Failed to get ID token from Google")
         }
     } catch (e: ApiException) {
-        viewModel.setError("Google Sign-In failed: ${e.message}")
+        println("=== Google Sign-In Error ===")
+        println("Error Code: ${e.statusCode}")
+        println("Error Message: ${e.message}")
+        println("===========================")
+        viewModel.setError("Google Sign-In failed (Error ${e.statusCode}): ${e.message}")
     }
 }

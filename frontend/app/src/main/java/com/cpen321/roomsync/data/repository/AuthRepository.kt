@@ -75,4 +75,33 @@ class AuthRepository {
             AuthResponse(false, "Unexpected error: ${e.message}", user = null)
         }
     }
+
+    suspend fun deleteUser(): com.cpen321.roomsync.data.models.ApiResponse<Any> {
+        val timestamp = System.currentTimeMillis()
+        Log.d("AuthRepository", "[$timestamp] Starting delete user request")
+        
+        return try {
+            Log.d("AuthRepository", "[$timestamp] Making API call to delete user endpoint")
+            val response = RetrofitInstance.api.deleteUser()
+
+            if (response.isSuccessful) {
+                Log.d("AuthRepository", "[$timestamp] Delete user successful")
+                response.body() ?: com.cpen321.roomsync.data.models.ApiResponse(false, "Empty response from server")
+            } else {
+                Log.e("AuthRepository", "[$timestamp] Delete user failed with code: ${response.code()}")
+                val errorBody = response.errorBody()?.string()
+                Log.e("AuthRepository", "[$timestamp] Error body: $errorBody")
+                com.cpen321.roomsync.data.models.ApiResponse(false, errorBody ?: "Delete user failed: ${response.code()}")
+            }
+        } catch (e: IOException) {
+            Log.e("AuthRepository", "[$timestamp] Network error during delete user: ${e.message}")
+            com.cpen321.roomsync.data.models.ApiResponse(false, "Network error: ${e.message}")
+        } catch (e: HttpException) {
+            Log.e("AuthRepository", "[$timestamp] HTTP error during delete user: ${e.code()} - ${e.message()}")
+            com.cpen321.roomsync.data.models.ApiResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "[$timestamp] Unexpected error during delete user: ${e.message}")
+            com.cpen321.roomsync.data.models.ApiResponse(false, "Unexpected error: ${e.message}")
+        }
+    }
 }

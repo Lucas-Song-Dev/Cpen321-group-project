@@ -75,4 +75,8 @@ interface ApiService {
 
     @PUT("api/users/optionalProfile")
     suspend fun updateOptionalProfile(@Body request: ProfileUpdateRequest): Response<ProfileResponse>  // Change ProfileSetRequest to ProfileUpdateRequest
+
+    // User endpoints
+    @DELETE("api/user/users/me")
+    suspend fun deleteUser(): Response<ApiResponse<Any>>
 }
