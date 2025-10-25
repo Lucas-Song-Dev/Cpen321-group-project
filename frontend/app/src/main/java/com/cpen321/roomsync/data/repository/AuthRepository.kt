@@ -13,18 +13,18 @@ class AuthRepository {
             val response = RetrofitInstance.api.login(AuthRequest(token = idToken))
 
             if (response.isSuccessful) {
-                response.body() ?: AuthResponse(false, "Empty response from server")
+                response.body() ?: AuthResponse(false, "Empty response from server", user = null)
             } else {
                 // Extract error message from response body if available
                 val errorBody = response.errorBody()?.string()
-                AuthResponse(false, errorBody ?: "Login failed: ${response.code()}")
+                AuthResponse(false, errorBody ?: "Login failed: ${response.code()}", user = null)
             }
         } catch (e: IOException) {
-            AuthResponse(false, "Network error: ${e.message}")
+            AuthResponse(false, "Network error: ${e.message}", user = null)
         } catch (e: HttpException) {
-            AuthResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
+            AuthResponse(false, "HTTP error: ${e.code()} - ${e.message()}", user = null)
         } catch (e: Exception) {
-            AuthResponse(false, "Unexpected error: ${e.message}")
+            AuthResponse(false, "Unexpected error: ${e.message}", user = null)
         }
     }
 
@@ -33,18 +33,18 @@ class AuthRepository {
             val response = RetrofitInstance.api.signup(AuthRequest(token = idToken))
 
             if (response.isSuccessful) {
-                response.body() ?: AuthResponse(false, "Empty response from server")
+                response.body() ?: AuthResponse(false, "Empty response from server", user = null)
             } else {
                 // Extract error message from response body if available
                 val errorBody = response.errorBody()?.string()
-                AuthResponse(false, errorBody ?: "Signup failed: ${response.code()}")
+                AuthResponse(false, errorBody ?: "Signup failed: ${response.code()}", user = null)
             }
         } catch (e: IOException) {
-            AuthResponse(false, "Network error: ${e.message}")
+            AuthResponse(false, "Network error: ${e.message}", user = null)
         } catch (e: HttpException) {
-            AuthResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
+            AuthResponse(false, "HTTP error: ${e.code()} - ${e.message()}", user = null)
         } catch (e: Exception) {
-            AuthResponse(false, "Unexpected error: ${e.message}")
+            AuthResponse(false, "Unexpected error: ${e.message}", user = null)
         }
     }
 }
