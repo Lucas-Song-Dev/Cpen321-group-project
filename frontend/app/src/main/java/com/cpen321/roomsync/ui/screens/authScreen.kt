@@ -57,6 +57,7 @@ fun AuthScreen(
                 if (isSigningUp) {
                     onSignUp()
                 } else {
+                    //NEED to fix so if the group name is invalid, it tells the user that they need to create/join a group first
                     onLogin(state.userGroupName ?: "My Group")
                 }
             }

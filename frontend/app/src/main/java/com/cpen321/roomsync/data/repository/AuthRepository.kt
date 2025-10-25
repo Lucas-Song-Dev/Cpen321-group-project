@@ -19,12 +19,12 @@ class AuthRepository {
 
             if (response.isSuccessful) {
                 Log.d("AuthRepository", "[$timestamp] Login successful")
-                response.body() ?: AuthResponse(false, "Empty response from server")
+                response.body() ?: AuthResponse(false, "Empty response from server", user = null)
             } else {
                 Log.e("AuthRepository", "[$timestamp] Login failed with code: ${response.code()}")
                 // Extract error message from response body if available
                 val errorBody = response.errorBody()?.string()
-                AuthResponse(false, errorBody ?: "Login failed: ${response.code()}")
+                AuthResponse(false, errorBody ?: "Login failed: ${response.code()}", user = null)
             }
         } catch (e: IOException) {
             Log.e("AuthRepository", "[$timestamp] Network error during login: ${e.message}")
@@ -34,7 +34,12 @@ class AuthRepository {
             AuthResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
         } catch (e: Exception) {
             Log.e("AuthRepository", "[$timestamp] Unexpected error during login: ${e.message}")
-            AuthResponse(false, "Unexpected error: ${e.message}")
+            AuthResponse(false, "Network error: ${e.message}", user = null)
+        } catch (e: HttpException) {
+            AuthResponse(false, "HTTP error: ${e.code()} - ${e.message()}", user = null)
+        } catch (e: Exception) {
+            AuthResponse(false, "Unexpected error: ${e.message}", user = null)
+
         }
     }
 
@@ -48,12 +53,12 @@ class AuthRepository {
 
             if (response.isSuccessful) {
                 Log.d("AuthRepository", "[$timestamp] Signup successful")
-                response.body() ?: AuthResponse(false, "Empty response from server")
+                response.body() ?: AuthResponse(false, "Empty response from server", user = null)
             } else {
                 Log.e("AuthRepository", "[$timestamp] Signup failed with code: ${response.code()}")
                 // Extract error message from response body if available
                 val errorBody = response.errorBody()?.string()
-                AuthResponse(false, errorBody ?: "Signup failed: ${response.code()}")
+                AuthResponse(false, errorBody ?: "Signup failed: ${response.code()}", user = null)
             }
         } catch (e: IOException) {
             Log.e("AuthRepository", "[$timestamp] Network error during signup: ${e.message}")
@@ -63,7 +68,11 @@ class AuthRepository {
             AuthResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
         } catch (e: Exception) {
             Log.e("AuthRepository", "[$timestamp] Unexpected error during signup: ${e.message}")
-            AuthResponse(false, "Unexpected error: ${e.message}")
+            AuthResponse(false, "Network error: ${e.message}", user = null)
+        } catch (e: HttpException) {
+            AuthResponse(false, "HTTP error: ${e.code()} - ${e.message()}", user = null)
+        } catch (e: Exception) {
+            AuthResponse(false, "Unexpected error: ${e.message}", user = null)
         }
     }
 }

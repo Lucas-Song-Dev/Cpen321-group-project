@@ -3,21 +3,28 @@ import jwt from "jsonwebtoken";
 import { config } from "../config";
 
 export const AuthService = {
-  signup: async (email: string, name: string) => {
+  signup: async (email: string, name: string, googleId: string) => {
     try {
       let user = await UserModel.findOne({ email });
       if (user) {
         return { success: false, message: "User already exists. Please log in instead." };
       }
 
-      user = new UserModel({ email, name, groupName: "" });
+      user = new UserModel({email, name, googleId, profileComplete: false});
       await user.save();
 
       const token = jwt.sign({ email: user.email, id: user._id }, config.JWT_SECRET, { expiresIn: "1h" });
       return {
         success: true,
         message: "Signup successful!",
-        user: { email: user.email, name: user.name, groupName: user.groupName },
+        user: { 
+          email: user.email, 
+          name: user.name,
+          dob: user.dob || null,
+          gender: user.gender || null,
+          profileComplete: user.profileComplete,
+          groupName: user.groupName || null
+        },
         token,
       };
     } catch (err) {
@@ -38,7 +45,7 @@ export const AuthService = {
       return {
         success: true,
         message: "Login successful!",
-        user: { email: user.email, name: user.name, groupName: user.groupName },
+        user: { email: user.email, name: user.name, groupName: user.groupName},
         token,
       };
     } catch (err) {

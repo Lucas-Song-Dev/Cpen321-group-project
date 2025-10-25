@@ -11,16 +11,62 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cpen321.roomsync.data.models.User
+import com.cpen321.roomsync.ui.viewmodels.PersonalProfileViewModel
+import com.cpen321.roomsync.ui.viewmodels.ProfileSetState
 
 @Composable
 fun PersonalProfileScreen(
-    onContinue: () -> Unit = {}
+    user: User,
+    viewModel: PersonalProfileViewModel,
+    onProfileComplete: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
     var dob by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var selectedGender by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("") }
+
+    val profileSetState by viewModel.profileSetState.collectAsState()
+
+    //Navigate when profile update is successful
+    LaunchedEffect(profileSetState) {
+        if (profileSetState is ProfileSetState.Success) {
+            onProfileComplete()
+        }
+    }
+
+    //Show loading dialog
+    if (profileSetState is ProfileSetState.Loading) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Updating Profile") },
+            text = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            },
+            confirmButton = { }
+        )
+    }
+
+    //Show error dialog
+    if (profileSetState is ProfileSetState.Error) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.resetState()
+            },
+            title = { Text("Error") },
+            text = { Text((profileSetState as ProfileSetState.Error).message) },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.resetState()
+                }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -32,7 +78,7 @@ fun PersonalProfileScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Title
+            //Page title
             Text(
                 text = "Personal Profile",
                 fontSize = 24.sp,
@@ -41,7 +87,7 @@ fun PersonalProfileScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Name field
+            //Name field (read-only: retrieved from google auth)
             Column {
                 Text(
                     text = "Name:",
@@ -50,18 +96,45 @@ fun PersonalProfileScreen(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
+                    value = user.name,
+                    onValueChange = { },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    placeholder = { Text("Enter your full name") }
+                    enabled = false,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
                 )
             }
 
-            // DOB field
+            //Email field (read-only: retrieved from google auth)
             Column {
                 Text(
-                    text = "DOB:",
+                    text = "Email:",
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                OutlinedTextField(
+                    value = user.email,
+                    onValueChange = { },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = false,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+                )
+            }
+
+            //DOB field
+            Column {
+                Text(
+                    text = "Date of Birth:",
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -71,45 +144,11 @@ fun PersonalProfileScreen(
                     onValueChange = { dob = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    placeholder = { Text("MM/DD/YYYY") }
+                    placeholder = { Text("YYYY-MM-DD") }
                 )
             }
 
-            // Phone field
-            Column {
-                Text(
-                    text = "Phone:",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    placeholder = { Text("Enter your phone number") }
-                )
-            }
-
-            // Email field
-            Column {
-                Text(
-                    text = "E-mail:",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    placeholder = { Text("Enter your email address") }
-                )
-            }
-
-            // Gender section
+            //Gender section
             Column {
                 Text(
                     text = "Gender:",
@@ -117,7 +156,7 @@ fun PersonalProfileScreen(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -125,23 +164,34 @@ fun PersonalProfileScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     FilterChip(
-                        onClick = { selectedGender = "Male" },
+                        onClick = { gender = "Male" },
                         label = { Text("Male") },
-                        selected = selectedGender == "Male",
+                        selected = gender == "Male",
                         modifier = Modifier.selectable(
-                            selected = selectedGender == "Male",
-                            onClick = { selectedGender = "Male" },
+                            selected = gender == "Male",
+                            onClick = { gender = "Male" },
                             role = Role.RadioButton
                         )
                     )
-                    
+
                     FilterChip(
-                        onClick = { selectedGender = "Female" },
+                        onClick = { gender = "Female" },
                         label = { Text("Female") },
-                        selected = selectedGender == "Female",
+                        selected = gender == "Female",
                         modifier = Modifier.selectable(
-                            selected = selectedGender == "Female",
-                            onClick = { selectedGender = "Female" },
+                            selected = gender == "Female",
+                            onClick = { gender = "Female" },
+                            role = Role.RadioButton
+                        )
+                    )
+
+                    FilterChip(
+                        onClick = { gender = "Prefer-not-to-say" },
+                        label = { Text("Prefer-not-to-say") },
+                        selected = gender == "Prefer-not-to-say",
+                        modifier = Modifier.selectable(
+                            selected = gender == "Prefer-not-to-say",
+                            onClick = { gender = "Prefer-not-to-say" },
                             role = Role.RadioButton
                         )
                     )
@@ -150,13 +200,15 @@ fun PersonalProfileScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Continue button
+            //Continue button
             Button(
-                onClick = onContinue,
+                onClick = {
+                    viewModel.updateProfile(user.email, dob, gender)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                enabled = name.isNotBlank() && dob.isNotBlank() && phone.isNotBlank() && email.isNotBlank() && selectedGender.isNotBlank()
+                enabled = dob.isNotBlank() && gender.isNotBlank()
             ) {
                 Text(
                     text = "Continue",

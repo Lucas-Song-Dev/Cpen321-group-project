@@ -10,6 +10,7 @@ import groupRouter from "./routes/group";
 import taskRouter from "./routes/task";
 import chatRouter from "./routes/chat";
 
+
 const app = express();
 
 // Request logging middleware
@@ -53,6 +54,7 @@ app.use("/api/user", authenticate, userRouter);  //protected with auth middlewar
 app.use("/api/group", authenticate, groupRouter);  //protected with auth middleware
 app.use("/api/task", authenticate, taskRouter);  //protected with auth middleware
 app.use("/api/chat", authenticate, chatRouter);  //protected with auth middleware
+app.use("/api", userRouter);  //protected with auth middleware
 
 console.log('Attempting to connect to MongoDB with URI:', config.MONGODB_URI);
 console.log("Attempting MongoDB connection...");
@@ -77,6 +79,10 @@ mongoose
   });
 
 app.listen(config.PORT, () => console.log(`Server running on port ${config.PORT}`));
+//later need to switch to this for .env
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 
 // import express from 'express';
