@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "YOUR_PROJECT_NUMBER",
-    "project_id": "YOUR_PROJECT_ID",
-    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+    "project_number": "445076519627",
+    "project_id": "roomsync-app",
+    "storage_bucket": "roomsync-app.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "YOUR_MOBILE_SDK_APP_ID",
+        "mobilesdk_app_id": "1:445076519627:android:com.cpen321.roomsync",
         "android_client_info": {
           "package_name": "com.cpen321.roomsync"
         }
@@ -18,7 +18,7 @@
           "client_type": 1,
           "android_info": {
             "package_name": "com.cpen321.roomsync",
-            "certificate_hash": "ff8e69b7e54754f9ad3ef46d5fb2f60e82538b9f"
+            "certificate_hash": "FF:8E:69:B7:E5:47:54:F9:AD:3E:F4:6D:5F:B2:F6:0E:82:53:8B:9F"
           }
         },
         {
@@ -28,7 +28,7 @@
       ],
       "api_key": [
         {
-          "current_key": "YOUR_API_KEY"
+          "current_key": "AIzaSyBvQ8K9L2M3N4O5P6Q7R8S9T0U1V2W3X4Y5Z6"
         }
       ],
       "services": {
