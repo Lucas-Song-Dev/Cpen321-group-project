@@ -20,19 +20,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cpen321.roomsync.ui.viewmodels.TaskViewModel
-import com.cpen321.roomsync.ui.viewmodels.GroupMember
+import com.cpen321.roomsync.ui.viewmodels.ViewModelGroupMember
 
 @Composable
 fun GroupDetailsScreen(
     groupName: String = "My Group",
+    viewModel: TaskViewModel,  // Inject ViewModel from parent
     onBack: () -> Unit = {}
 ) {
-    val viewModel: TaskViewModel = viewModel {
-        TaskViewModel("sample-group-id", "current-user")
-    }
     val uiState by viewModel.uiState.collectAsState()
-    
-    var selectedMember by remember { mutableStateOf<GroupMember?>(null) }
+
+    var selectedMember by remember { mutableStateOf<ViewModelGroupMember?>(null) }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -64,26 +62,26 @@ fun GroupDetailsScreen(
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = groupName,
                         fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Text(
                         text = "Members:",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = "${uiState.groupMembers.size} members",
                         fontSize = 18.sp,
@@ -108,7 +106,7 @@ fun GroupDetailsScreen(
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
-                    
+
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -132,7 +130,7 @@ fun GroupDetailsScreen(
                 Text("Back to Home")
             }
         }
-        
+
         // Member detail dialog
         selectedMember?.let { member ->
             MemberDetailDialog(
@@ -145,7 +143,7 @@ fun GroupDetailsScreen(
 
 @Composable
 fun MemberCard(
-    member: GroupMember,
+    member: ViewModelGroupMember,
     onClick: () -> Unit = {}
 ) {
     Card(
@@ -176,9 +174,9 @@ fun MemberCard(
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -191,7 +189,7 @@ fun MemberCard(
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+
                     if (member.isAdmin) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Surface(
@@ -207,17 +205,17 @@ fun MemberCard(
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = member.bio,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = member.email,
                     fontSize = 12.sp,
@@ -231,7 +229,7 @@ fun MemberCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemberDetailDialog(
-    member: GroupMember,
+    member: ViewModelGroupMember,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -258,16 +256,16 @@ fun MemberDetailDialog(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.width(16.dp))
-                
+
                 Column {
                     Text(
                         text = member.name,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    
+
                     if (member.isAdmin) {
                         Surface(
                             modifier = Modifier.clip(RoundedCornerShape(12.dp)),
@@ -303,7 +301,7 @@ fun MemberDetailDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                
+
                 // Contact section
                 Column {
                     Text(
@@ -319,7 +317,7 @@ fun MemberDetailDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                
+
                 // Join date section
                 Column {
                     Text(

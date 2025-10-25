@@ -468,9 +468,9 @@ fun CreatePollDialog(
 @Composable
 fun ChatScreen(
     groupName: String = "Group Chat",
-    groupId: String = "sample-group-id",
+    groupId: String = "68fb62f776137b62df6214d5",
     onBack: () -> Unit = {},
-    currentUserId: String = "current-user",
+    currentUserId: String = "68fb4f7cac22f6c9e5ac82b6",
     onNavigateToPolls: () -> Unit = {}
 ) {
     var messageText by remember { mutableStateOf("") }
@@ -528,6 +528,7 @@ fun ChatScreen(
             )
 
             // Messages List
+            println("ChatScreen: Current UI state: $uiState")
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -536,7 +537,10 @@ fun ChatScreen(
                 contentPadding = PaddingValues(vertical = 8.dp),
                 reverseLayout = true
             ) {
-                items(uiState.messages.reversed()) { message ->
+                val reversedMessages = uiState.messages.reversed()
+                println("ChatScreen: Displaying ${reversedMessages.size} messages")
+                items(reversedMessages) { message ->
+                    println("ChatScreen: Displaying message: $message")
                     MessageBubble(
                         message = convertViewModelMessage(message),
                         onPollClick = onNavigateToPolls

@@ -8,11 +8,19 @@ import java.util.Date
 data class AuthResponse(
     val success: Boolean,
     val message: String,
-    val userGroupName: String? = null, //delete later
-    val user: User? = null
+    val user: User? = null,
+    val token: String? = null,
+    val userGroupName: String? = null
+)
+
+data class ApiResponse<T>(
+    val success: Boolean,
+    val message: String? = null,
+    val data: T? = null
 )
 
 data class User(
+    val _id: String,
     val email: String,
     val name: String,
     val dob: Date?,

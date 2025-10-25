@@ -1,6 +1,9 @@
 import express, { Request, Response } from 'express';
 import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
+import Group from '../models/Group';
+import { UserModel } from '../models/User';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -11,10 +14,64 @@ router.use(protect);
 // @route   POST /api/group
 // @access  Private
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
-  // TODO: Implement create group
-  res.status(200).json({
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] GROUP CREATE: Starting group creation`);
+  console.log(`[${timestamp}] GROUP CREATE: User:`, req.user);
+  console.log(`[${timestamp}] GROUP CREATE: Request body:`, req.body);
+  
+  const { name } = req.body;
+
+  if (!name || name.trim().length === 0) {
+    console.log(`[${timestamp}] GROUP CREATE: Validation failed - group name is required`);
+    return res.status(400).json({
+      success: false,
+      message: 'Group name is required'
+    });
+  }
+
+  console.log(`[${timestamp}] GROUP CREATE: Checking if user is already in a group`);
+  // Check if user is already in a group
+  const existingGroup = await Group.findOne({ 
+    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+  });
+
+  if (existingGroup) {
+    console.log(`[${timestamp}] GROUP CREATE: User already in group:`, existingGroup._id);
+    return res.status(400).json({
+      success: false,
+      message: 'User is already a member of a group'
+    });
+  }
+
+  console.log(`[${timestamp}] GROUP CREATE: Creating new group with name:`, name.trim());
+  // Create new group
+  const group = await Group.create({
+    name: name.trim(),
+    owner: new mongoose.Types.ObjectId(req.user!._id),
+    members: [{
+      userId: new mongoose.Types.ObjectId(req.user!._id),
+      joinDate: new Date()
+    }]
+  });
+
+  console.log(`[${timestamp}] GROUP CREATE: Group created successfully:`, group._id);
+  console.log(`[${timestamp}] GROUP CREATE: Updating user's groupName to:`, group.name);
+  // Update user's groupName
+  await UserModel.findByIdAndUpdate(req.user!._id, { 
+    groupName: group.name 
+  });
+
+  console.log(`[${timestamp}] GROUP CREATE: Populating group with owner and member details`);
+  // Populate owner information
+  await group.populate('owner', 'name email');
+  await group.populate('members.userId', 'name email');
+
+  console.log(`[${timestamp}] GROUP CREATE: Group creation completed successfully`);
+  res.status(201).json({
     success: true,
-    message: 'Create group endpoint - to be implemented'
+    data: {
+      group
+    }
   });
 }));
 
@@ -22,10 +79,86 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // @route   POST /api/group/join
 // @access  Private
 router.post('/join', asyncHandler(async (req: Request, res: Response) => {
-  // TODO: Implement join group
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] GROUP JOIN: Starting group join process`);
+  console.log(`[${timestamp}] GROUP JOIN: User:`, req.user);
+  console.log(`[${timestamp}] GROUP JOIN: Request body:`, req.body);
+  
+  const { groupCode } = req.body;
+
+  if (!groupCode || groupCode.trim().length === 0) {
+    console.log(`[${timestamp}] GROUP JOIN: Validation failed - group code is required`);
+    return res.status(400).json({
+      success: false,
+      message: 'Group code is required'
+    });
+  }
+
+  console.log(`[${timestamp}] GROUP JOIN: Checking if user is already in a group`);
+  // Check if user is already in a group
+  const existingGroup = await Group.findOne({ 
+    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+  });
+
+  if (existingGroup) {
+    return res.status(400).json({
+      success: false,
+      message: 'User is already a member of a group'
+    });
+  }
+
+  // Find group by code
+  const group = await Group.findOne({ groupCode: groupCode.trim().toUpperCase() });
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'Group not found'
+    });
+  }
+
+  // Check if group is full
+  if (group.members.length >= 8) {
+    return res.status(400).json({
+      success: false,
+      message: 'Group is full (maximum 8 members)'
+    });
+  }
+
+  // Check if user is already a member
+  const isAlreadyMember = group.members.some(member => 
+    member.userId.toString() === req.user!._id.toString()
+  );
+
+  if (isAlreadyMember) {
+    return res.status(400).json({
+      success: false,
+      message: 'User is already a member of this group'
+    });
+  }
+
+  // Add user to group
+  group.members.push({
+    userId: new mongoose.Types.ObjectId(req.user!._id),
+    joinDate: new Date()
+  });
+
+  await group.save();
+
+  // Update user's groupName
+  await UserModel.findByIdAndUpdate(req.user!._id, { 
+    groupName: group.name 
+  });
+
+  // Populate member information
+  await group.populate('owner', 'name email');
+  await group.populate('members.userId', 'name email');
+
   res.status(200).json({
     success: true,
-    message: 'Join group endpoint - to be implemented'
+    data: {
+      group
+    }
   });
 }));
 
@@ -33,10 +166,24 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
 // @route   GET /api/group
 // @access  Private
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
-  // TODO: Implement get user group
+  const group = await Group.findOne({ 
+    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+  })
+    .populate('owner', 'name email')
+    .populate('members.userId', 'name email');
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'User is not a member of any group'
+    });
+  }
+
   res.status(200).json({
     success: true,
-    message: 'Get user group endpoint - to be implemented'
+    data: {
+      group
+    }
   });
 }));
 
@@ -44,10 +191,40 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 // @route   DELETE /api/group/leave
 // @access  Private
 router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
-  // TODO: Implement leave group
+  const group = await Group.findOne({ 
+    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+  });
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'User is not a member of any group'
+    });
+  }
+
+  // Check if user is the owner
+  if (group.owner.toString() === req.user!._id.toString()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Group owner cannot leave. Transfer ownership or delete group first.'
+    });
+  }
+
+  // Remove user from group
+  group.members = group.members.filter(member => 
+    member.userId.toString() !== req.user!._id.toString()
+  );
+
+  await group.save();
+
+  // Update user's groupName
+  await UserModel.findByIdAndUpdate(req.user!._id, { 
+    groupName: "" 
+  });
+
   res.status(200).json({
     success: true,
-    message: 'Leave group endpoint - to be implemented'
+    message: 'Successfully left the group'
   });
 }));
 

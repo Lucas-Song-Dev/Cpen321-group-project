@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cpen321.roomsync.ui.screens.AuthScreen
 import com.cpen321.roomsync.ui.screens.PersonalProfileScreen
 import com.cpen321.roomsync.ui.screens.OptionalProfileScreen
@@ -14,6 +15,7 @@ import com.cpen321.roomsync.ui.screens.GroupDetailsScreen
 import com.cpen321.roomsync.ui.screens.ChatScreen
 import com.cpen321.roomsync.ui.screens.TaskScreen
 import com.cpen321.roomsync.ui.screens.PollingScreen
+import com.cpen321.roomsync.ui.viewmodels.TaskViewModel
 
 
 //testing
@@ -52,7 +54,7 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.AUTH
+        startDestination = NavRoutes.AUTH  // Start with auth screen
     ) {
         composable(NavRoutes.AUTH) {
             AuthScreen(
@@ -138,14 +140,23 @@ fun AppNavigation() {
                         },
                         onOpenPolls = {
                             navController.navigate("${NavRoutes.POLLING}?groupName=${groupName}")
+                        },
+                        onLogout = {
+                            navController.navigate(NavRoutes.AUTH) {
+                                popUpTo(NavRoutes.AUTH) { inclusive = true }
+                            }
                         }
                     )
                 }
 
                 composable("${NavRoutes.GROUP_DETAILS}?groupName={groupName}") { backStackEntry ->
                     val groupName = backStackEntry.arguments?.getString("groupName") ?: "My Group"
+                    val viewModel = androidx.lifecycle.viewmodel.compose.viewModel {
+                        TaskViewModel("68fb62f776137b62df6214d5", "68fb4f7cac22f6c9e5ac82b6")
+                    }
                     GroupDetailsScreen(
                         groupName = groupName,
+                        viewModel = viewModel,
                         onBack = {
                             navController.popBackStack()
                         }
@@ -156,7 +167,7 @@ fun AppNavigation() {
                     val groupName = backStackEntry.arguments?.getString("groupName") ?: "Group Chat"
                     ChatScreen(
                         groupName = groupName,
-                        groupId = "sample-group-id", // TODO: Get actual group ID
+                        groupId = "68fb62f776137b62df6214d5", // Real group ID from database
                         onBack = {
                             navController.popBackStack()
                         },
@@ -170,7 +181,7 @@ fun AppNavigation() {
                     val groupName = backStackEntry.arguments?.getString("groupName") ?: "Group Tasks"
                     TaskScreen(
                         groupName = groupName,
-                        groupId = "sample-group-id", // TODO: Get actual group ID
+                        groupId = "68fb62f776137b62df6214d5", // Real group ID from database
                         onBack = {
                             navController.popBackStack()
                         }
@@ -181,7 +192,7 @@ fun AppNavigation() {
                     val groupName = backStackEntry.arguments?.getString("groupName") ?: "Group Polls"
                     PollingScreen(
                         groupName = groupName,
-                        groupId = "sample-group-id", // TODO: Get actual group ID
+                        groupId = "68fb62f776137b62df6214d5", // Real group ID from database
                         onBack = {
                             navController.popBackStack()
                         }

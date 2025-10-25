@@ -6,13 +6,54 @@ import mongoose from "mongoose";
 import { authRouter } from "./routes/auth";
 import { userRouter } from "./routes/user";
 import { authenticate } from "./middleware/auth";
+import groupRouter from "./routes/group";
+import taskRouter from "./routes/task";
+import chatRouter from "./routes/chat";
 
 
 const app = express();
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${req.method} ${req.path}`);
+  console.log(`[${timestamp}] Headers:`, JSON.stringify(req.headers, null, 2));
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log(`[${timestamp}] Body:`, JSON.stringify(req.body, null, 2));
+  }
+  if (req.query && Object.keys(req.query).length > 0) {
+    console.log(`[${timestamp}] Query:`, JSON.stringify(req.query, null, 2));
+  }
+  next();
+});
+
 app.use(cors());
 app.use(bodyParser.json());
 
+// Response logging middleware
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  res.send = function(data) {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] Response ${res.statusCode} for ${req.method} ${req.path}`);
+    if (data) {
+      try {
+        const parsedData = JSON.parse(data);
+        console.log(`[${timestamp}] Response Body:`, JSON.stringify(parsedData, null, 2));
+      } catch (e) {
+        console.log(`[${timestamp}] Response Body (raw):`, data);
+      }
+    }
+    return originalSend.call(this, data);
+  };
+  next();
+});
+
 app.use("/api/auth", authRouter);
+app.use("/api/user", authenticate, userRouter);  //protected with auth middleware
+app.use("/api/group", authenticate, groupRouter);  //protected with auth middleware
+app.use("/api/task", authenticate, taskRouter);  //protected with auth middleware
+app.use("/api/chat", authenticate, chatRouter);  //protected with auth middleware
 app.use("/api", userRouter);  //protected with auth middleware
 
 console.log('Attempting to connect to MongoDB with URI:', config.MONGODB_URI);

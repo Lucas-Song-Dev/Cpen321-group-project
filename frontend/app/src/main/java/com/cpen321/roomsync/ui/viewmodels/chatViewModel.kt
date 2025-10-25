@@ -2,6 +2,8 @@ package com.cpen321.roomsync.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cpen321.roomsync.data.models.Message as ApiMessage
+import com.cpen321.roomsync.data.repository.ChatRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,7 +51,8 @@ data class ChatUiState(
 
 class ChatViewModel(
     private val groupId: String,
-    private val currentUserId: String
+    private val currentUserId: String,
+    private val chatRepository: ChatRepository = ChatRepository()
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -92,51 +95,35 @@ class ChatViewModel(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 
-                // TODO: Implement API call to load messages
-                // val response = chatApi.getMessages(groupId)
-                // val messages = response.data.messages.map { message ->
-                //     ChatMessage(
-                //         id = message.id,
-                //         content = message.content,
-                //         senderName = message.senderId.fullname ?: "Unknown",
-                //         senderId = message.senderId.id,
-                //         timestamp = message.createdAt,
-                //         isOwnMessage = message.senderId.id == currentUserId
-                //     )
-                // }
-                
-                // For now, use sample data
-                val sampleMessages = listOf(
-                    ChatMessage(
-                        id = "1",
-                        content = "Hey everyone! Welcome to our group chat!",
-                        senderName = "Alice",
-                        senderId = "alice-id",
-                        timestamp = Date(System.currentTimeMillis() - 3600000),
-                        isOwnMessage = false
-                    ),
-                    ChatMessage(
-                        id = "2", 
-                        content = "Thanks for setting this up!",
-                        senderName = "Bob",
-                        senderId = "bob-id",
-                        timestamp = Date(System.currentTimeMillis() - 3000000),
-                        isOwnMessage = false
-                    ),
-                    ChatMessage(
-                        id = "3",
-                        content = "Looking forward to living with you all!",
-                        senderName = "You",
-                        senderId = currentUserId,
-                        timestamp = Date(System.currentTimeMillis() - 1800000),
-                        isOwnMessage = true
+                val response = chatRepository.getMessages(groupId)
+                println("ChatViewModel: Got response: $response")
+                if (response.success && response.data?.messages != null) {
+                    println("ChatViewModel: Mapping ${response.data.messages.size} messages")
+                    val messages = response.data.messages.map { message ->
+                        println("ChatViewModel: Processing message: $message")
+                        ChatMessage(
+                            id = message._id,
+                            content = message.content,
+                            senderName = "User", // Simplified since we don't have user names yet
+                            senderId = message.senderId._id,
+                            timestamp = Date(message.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
+                            isOwnMessage = message.senderId._id == currentUserId,
+                            type = when (message.type) {
+                                "poll" -> MessageType.POLL
+                                else -> MessageType.TEXT
+                            }
+                        )
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        messages = messages,
+                        isLoading = false
                     )
-                )
-                
-                _uiState.value = _uiState.value.copy(
-                    messages = sampleMessages,
-                    isLoading = false
-                )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = response.message ?: "Failed to load messages",
+                        isLoading = false
+                    )
+                }
                 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -161,21 +148,15 @@ class ChatViewModel(
                     isOwnMessage = true
                 )
                 
-                // Add message to UI immediately for better UX
-                _uiState.value = _uiState.value.copy(
-                    messages = _uiState.value.messages + newMessage
-                )
-                
-                // TODO: Send message via Socket.IO
-                // socket?.emit("send-message", mapOf(
-                //     "groupId" to groupId,
-                //     "senderId" to currentUserId,
-                //     "content" to content.trim(),
-                //     "type" to "text"
-                // ))
-                
-                // TODO: Also send via REST API as fallback
-                // chatApi.sendMessage(groupId, content.trim())
+                val response = chatRepository.sendMessage(groupId, content.trim())
+                if (response.success) {
+                    // Refresh messages after successful send
+                    loadMessages()
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = response.message ?: "Failed to send message"
+                    )
+                }
                 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
