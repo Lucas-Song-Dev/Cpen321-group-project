@@ -96,12 +96,15 @@ class ChatViewModel(
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 
                 val response = chatRepository.getMessages(groupId)
-                if (response.success && response.data != null) {
-                    val messages = response.data.map { message ->
+                println("ChatViewModel: Got response: $response")
+                if (response.success && response.data?.messages != null) {
+                    println("ChatViewModel: Mapping ${response.data.messages.size} messages")
+                    val messages = response.data.messages.map { message ->
+                        println("ChatViewModel: Processing message: $message")
                         ChatMessage(
                             id = message._id,
                             content = message.content,
-                            senderName = message.senderId.name ?: "Unknown",
+                            senderName = "User", // Simplified since we don't have user names yet
                             senderId = message.senderId._id,
                             timestamp = Date(message.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
                             isOwnMessage = message.senderId._id == currentUserId,
