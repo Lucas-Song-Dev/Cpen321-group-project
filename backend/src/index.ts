@@ -7,12 +7,13 @@ import { authRouter } from "./routes/auth";
 import { userRouter } from "./routes/user";
 import { authenticate } from "./middleware/auth";
 
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
 app.use("/api/auth", authRouter);
-app.use("/api/user", authenticate, userRouter);  //protected with auth middleware
+app.use("/api", userRouter);  //protected with auth middleware
 
 console.log('Attempting to connect to MongoDB with URI:', config.MONGODB_URI);
 console.log("Attempting MongoDB connection...");
@@ -37,6 +38,10 @@ mongoose
   });
 
 app.listen(config.PORT, () => console.log(`Server running on port ${config.PORT}`));
+//later need to switch to this for .env
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 
 // import express from 'express';
