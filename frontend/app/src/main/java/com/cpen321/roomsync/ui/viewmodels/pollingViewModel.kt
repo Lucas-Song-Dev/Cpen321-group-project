@@ -64,14 +64,14 @@ class PollingViewModel(
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
                 
                 val response = chatRepository.getMessages(groupId)
-                if (response.success && response.data != null) {
-                    val pollMessages = response.data.filter { it.type == "poll" }
-                    val viewModelPolls = pollMessages.map { message ->
+                if (response.success && response.data?.messages != null) {
+                    val pollMessages = response.data.messages.filter { it.type == "poll" }
+                    val viewModelPolls = pollMessages.mapNotNull { message ->
                         val pollData = message.pollData
                         if (pollData != null) {
-                            val totalVotes = pollData.votes.size
+                            val totalVotes = message.totalPollVotes
                             val optionsWithVotes = pollData.options.map { option ->
-                                val votes = pollData.votes.count { it.option == option }
+                                val votes = message.pollResults?.get(option) ?: 0
                                 ViewModelPollOption(
                                     text = option,
                                     votes = votes,
@@ -86,7 +86,7 @@ class PollingViewModel(
                                 createdBy = message.senderId.name ?: "Unknown",
                                 createdAt = Date(message.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
                                 expiresAt = Date(pollData.expiresAt.toLongOrNull() ?: System.currentTimeMillis()),
-                                status = if (Date().after(Date(pollData.expiresAt.toLongOrNull() ?: System.currentTimeMillis()))) {
+                                status = if (message.isPollExpired) {
                                     ViewModelPollStatus.EXPIRED
                                 } else {
                                     ViewModelPollStatus.ACTIVE

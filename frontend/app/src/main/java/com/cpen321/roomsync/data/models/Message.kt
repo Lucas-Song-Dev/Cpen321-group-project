@@ -3,12 +3,21 @@ package com.cpen321.roomsync.data.models
 data class Message(
     val _id: String,
     val groupId: String,
-    val senderId: User,
+    val senderId: SenderId,
     val content: String,
     val type: String,
     val pollData: PollData? = null,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
+    val pollResults: Map<String, Int>? = null,
+    val isPollExpired: Boolean = false,
+    val totalPollVotes: Int = 0,
+    val id: String? = null
+)
+
+data class SenderId(
+    val _id: String,
+    val name: String? = null
 )
 
 data class PollData(
@@ -47,5 +56,16 @@ data class MessageResponse(
 data class MessagesResponse(
     val success: Boolean,
     val message: String? = null,
-    val data: List<Message>? = null
+    val data: MessagesData? = null
+)
+
+data class MessagesData(
+    val messages: List<Message>,
+    val pagination: PaginationData
+)
+
+data class PaginationData(
+    val page: Int,
+    val limit: Int,
+    val total: Int
 )

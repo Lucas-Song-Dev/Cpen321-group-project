@@ -528,6 +528,7 @@ fun ChatScreen(
             )
 
             // Messages List
+            println("ChatScreen: Current UI state: $uiState")
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -536,7 +537,10 @@ fun ChatScreen(
                 contentPadding = PaddingValues(vertical = 8.dp),
                 reverseLayout = true
             ) {
-                items(uiState.messages.reversed()) { message ->
+                val reversedMessages = uiState.messages.reversed()
+                println("ChatScreen: Displaying ${reversedMessages.size} messages")
+                items(reversedMessages) { message ->
+                    println("ChatScreen: Displaying message: $message")
                     MessageBubble(
                         message = convertViewModelMessage(message),
                         onPollClick = onNavigateToPolls
