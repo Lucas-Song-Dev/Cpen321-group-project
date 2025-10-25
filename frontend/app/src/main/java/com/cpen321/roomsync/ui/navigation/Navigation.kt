@@ -36,6 +36,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModelFactory
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModel
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.dp
 
 //screen destinations
 object NavRoutes {
@@ -243,26 +248,58 @@ fun AppNavigation() {
                     val groupId = groupUiState.group?.id ?: ""
                     val currentUserId = authState?.user?._id ?: ""
                     
-                    println("Navigation CHAT: groupId='$groupId', currentUserId='$currentUserId'")
+                    println("Navigation CHAT: groupId='$groupId', currentUserId='$currentUserId', isLoading=${groupUiState.isLoading}")
+                    println("Navigation CHAT: group=${groupUiState.group}, authUser=${authState?.user}")
                     
-                    if (groupId.isNotEmpty() && currentUserId.isNotEmpty()) {
-                        ChatScreen(
-                            groupName = groupName,
-                            groupId = groupId,
-                            currentUserId = currentUserId,
-                            onBack = {
-                                navController.popBackStack()
-                            },
-                            onNavigateToPolls = {
-                                navController.navigate(NavRoutes.POLLING)
+                    when {
+                        groupUiState.isLoading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                                Text(
+                                    text = "Loading group...",
+                                    modifier = Modifier.padding(top = 64.dp)
+                                )
                             }
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
+                        }
+                        groupId.isEmpty() -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("No group found. Please create or join a group first.")
+                                    Button(
+                                        onClick = { navController.navigate(NavRoutes.GROUP_SELECTION) },
+                                        modifier = Modifier.padding(top = 16.dp)
+                                    ) {
+                                        Text("Go to Group Selection")
+                                    }
+                                }
+                            }
+                        }
+                        currentUserId.isEmpty() -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("User not authenticated. Please log in again.")
+                            }
+                        }
+                        else -> {
+                            ChatScreen(
+                                groupName = groupName,
+                                groupId = groupId,
+                                currentUserId = currentUserId,
+                                onBack = {
+                                    navController.popBackStack()
+                                },
+                                onNavigateToPolls = {
+                                    navController.navigate(NavRoutes.POLLING)
+                                }
+                            )
                         }
                     }
                 }

@@ -18,11 +18,15 @@ export const AuthService = {
         success: true,
         message: "Signup successful!",
         user: { 
+          _id: String(user._id),
           email: user.email, 
           name: user.name,
           dob: user.dob || null,
           gender: user.gender || null,
           profileComplete: user.profileComplete,
+          bio: user.bio || null,
+          profilePicture: user.profilePicture || null,
+          livingPreferences: user.livingPreferences || null,
           groupName: user.groupName || null
         },
         token,
@@ -45,7 +49,18 @@ export const AuthService = {
       return {
         success: true,
         message: "Login successful!",
-        user: { email: user.email, name: user.name, groupName: user.groupName},
+        user: { 
+          _id: String(user._id),
+          email: user.email, 
+          name: user.name,
+          dob: user.dob || null,
+          gender: user.gender || null,
+          profileComplete: user.profileComplete,
+          bio: user.bio || null,
+          profilePicture: user.profilePicture || null,
+          livingPreferences: user.livingPreferences || null,
+          groupName: user.groupName || null
+        },
         token,
       };
     } catch (err) {
