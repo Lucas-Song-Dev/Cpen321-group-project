@@ -10,6 +10,7 @@ import com.cpen321.roomsync.ui.screens.PersonalProfileScreen
 import com.cpen321.roomsync.ui.screens.OptionalProfileScreen
 import com.cpen321.roomsync.ui.screens.GroupSelectionScreen
 import com.cpen321.roomsync.ui.screens.CreateGroupScreen
+import com.cpen321.roomsync.ui.screens.JoinGroupScreen
 import com.cpen321.roomsync.ui.screens.HomeScreen
 import com.cpen321.roomsync.ui.screens.GroupDetailsScreen
 import com.cpen321.roomsync.ui.screens.ChatScreen
@@ -49,6 +50,7 @@ object NavRoutes {
     const val OPTIONAL_PROFILE = "optional_profile"
     const val GROUP_SELECTION = "group_selection"
     const val CREATE_GROUP = "create_group"
+    const val JOIN_GROUP = "join_group"
     const val HOME = "home"
     const val GROUP_DETAILS = "group_details"
     const val CHAT = "chat"
@@ -142,7 +144,7 @@ fun AppNavigation() {
                             navController.navigate(NavRoutes.CREATE_GROUP)
                         },
                         onJoinGroup = {
-                            // TODO: Navigate to join group screen
+                            navController.navigate(NavRoutes.JOIN_GROUP)
                         }
                     )
                 }
@@ -151,6 +153,20 @@ fun AppNavigation() {
                     CreateGroupScreen(
                         onCreateGroup = {
                             // Navigate to home after successful group creation
+                            navController.navigate(NavRoutes.HOME) {
+                                popUpTo(NavRoutes.GROUP_SELECTION) { inclusive = true }
+                            }
+                        },
+                        onBack = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+
+                composable(NavRoutes.JOIN_GROUP) {
+                    JoinGroupScreen(
+                        onJoinGroup = {
+                            // Navigate to home after successful group join
                             navController.navigate(NavRoutes.HOME) {
                                 popUpTo(NavRoutes.GROUP_SELECTION) { inclusive = true }
                             }

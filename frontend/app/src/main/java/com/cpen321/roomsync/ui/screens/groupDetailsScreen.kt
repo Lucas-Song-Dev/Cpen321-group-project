@@ -15,6 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,8 +32,12 @@ fun GroupDetailsScreen(
     onBack: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val groupViewModel: com.cpen321.roomsync.ui.viewmodels.GroupViewModel = viewModel()
+    val groupUiState by groupViewModel.uiState.collectAsState()
 
     var selectedMember by remember { mutableStateOf<ViewModelGroupMember?>(null) }
+    var showCopyToast by remember { mutableStateOf(false) }
+    val clipboardManager: ClipboardManager = LocalClipboardManager.current
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -87,6 +94,66 @@ fun GroupDetailsScreen(
                         fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Group Code section
+                    Text(
+                        text = "Group Code:",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Group code display with copy functionality
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Share this code with new members:",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                
+                                Text(
+                                    text = groupUiState.group?.groupCode ?: "Loading...",
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            
+                            IconButton(
+                                onClick = {
+                                    groupUiState.group?.groupCode?.let { code ->
+                                        clipboardManager.setText(AnnotatedString(code))
+                                        showCopyToast = true
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Copy group code",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -137,6 +204,34 @@ fun GroupDetailsScreen(
                 member = member,
                 onDismiss = { selectedMember = null }
             )
+        }
+
+        // Copy toast
+        if (showCopyToast) {
+            LaunchedEffect(showCopyToast) {
+                kotlinx.coroutines.delay(2000)
+                showCopyToast = false
+            }
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "Group code copied to clipboard!",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
         }
     }
 }

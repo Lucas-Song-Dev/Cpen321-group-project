@@ -13,7 +13,7 @@ const GroupSchema = new Schema<IGroup>({
     required: false, // Will be generated in pre-save hook
     unique: true,
     uppercase: true,
-    length: 8 //generated 8-character codes
+    length: 4 //generated 4-character codes
   },
   owner: {
     type: Schema.Types.ObjectId,
@@ -71,8 +71,8 @@ GroupSchema.pre('save', async function(next) {
     let isUnique = false;
     
     while (!isUnique) {
-      // Generate 8-character alphanumeric code
-      code = Math.random().toString(36).substring(2, 10).toUpperCase();
+      // Generate 4-character alphanumeric code
+      code = Math.random().toString(36).substring(2, 6).toUpperCase();
       const existingGroup = await mongoose.model('Group').findOne({ groupCode: code });
       isUnique = !existingGroup;
     }
