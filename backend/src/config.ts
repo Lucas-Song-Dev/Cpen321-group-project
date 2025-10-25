@@ -3,10 +3,10 @@ import path from 'path';
 
 // Hardcoded default configuration
 const defaultConfig = {
-  PORT: 5000,
-  MONGODB_URI: 'mongodb://localhost:27017/roomsync',
-  GOOGLE_CLIENT_ID: '541793356201-qgco2eercgnmfneqq111nsbgb535k95v.apps.googleusercontent.com',
-  JWT_SECRET: 'ba7509e452465eb01ab49cab219be378bd344d441e0125ce75f418232b2fdad0'
+  PORT: 3000,
+  MONGODB_URI: 'mongodb+srv://roomsync-user:roommate@roomsync.bijkxqe.mongodb.net/?retryWrites=true&w=majority&appName=RoomSync',
+  GOOGLE_CLIENT_ID: '445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com', // Web Client ID (for backend token verification)
+  JWT_SECRET: 'roomsync-super-secret-jwt-key-2024-make-it-very-long-and-secure'
 };
 
 // //try to load environment variables
