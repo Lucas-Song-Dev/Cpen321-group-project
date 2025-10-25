@@ -10,4 +10,5 @@ userRouter.get("/", (req, res) => {
 
 userRouter.put('/users/profile', UserController.setProfile);
 userRouter.put('/users/optionalProfile', UserController.updateProfile);
+
 userRouter.delete('/users/me', authenticate, UserController.deleteUser);
