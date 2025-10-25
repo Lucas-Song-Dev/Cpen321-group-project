@@ -1,7 +1,6 @@
 package com.cpen321.roomsync.data.network
 
 import com.cpen321.roomsync.data.models.*
-import retrofit2.Response
 import retrofit2.http.*
 import com.cpen321.roomsync.data.models.AuthRequest
 import com.cpen321.roomsync.data.models.AuthResponse
@@ -10,8 +9,14 @@ import com.cpen321.roomsync.data.models.User
 import com.cpen321.roomsync.data.models.ProfileResponse
 
 
+import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.DELETE
+
+
 interface ApiService {
-    // Authentication endpoints
     @POST("api/auth/login")
     suspend fun login(@Body request: AuthRequest): Response<AuthResponse>
 
@@ -69,5 +74,5 @@ interface ApiService {
     suspend fun updateProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
 
     @PUT("api/users/optionalProfile")
-    suspend fun updateOptionalProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
+    suspend fun updateOptionalProfile(@Body request: ProfileUpdateRequest): Response<ProfileResponse>  // Change ProfileSetRequest to ProfileUpdateRequest
 }

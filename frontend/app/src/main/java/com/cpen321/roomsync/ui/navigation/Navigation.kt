@@ -32,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.CircularProgressIndicator
+import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModelFactory
+import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModel
 
 //screen destinations
 object NavRoutes {
@@ -54,7 +56,7 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.AUTH  // Start with auth screen
+        startDestination = NavRoutes.AUTH
     ) {
         composable(NavRoutes.AUTH) {
             AuthScreen(
@@ -96,24 +98,24 @@ fun AppNavigation() {
 
         composable(NavRoutes.OPTIONAL_PROFILE) {
             val authResponse by authViewModel.authState.collectAsState()
+            val factory = OptionalProfileViewModelFactory(RetrofitInstance.api)
+            val optionalProfileViewModel: OptionalProfileViewModel = viewModel(factory = factory)
             val user = authResponse?.user
-            val factory = PersonalProfileViewModelFactory(RetrofitInstance.api)
-            val personalProfileViewModel: PersonalProfileViewModel = viewModel(factory = factory)
 
             if (user != null) {
                 OptionalProfileScreen(
                     user = user,
-                    viewModel = personalProfileViewModel,
+                    viewModel = optionalProfileViewModel,
                     onComplete = {
                         navController.navigate(NavRoutes.GROUP_SELECTION)
                     }
                 )
             } else {
-                Box(
+                Box(//need to change to  display error
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator() //need to change to
                 }
             }
         }

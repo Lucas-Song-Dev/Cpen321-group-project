@@ -26,33 +26,76 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.cpen321.roomsync.data.models.User
-import com.cpen321.roomsync.ui.viewmodels.PersonalProfileViewModel
+import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModel
+import com.cpen321.roomsync.ui.viewmodels.OptionalProfileState
 
 
-//    suspend fun updateOptionalProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
 @Composable
 fun OptionalProfileScreen(
     user: User,
-    viewModel: PersonalProfileViewModel,
+    viewModel: OptionalProfileViewModel,
     onComplete: () -> Unit = {}
 ) {
     var bio by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    
-    //Living Preferences
-    var morningNight by remember { mutableStateOf("") }
-    var drinking by remember { mutableStateOf("") }
-    var partying by remember { mutableStateOf("") }
-    var noise by remember { mutableStateOf("") }
-    var profession by remember { mutableStateOf("") }
-    
+
+    //Living Preferences - lowercase to match backend
+    var morningNight by remember { mutableStateOf<String?>(null) }
+    var drinking by remember { mutableStateOf<String?>(null) }
+    var partying by remember { mutableStateOf<String?>(null) }
+    var noise by remember { mutableStateOf<String?>(null) }
+    var profession by remember { mutableStateOf<String?>(null) }
+
     val context = LocalContext.current
-    
+    val optionalProfileState by viewModel.optionalProfileState.collectAsState()
+
     // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedImageUri = uri
+    }
+
+    // Navigate when profile update is successful
+    LaunchedEffect(optionalProfileState) {
+        if (optionalProfileState is OptionalProfileState.Success) {
+            onComplete()
+        }
+    }
+
+    // Show loading dialog
+    if (optionalProfileState is OptionalProfileState.Loading) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Updating Profile") },
+            text = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            },
+            confirmButton = { }
+        )
+    }
+
+    // Show error dialog
+    if (optionalProfileState is OptionalProfileState.Error) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.resetState()
+            },
+            title = { Text("Error") },
+            text = { Text((optionalProfileState as OptionalProfileState.Error).message) },
+            confirmButton = {
+                Button(onClick = {
+                    viewModel.resetState()
+                }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     Surface(
@@ -86,7 +129,7 @@ fun OptionalProfileScreen(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
-                
+
                 Box(
                     modifier = Modifier
                         .size(120.dp)
@@ -123,8 +166,7 @@ fun OptionalProfileScreen(
                         }
                     }
                 }
-                
-                // Image selection buttons
+
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.padding(top = 12.dp)
@@ -141,7 +183,7 @@ fun OptionalProfileScreen(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Gallery", fontSize = 12.sp)
                     }
-                    
+
                     if (selectedImageUri != null) {
                         OutlinedButton(
                             onClick = { selectedImageUri = null },
@@ -163,12 +205,13 @@ fun OptionalProfileScreen(
                 )
                 OutlinedTextField(
                     value = bio,
-                    onValueChange = { bio = it },
+                    onValueChange = { if (it.length <= 500) bio = it },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp),
                     maxLines = 4,
-                    placeholder = { Text("Tell us about yourself...") }
+                    placeholder = { Text("Tell us about yourself...") },
+                    supportingText = { Text("${bio.length}/500") }
                 )
             }
 
@@ -184,7 +227,7 @@ fun OptionalProfileScreen(
             // Morning/Night
             Column {
                 Text(
-                    text = "Morning/Night:",
+                    text = "Schedule:",
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -280,7 +323,7 @@ fun OptionalProfileScreen(
             // Noise
             Column {
                 Text(
-                    text = "Noise:",
+                    text = "Noise Preference:",
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -317,104 +360,72 @@ fun OptionalProfileScreen(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .selectableGroup(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // First row
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            onClick = { profession = "Student" },
-                            label = { Text("Student") },
-                            selected = profession == "Student",
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            onClick = { profession = "Worker" },
-                            label = { Text("Worker") },
-                            selected = profession == "Worker",
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            onClick = { profession = "Unemployed" },
-                            label = { Text("Unemployed") },
-                            selected = profession == "Unemployed",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-//
-//                    // Second row
-//                    Row(
-//                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-//                    ) {
-//                        FilterChip(
-//                            onClick = { profession = "Entrepreneur" },
-//                            label = { Text("Entrepreneur") },
-//                            selected = profession == "Entrepreneur",
-//                            modifier = Modifier.weight(1f)
-//                        )
-//                        FilterChip(
-//                            onClick = { profession = "Freelancer" },
-//                            label = { Text("Freelancer") },
-//                            selected = profession == "Freelancer",
-//                            modifier = Modifier.weight(1f)
-//                        )
-//                        FilterChip(
-//                            onClick = { profession = "Artist" },
-//                            label = { Text("Artist") },
-//                            selected = profession == "Artist",
-//                            modifier = Modifier.weight(1f)
-//                        )
-//                    }
-//
-//                    // Third row
-//                    Row(
-//                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-//                    ) {
-//                        FilterChip(
-//                            onClick = { profession = "Healthcare" },
-//                            label = { Text("Healthcare") },
-//                            selected = profession == "Healthcare",
-//                            modifier = Modifier.weight(1f)
-//                        )
-//                        FilterChip(
-//                            onClick = { profession = "Tech" },
-//                            label = { Text("Tech") },
-//                            selected = profession == "Tech",
-//                            modifier = Modifier.weight(1f)
-//                        )
-//                        FilterChip(
-//                            onClick = { profession = "Other" },
-//                            label = { Text("Other") },
-//                            selected = profession == "Other",
-//                            modifier = Modifier.weight(1f)
-//                        )
-//                    }
+                    FilterChip(
+                        onClick = { profession = "Student" },
+                        label = { Text("Student") },
+                        selected = profession == "Student"
+                    )
+                    FilterChip(
+                        onClick = { profession = "Worker" },
+                        label = { Text("Worker") },
+                        selected = profession == "Worker"
+                    )
+                    FilterChip(
+                        onClick = { profession = "Unemployed" },
+                        label = { Text("Unemployed") },
+                        selected = profession == "Unemployed"
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Complete button
-            Button(
-                onClick = {
-                    // Save the bio to TaskViewModel
-                    com.cpen321.roomsync.ui.viewmodels.TaskViewModel.saveUserBio(bio)
-                    onComplete()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
+            // Action buttons
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "Complete",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Button(
+                    onClick = {
+                        viewModel.updateOptionalProfile(
+                            email = user.email,
+                            bio = bio.takeIf { it.isNotBlank() },
+                            profilePicture = selectedImageUri?.toString(),
+                            schedule = morningNight,
+                            drinking = drinking,
+                            partying = partying,
+                            noise = noise,
+                            profession = profession
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Text(
+                        text = "Save & Continue",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = onComplete,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Text(
+                        text = "Skip for Now",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }

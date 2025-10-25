@@ -1,13 +1,5 @@
 package com.cpen321.roomsync.data.models
 
-data class ProfileSetRequest(
-    val email: String,
-    val dob: String? = null,
-    val gender: String? = null,
-    val bio: String? = null,
-    val profilePicture: String? = null,
-    val livingPreferences: LivingPreferences? = null
-)
 
 data class ProfileResponse(
     val success: Boolean,
@@ -15,12 +7,20 @@ data class ProfileResponse(
     val user: User
 )
 
+//FOR MANDATORY PROFILE
+data class ProfileSetRequest(
+    val email: String,
+    val dob: String,
+    val gender: String
+)
+
+
+//FOR OPTIONAL PROFILE
 data class ProfileUpdateRequest(
     val email: String,
     val bio: String?,
     val profilePicture: String?,
     val livingPreferences: LivingPreferences?,
-    val groupName: String?
 )
 
 data class LivingPreferences(

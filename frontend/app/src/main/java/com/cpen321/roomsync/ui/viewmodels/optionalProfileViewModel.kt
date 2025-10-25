@@ -3,10 +3,9 @@ package com.cpen321.roomsync.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cpen321.roomsync.data.models.LivingPreferences
-import com.cpen321.roomsync.data.models.ProfileSetRequest
+import com.cpen321.roomsync.data.models.ProfileUpdateRequest
 import com.cpen321.roomsync.data.models.User
 import com.cpen321.roomsync.data.network.ApiService
-import com.cpen321.roomsync.data.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,13 +15,13 @@ class OptionalProfileViewModel(
     private val apiService: ApiService
 ) : ViewModel() {
 
-
     private val _optionalProfileState = MutableStateFlow<OptionalProfileState>(OptionalProfileState.Idle)
     val optionalProfileState: StateFlow<OptionalProfileState> = _optionalProfileState.asStateFlow()
 
     fun updateOptionalProfile(
         email: String,
         bio: String?,
+        profilePicture: String?,
         schedule: String?,
         drinking: String?,
         partying: String?,
@@ -44,10 +43,10 @@ class OptionalProfileViewModel(
                 } else null
 
                 val response = apiService.updateOptionalProfile(
-                    ProfileSetRequest(
+                    ProfileUpdateRequest(
                         email = email,
                         bio = bio?.takeIf { it.isNotBlank() },
-                        profilePicture = null,
+                        profilePicture = profilePicture,
                         livingPreferences = livingPreferences
                     )
                 )
