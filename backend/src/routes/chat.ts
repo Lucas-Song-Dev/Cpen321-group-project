@@ -62,7 +62,7 @@ router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response
   console.log(`[${timestamp}] CHAT GET MESSAGES: User is member, fetching messages`);
   // Get messages with pagination
   const messages = await Message.find({ groupId })
-    .populate('senderId', 'fullname nickname')
+    .populate('senderId', 'name')
     .sort({ createdAt: -1 })
     .limit(Number(limit) * 1)
     .skip((Number(page) - 1) * Number(limit));
@@ -149,7 +149,7 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
   });
 
   // Populate sender information
-  await message.populate('senderId', 'fullname nickname');
+  await message.populate('senderId', 'name');
 
   // Broadcast message via Socket.IO
   try {
@@ -158,12 +158,17 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
       id: message._id.toString(),
       content: message.content,
       senderId: message.senderId._id.toString(),
-      senderName: (message.senderId as any).fullname || (message.senderId as any).nickname || 'User',
+      senderName: (message.senderId as any).name || 'User',
       groupId: groupId,
       timestamp: message.createdAt.getTime(),
       type: message.type
     };
     console.log(`[${timestamp}] CHAT SEND MESSAGE: Broadcasting to group ${groupId} with data:`, messageData);
+    
+    // Get all sockets in the room
+    const socketsInRoom = await io.in(groupId).fetchSockets();
+    console.log(`[${timestamp}] CHAT SEND MESSAGE: Sockets in room ${groupId}:`, socketsInRoom.length);
+    
     io.to(groupId).emit('new-message', messageData);
     console.log(`[${timestamp}] CHAT SEND MESSAGE: Broadcasted message to group ${groupId}`);
   } catch (socketError) {
@@ -237,7 +242,7 @@ router.post('/:groupId/poll', asyncHandler(async (req: Request, res: Response) =
   });
 
   // Populate sender information
-  await message.populate('senderId', 'fullname nickname');
+  await message.populate('senderId', 'name');
 
   res.status(201).json({
     success: true,
@@ -335,7 +340,7 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
   await message.save();
 
   // Populate sender information
-  await message.populate('senderId', 'fullname nickname');
+  await message.populate('senderId', 'name');
 
   res.status(200).json({
     success: true,

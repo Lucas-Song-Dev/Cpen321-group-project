@@ -31,10 +31,16 @@ export class SocketHandler {
       // Authenticate user
       socket.on('authenticate', (token: string) => {
         try {
+          console.log('Authenticating socket with token...');
           const decoded = jwt.verify(token, config.JWT_SECRET) as any;
-          socket.userId = decoded.userId;
-          this.connectedUsers.set(decoded.userId, socket.id);
-          console.log(`User authenticated: ${decoded.userId}`);
+          console.log('Token decoded:', decoded);
+          socket.userId = decoded.id || decoded.userId; // Support both 'id' and 'userId' in JWT payload
+          if (socket.userId) {
+            this.connectedUsers.set(socket.userId, socket.id);
+            console.log(`User authenticated: ${socket.userId}`);
+          } else {
+            console.log('No userId found in decoded token');
+          }
         } catch (error) {
           console.log('Authentication failed:', error);
           socket.disconnect();
@@ -43,9 +49,9 @@ export class SocketHandler {
 
       // Join group
       socket.on('join-group', (groupId: string) => {
-        console.log(`Received join-group request for group: ${groupId}, socket.userId: ${socket.userId}`);
+        console.log(`[SOCKET] Received join-group request for group: ${groupId}, socket.userId: ${socket.userId}`);
         if (!socket.userId) {
-          console.log('Socket not authenticated, cannot join group');
+          console.log('[SOCKET] Socket not authenticated, cannot join group');
           socket.emit('error', 'User not authenticated');
           return;
         }
@@ -58,8 +64,9 @@ export class SocketHandler {
         }
         this.groupMembers.get(groupId)!.add(socket.userId);
 
-        console.log(`User ${socket.userId} joined group ${groupId}`);
-        console.log(`Total members in group ${groupId}: ${this.groupMembers.get(groupId)!.size}`);
+        console.log(`[SOCKET] User ${socket.userId} joined group ${groupId}`);
+        console.log(`[SOCKET] Total members in group ${groupId}: ${this.groupMembers.get(groupId)!.size}`);
+        console.log(`[SOCKET] Socket rooms for this socket:`, Array.from(socket.rooms));
         
         // Notify other group members
         socket.to(groupId).emit('user-joined', {
