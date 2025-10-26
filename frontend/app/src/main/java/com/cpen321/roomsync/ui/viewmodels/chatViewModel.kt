@@ -77,20 +77,28 @@ class ChatViewModel(
                 // Set up real-time listeners FIRST
                 setupSocketListeners()
                 
-                // Connect to Socket.IO with authentication token
+                // Set up authentication callback BEFORE connecting
+                socketManager.onAuthenticated { success ->
+                    println("ChatViewModel: Authentication result: $success")
+                    if (success) {
+                        // Join the group after successful authentication
+                        println("ChatViewModel: Joining group: $groupId")
+                        socketManager.joinGroup(groupId)
+                        
+                        // Update connection state
+                        _uiState.value = _uiState.value.copy(isConnected = true, isLoading = false)
+                        println("ChatViewModel: Connected and joined group successfully")
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            error = "Authentication failed",
+                            isLoading = false
+                        )
+                    }
+                }
+                
+                // Connect to Socket.IO with authentication token (DO THIS AFTER setting callback)
                 println("ChatViewModel: Connecting to socket with token: ${if (authToken != null) "present" else "null"}")
                 socketManager.connect(token = authToken)
-                
-                // Wait a bit for connection to establish
-                kotlinx.coroutines.delay(500)
-                
-                // Join the group
-                println("ChatViewModel: Joining group: $groupId")
-                socketManager.joinGroup(groupId)
-                
-                // Update connection state
-                _uiState.value = _uiState.value.copy(isConnected = true, isLoading = false)
-                println("ChatViewModel: Connected and joined group successfully")
                 
             } catch (e: Exception) {
                 println("ChatViewModel: Connection error: ${e.message}")

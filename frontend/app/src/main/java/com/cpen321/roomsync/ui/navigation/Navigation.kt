@@ -309,6 +309,7 @@ fun AppNavigation() {
                                 groupName = groupName,
                                 groupId = groupId,
                                 currentUserId = currentUserId,
+                                authViewModel = authViewModel,
                                 onBack = {
                                     navController.popBackStack()
                                 },

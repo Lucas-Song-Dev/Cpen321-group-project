@@ -3,7 +3,7 @@ import path from 'path';
 
 // Hardcoded default configuration
 const defaultConfig = {
-  PORT: 3000,
+  PORT: 4000,
   MONGODB_URI: 'mongodb+srv://roomsync-user:roommate@roomsync.bijkxqe.mongodb.net/?retryWrites=true&w=majority&appName=RoomSync',
   GOOGLE_CLIENT_ID: '445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com', // Web Client ID (for backend token verification)
   JWT_SECRET: 'roomsync-super-secret-jwt-key-2024-make-it-very-long-and-secure'
