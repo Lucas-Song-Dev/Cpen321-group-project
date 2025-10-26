@@ -43,7 +43,9 @@ export class SocketHandler {
 
       // Join group
       socket.on('join-group', (groupId: string) => {
+        console.log(`Received join-group request for group: ${groupId}, socket.userId: ${socket.userId}`);
         if (!socket.userId) {
+          console.log('Socket not authenticated, cannot join group');
           socket.emit('error', 'User not authenticated');
           return;
         }
@@ -57,6 +59,7 @@ export class SocketHandler {
         this.groupMembers.get(groupId)!.add(socket.userId);
 
         console.log(`User ${socket.userId} joined group ${groupId}`);
+        console.log(`Total members in group ${groupId}: ${this.groupMembers.get(groupId)!.size}`);
         
         // Notify other group members
         socket.to(groupId).emit('user-joined', {

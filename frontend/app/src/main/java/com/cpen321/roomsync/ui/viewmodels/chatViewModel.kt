@@ -74,22 +74,26 @@ class ChatViewModel(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 
+                // Set up real-time listeners FIRST
+                setupSocketListeners()
+                
                 // Connect to Socket.IO with authentication token
+                println("ChatViewModel: Connecting to socket with token: ${if (authToken != null) "present" else "null"}")
                 socketManager.connect(token = authToken)
                 
                 // Wait a bit for connection to establish
                 kotlinx.coroutines.delay(500)
                 
                 // Join the group
+                println("ChatViewModel: Joining group: $groupId")
                 socketManager.joinGroup(groupId)
-                
-                // Set up real-time listeners
-                setupSocketListeners()
                 
                 // Update connection state
                 _uiState.value = _uiState.value.copy(isConnected = true, isLoading = false)
+                println("ChatViewModel: Connected and joined group successfully")
                 
             } catch (e: Exception) {
+                println("ChatViewModel: Connection error: ${e.message}")
                 _uiState.value = _uiState.value.copy(
                     error = "Failed to connect to chat: ${e.message}",
                     isLoading = false
@@ -101,19 +105,26 @@ class ChatViewModel(
     private fun setupSocketListeners() {
         // Listen for new messages
         socketManager.onNewMessage { messageData ->
+            println("ChatViewModel: Received new message via socket: $messageData")
             viewModelScope.launch {
-                val newMessage = ChatMessage(
-                    id = messageData.getString("id"),
-                    content = messageData.getString("content"),
-                    senderName = messageData.getString("senderName"),
-                    senderId = messageData.getString("senderId"),
-                    timestamp = Date(messageData.getLong("timestamp")),
-                    isOwnMessage = messageData.getString("senderId") == currentUserId
-                )
-                
-                _uiState.value = _uiState.value.copy(
-                    messages = _uiState.value.messages + newMessage
-                )
+                try {
+                    val newMessage = ChatMessage(
+                        id = messageData.optString("id", ""),
+                        content = messageData.optString("content", ""),
+                        senderName = messageData.optString("senderName", "User"),
+                        senderId = messageData.optString("senderId", ""),
+                        timestamp = Date(messageData.optLong("timestamp", System.currentTimeMillis())),
+                        isOwnMessage = messageData.optString("senderId", "") == currentUserId
+                    )
+                    
+                    println("ChatViewModel: Adding message to state: ${newMessage.content}")
+                    _uiState.value = _uiState.value.copy(
+                        messages = _uiState.value.messages + newMessage
+                    )
+                    println("ChatViewModel: Total messages: ${_uiState.value.messages.size}")
+                } catch (e: Exception) {
+                    println("ChatViewModel: Error parsing message: ${e.message}")
+                }
             }
         }
         
@@ -193,10 +204,8 @@ class ChatViewModel(
         
         viewModelScope.launch {
             try {
-                // Send message via Socket.IO for real-time delivery
-                socketManager.sendMessage(groupId, content.trim(), currentUserId)
-                
-                // Also send to backend for persistence
+                println("ChatViewModel: Sending message via HTTP: $content")
+                // Send to backend for persistence - it will broadcast via Socket.IO
                 val response = chatRepository.sendMessage(groupId, content.trim())
                 if (!response.success) {
                     _uiState.value = _uiState.value.copy(

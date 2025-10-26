@@ -5,6 +5,7 @@ import Message from '../models/Message';
 import Group from '../models/Group';
 import { UserModel } from '../models/User';
 import mongoose from 'mongoose';
+import { socketHandler } from '../index';
 
 const router = express.Router();
 
@@ -149,6 +150,25 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
 
   // Populate sender information
   await message.populate('senderId', 'fullname nickname');
+
+  // Broadcast message via Socket.IO
+  try {
+    const io = socketHandler.getIO();
+    const messageData = {
+      id: message._id.toString(),
+      content: message.content,
+      senderId: message.senderId._id.toString(),
+      senderName: (message.senderId as any).fullname || (message.senderId as any).nickname || 'User',
+      groupId: groupId,
+      timestamp: message.createdAt.getTime(),
+      type: message.type
+    };
+    console.log(`[${timestamp}] CHAT SEND MESSAGE: Broadcasting to group ${groupId} with data:`, messageData);
+    io.to(groupId).emit('new-message', messageData);
+    console.log(`[${timestamp}] CHAT SEND MESSAGE: Broadcasted message to group ${groupId}`);
+  } catch (socketError) {
+    console.error(`[${timestamp}] CHAT SEND MESSAGE: Socket broadcast error:`, socketError);
+  }
 
   res.status(201).json({
     success: true,

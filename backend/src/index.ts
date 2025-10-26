@@ -84,6 +84,9 @@ mongoose
 // Initialize Socket.IO
 const socketHandler = new SocketHandler(server);
 
+// Export socketHandler for use in routes
+export { socketHandler };
+
 server.listen(config.PORT, () => {
   console.log(`Server running on port ${config.PORT}`);
   console.log(`Socket.IO server ready for real-time chat`);
