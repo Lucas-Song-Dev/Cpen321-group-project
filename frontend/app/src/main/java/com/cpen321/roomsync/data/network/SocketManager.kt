@@ -12,8 +12,15 @@ class SocketManager {
     private val _connectionState = MutableStateFlow(false)
     val connectionState: StateFlow<Boolean> = _connectionState.asStateFlow()
     private var isAuthenticated = false
+    private var onAuthenticatedCallback: ((Boolean) -> Unit)? = null
     
-    fun connect(serverUrl: String = "http://10.0.2.2:3000", token: String? = null) {
+    // Store callback references
+    private var newMessageCallback: ((JSONObject) -> Unit)? = null
+    private var pollUpdateCallback: ((JSONObject) -> Unit)? = null
+    private var userJoinedCallback: ((JSONObject) -> Unit)? = null
+    private var userLeftCallback: ((JSONObject) -> Unit)? = null
+    
+    fun connect(serverUrl: String = "http://10.0.2.2:4000", token: String? = null) {
         try {
             val options = IO.Options().apply {
                 forceNew = true
@@ -27,11 +34,29 @@ class SocketManager {
             socket?.on(Socket.EVENT_CONNECT) {
                 println("SocketManager: Socket connected")
                 _connectionState.value = true
+                
+                // Listen for authentication response FIRST (must be registered before emitting authenticate)
+                socket?.on("authenticated") { args ->
+                    if (args.isNotEmpty()) {
+                        val data = args[0] as JSONObject
+                        val success = data.optBoolean("success", false)
+                        isAuthenticated = success
+                        if (success) {
+                            println("SocketManager: Authentication successful")
+                        } else {
+                            println("SocketManager: Authentication failed: ${data.optString("error", "Unknown error")}")
+                        }
+                        onAuthenticatedCallback?.invoke(success)
+                    }
+                }
+                
+                // Register all other listeners after connection
+                registerListeners()
+                
                 // Authenticate if token is provided
                 if (token != null) {
                     println("SocketManager: Authenticating with token")
                     socket?.emit("authenticate", token)
-                    isAuthenticated = true
                 }
             }
             
@@ -49,6 +74,37 @@ class SocketManager {
         } catch (e: Exception) {
             _connectionState.value = false
             isAuthenticated = false
+        }
+    }
+    
+    private fun registerListeners() {
+        println("SocketManager: Registering all listeners")
+        
+        socket?.on("new-message") { args ->
+            println("SocketManager: Received new-message event with ${args.size} args")
+            if (args.isNotEmpty()) {
+                val messageData = args[0] as JSONObject
+                println("SocketManager: Message data: $messageData")
+                newMessageCallback?.invoke(messageData)
+            }
+        }
+        
+        socket?.on("poll-update") { args ->
+            if (args.isNotEmpty()) {
+                pollUpdateCallback?.invoke(args[0] as JSONObject)
+            }
+        }
+        
+        socket?.on("user-joined") { args ->
+            if (args.isNotEmpty()) {
+                userJoinedCallback?.invoke(args[0] as JSONObject)
+            }
+        }
+        
+        socket?.on("user-left") { args ->
+            if (args.isNotEmpty()) {
+                userLeftCallback?.invoke(args[0] as JSONObject)
+            }
         }
     }
     
@@ -96,39 +152,53 @@ class SocketManager {
     }
     
     fun onNewMessage(callback: (JSONObject) -> Unit) {
-        println("SocketManager: Setting up new-message listener")
-        socket?.on("new-message") { args ->
-            println("SocketManager: Received new-message event with ${args.size} args")
-            if (args.isNotEmpty()) {
-                val messageData = args[0] as JSONObject
-                println("SocketManager: Message data: $messageData")
-                callback(messageData)
+        println("SocketManager: Setting up new-message callback")
+        newMessageCallback = callback
+        // If socket is already connected, register the listener now
+        if (socket?.connected() == true) {
+            socket?.on("new-message") { args ->
+                if (args.isNotEmpty()) {
+                    callback(args[0] as JSONObject)
+                }
             }
         }
     }
     
     fun onPollUpdate(callback: (JSONObject) -> Unit) {
-        socket?.on("poll-update") { args ->
-            if (args.isNotEmpty()) {
-                callback(args[0] as JSONObject)
+        pollUpdateCallback = callback
+        if (socket?.connected() == true) {
+            socket?.on("poll-update") { args ->
+                if (args.isNotEmpty()) {
+                    callback(args[0] as JSONObject)
+                }
             }
         }
     }
     
     fun onUserJoined(callback: (JSONObject) -> Unit) {
-        socket?.on("user-joined") { args ->
-            if (args.isNotEmpty()) {
-                callback(args[0] as JSONObject)
+        userJoinedCallback = callback
+        if (socket?.connected() == true) {
+            socket?.on("user-joined") { args ->
+                if (args.isNotEmpty()) {
+                    callback(args[0] as JSONObject)
+                }
             }
         }
     }
     
     fun onUserLeft(callback: (JSONObject) -> Unit) {
-        socket?.on("user-left") { args ->
-            if (args.isNotEmpty()) {
-                callback(args[0] as JSONObject)
+        userLeftCallback = callback
+        if (socket?.connected() == true) {
+            socket?.on("user-left") { args ->
+                if (args.isNotEmpty()) {
+                    callback(args[0] as JSONObject)
+                }
             }
         }
+    }
+    
+    fun onAuthenticated(callback: (Boolean) -> Unit) {
+        onAuthenticatedCallback = callback
     }
     
     fun disconnect() {

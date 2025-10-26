@@ -472,6 +472,7 @@ fun ChatScreen(
     groupId: String = "68fb62f776137b62df6214d5",
     onBack: () -> Unit = {},
     currentUserId: String = "68fb4f7cac22f6c9e5ac82b6",
+    authViewModel: AuthViewModel = viewModel(),
     onNavigateToPolls: () -> Unit = {}
 ) {
     var messageText by remember { mutableStateOf("") }
@@ -484,12 +485,11 @@ fun ChatScreen(
     println("ChatScreen: Received groupId: '$groupId', currentUserId: '$currentUserId'")
 
     // Get auth token from AuthViewModel
-    val authViewModel: AuthViewModel = viewModel()
     val authState by authViewModel.authState.collectAsState()
     val authToken = authState?.token
 
-    // Use ViewModel
-    val viewModel: ChatViewModel = viewModel { 
+    // Use ViewModel with key to recreate when token becomes available
+    val viewModel: ChatViewModel = viewModel(key = "$groupId-$authToken") { 
         ChatViewModel(groupId, currentUserId, authToken) 
     }
     val uiState by viewModel.uiState.collectAsState()

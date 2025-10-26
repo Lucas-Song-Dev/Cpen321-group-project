@@ -31,18 +31,22 @@ export class SocketHandler {
       // Authenticate user
       socket.on('authenticate', (token: string) => {
         try {
-          console.log('Authenticating socket with token...');
+          console.log('[SOCKET] Authenticating socket with token...');
           const decoded = jwt.verify(token, config.JWT_SECRET) as any;
-          console.log('Token decoded:', decoded);
+          console.log('[SOCKET] Token decoded:', decoded);
           socket.userId = decoded.id || decoded.userId; // Support both 'id' and 'userId' in JWT payload
           if (socket.userId) {
             this.connectedUsers.set(socket.userId, socket.id);
-            console.log(`User authenticated: ${socket.userId}`);
+            console.log(`[SOCKET] User authenticated: ${socket.userId}`);
+            // Emit authentication success event
+            socket.emit('authenticated', { success: true, userId: socket.userId });
           } else {
-            console.log('No userId found in decoded token');
+            console.log('[SOCKET] No userId found in decoded token');
+            socket.emit('authenticated', { success: false, error: 'No userId in token' });
           }
         } catch (error) {
-          console.log('Authentication failed:', error);
+          console.log('[SOCKET] Authentication failed:', error);
+          socket.emit('authenticated', { success: false, error: 'Invalid token' });
           socket.disconnect();
         }
       });
