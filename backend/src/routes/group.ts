@@ -173,8 +173,8 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const group = await Group.findOne({ 
     'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
   })
-    .populate('owner', 'name email')
-    .populate('members.userId', 'name email');
+    .populate('owner', 'name email bio averageRating')
+    .populate('members.userId', 'name email bio averageRating');
 
   if (!group) {
     console.log(`[${timestamp}] GROUP GET: User is not a member of any group`);
@@ -185,6 +185,20 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   }
 
   console.log(`[${timestamp}] GROUP GET: Group found:`, group._id);
+  
+  // Log how long each user has been in the group
+  console.log(`[${timestamp}] GROUP GET: Member join durations:`);
+  const now = new Date();
+  group.members.forEach((member: any) => {
+    const joinDate = new Date(member.joinDate);
+    const durationMs = now.getTime() - joinDate.getTime();
+    const durationMinutes = Math.floor(durationMs / (1000 * 60));
+    const durationHours = Math.floor(durationMinutes / 60);
+    const durationDays = Math.floor(durationHours / 24);
+    
+    console.log(`[${timestamp}]   - User ${member.userId.name} (${member.userId._id}): ${durationDays} days, ${durationHours % 24} hours, ${durationMinutes % 60} minutes (joined: ${joinDate.toISOString()})`);
+  });
+  
   res.status(200).json({
     success: true,
     data: group

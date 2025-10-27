@@ -249,50 +249,101 @@ class TaskViewModel(
         }
     }
     
+    private fun parseIsoDate(isoString: String): Date {
+        return try {
+            // Parse ISO 8601 date string (e.g., "2025-10-27T02:04:13.878Z")
+            val format = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+            format.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            val parsedDate = format.parse(isoString)
+            println("TaskViewModel: Parsed ISO date '$isoString' to ${parsedDate}")
+            parsedDate ?: Date(System.currentTimeMillis())
+        } catch (e: Exception) {
+            println("TaskViewModel: Failed to parse ISO date '$isoString': ${e.message}")
+            // Fallback: Try parsing as timestamp
+            try {
+                val timestamp = isoString.toLongOrNull()
+                if (timestamp != null) {
+                    println("TaskViewModel: Parsed as timestamp: $timestamp")
+                    Date(timestamp)
+                } else {
+                    println("TaskViewModel: Not a valid timestamp, using current time")
+                    Date(System.currentTimeMillis())
+                }
+            } catch (e2: Exception) {
+                println("TaskViewModel: All parsing failed, using current time")
+                Date(System.currentTimeMillis())
+            }
+        }
+    }
+    
     fun loadGroupMembers() {
-        // TODO: Replace with actual API call to get group members
-        // Create proper group member profiles
-        val userBio = getUserBio() // Get actual user bio from storage
-        val groupMembers = listOf(
-            ViewModelGroupMember(
-                id = currentUserId,
-                name = "You",
-                email = "you@example.com",
-                isAdmin = true,
-                joinDate = Date(),
-                bio = userBio.ifEmpty { "Tap to add your bio and tell your roommates about yourself!" },
-                profilePicture = null
-            ),
-            ViewModelGroupMember(
-                id = "member-a",
-                name = "Alex Chen",
-                email = "alex.chen@example.com",
-                isAdmin = false,
-                joinDate = Date(),
-                bio = "Computer Science student, loves coding and gaming",
-                profilePicture = null
-            ),
-            ViewModelGroupMember(
-                id = "member-b", 
-                name = "Blake Johnson",
-                email = "blake.johnson@example.com",
-                isAdmin = false,
-                joinDate = Date(),
-                bio = "Engineering student, enjoys outdoor activities and photography",
-                profilePicture = null
-            ),
-            ViewModelGroupMember(
-                id = "member-c",
-                name = "Casey Smith", 
-                email = "casey.smith@example.com",
-                isAdmin = false,
-                joinDate = Date(),
-                bio = "Business student, passionate about music and art",
-                profilePicture = null
-            )
-        )
-        
-        _uiState.value = _uiState.value.copy(groupMembers = groupMembers)
+        // Load group members from the GroupRepository to get real data
+        viewModelScope.launch {
+            try {
+                println("TaskViewModel: Loading group members...")
+                val groupRepository = com.cpen321.roomsync.data.repository.GroupRepository()
+                val response = groupRepository.getGroup()
+                
+                if (response.success && response.data != null) {
+                    val group = response.data
+                    val userBio = getUserBio() // Get actual user bio from storage
+                    
+                    println("TaskViewModel: Group data received - Name: ${group.name}, Members count: ${group.members.size}")
+                    
+                    val groupMembers = group.members.mapIndexed { index, member ->
+                        println("TaskViewModel: Processing member $index - Name: ${member.userId.name}, Join Date String: '${member.joinDate}'")
+                        
+                        val joinDate = parseIsoDate(member.joinDate)
+                        val now = Date()
+                        val durationMs = now.time - joinDate.time
+                        val days = (durationMs / (1000 * 60 * 60 * 24)).toInt()
+                        
+                        println("TaskViewModel: Member ${member.userId.name} - Join Date: $joinDate, Days ago: $days")
+                        
+                        ViewModelGroupMember(
+                            id = member.userId._id,
+                            name = member.userId.name ?: "Unknown",
+                            email = member.userId.email,
+                            isAdmin = member.userId._id == group.owner._id,
+                            joinDate = joinDate,
+                            moveInDate = member.moveInDate?.let { parseIsoDate(it) },
+                            bio = member.userId.bio ?: "No bio available",
+                            profilePicture = null
+                        )
+                    }
+                    
+                    // Add the owner if not already in members
+                    val ownerInMembers = groupMembers.any { it.id == group.owner._id }
+                    val allMembers = if (!ownerInMembers) {
+                        println("TaskViewModel: Owner not in members list, adding separately")
+                        val ownerMember = ViewModelGroupMember(
+                            id = group.owner._id,
+                            name = group.owner.name ?: "Unknown",
+                            email = group.owner.email,
+                            isAdmin = true,
+                            joinDate = Date(System.currentTimeMillis()), // Owner joined when group was created
+                            bio = group.owner.bio ?: "No bio available",
+                            profilePicture = null
+                        )
+                        listOf(ownerMember) + groupMembers
+                    } else {
+                        groupMembers
+                    }
+                    
+                    println("TaskViewModel: Final member count: ${allMembers.size}")
+                    _uiState.value = _uiState.value.copy(groupMembers = allMembers)
+                } else {
+                    println("TaskViewModel: Failed to load group - success: ${response.success}, message: ${response.message}")
+                    // Fallback to empty list if group loading fails
+                    _uiState.value = _uiState.value.copy(groupMembers = emptyList())
+                }
+            } catch (e: Exception) {
+                println("TaskViewModel: Error loading group members: ${e.message}")
+                e.printStackTrace()
+                // Fallback to empty list on error
+                _uiState.value = _uiState.value.copy(groupMembers = emptyList())
+            }
+        }
     }
 
     fun clearError() {

@@ -91,29 +91,39 @@ fun TaskScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Top App Bar
-            TopAppBar(
-                title = {
-                    Text(
-                        text = groupName,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+            // Top App Bar with extra padding
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = groupName,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { showAddTaskDialog = true }) {
+                                Icon(Icons.Default.Add, contentDescription = "Add Task")
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showAddTaskDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Task")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+                }
+            }
 
             // Tab Row
             TabRow(selectedTabIndex = currentTab) {

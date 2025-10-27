@@ -39,6 +39,33 @@ class GroupViewModel(
         loadGroup()
     }
     
+    private fun parseIsoDate(isoString: String): Date {
+        return try {
+            // Parse ISO 8601 date string (e.g., "2025-10-27T02:04:13.878Z")
+            val format = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+            format.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            val parsedDate = format.parse(isoString)
+            println("GroupViewModel: Parsed ISO date '$isoString' to ${parsedDate}")
+            parsedDate ?: Date(System.currentTimeMillis())
+        } catch (e: Exception) {
+            println("GroupViewModel: Failed to parse ISO date '$isoString': ${e.message}")
+            // Fallback: Try parsing as timestamp
+            try {
+                val timestamp = isoString.toLongOrNull()
+                if (timestamp != null) {
+                    println("GroupViewModel: Parsed as timestamp: $timestamp")
+                    Date(timestamp)
+                } else {
+                    println("GroupViewModel: Not a valid timestamp, using current time")
+                    Date(System.currentTimeMillis())
+                }
+            } catch (e2: Exception) {
+                println("GroupViewModel: All parsing failed, using current time")
+                Date(System.currentTimeMillis())
+            }
+        }
+    }
+    
     private fun loadGroup() {
         viewModelScope.launch {
             try {
@@ -52,13 +79,22 @@ class GroupViewModel(
                     val group = response.data
                     println("GroupViewModel: Group data received: ${group.name}, id: ${group._id}")
                     
-                    val groupMembers = group.members.map { member ->
+                    val groupMembers = group.members.mapIndexed { index, member ->
+                        println("GroupViewModel: Processing member $index - Name: ${member.userId.name}, Join Date String: '${member.joinDate}'")
+                        
+                        val joinDate = parseIsoDate(member.joinDate)
+                        val now = Date()
+                        val durationMs = now.time - joinDate.time
+                        val days = (durationMs / (1000 * 60 * 60 * 24)).toInt()
+                        
+                        println("GroupViewModel: Member ${member.userId.name} - Join Date: $joinDate, Days ago: $days")
+                        
                         ViewModelGroupMember(
                             id = member.userId._id,
                             name = member.userId.name ?: "Unknown",
                             email = member.userId.email,
-                            joinDate = Date(member.joinDate.toLongOrNull() ?: System.currentTimeMillis()),
-                            moveInDate = member.moveInDate?.let { Date(it.toLongOrNull() ?: System.currentTimeMillis()) }
+                            joinDate = joinDate,
+                            moveInDate = member.moveInDate?.let { parseIsoDate(it) }
                         )
                     }
                     
@@ -75,8 +111,8 @@ class GroupViewModel(
                         groupCode = group.groupCode,
                         owner = owner,
                         members = groupMembers,
-                        createdAt = Date(group.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
-                        updatedAt = Date(group.updatedAt.toLongOrNull() ?: System.currentTimeMillis())
+                        createdAt = parseIsoDate(group.createdAt),
+                        updatedAt = parseIsoDate(group.updatedAt)
                     )
                     
                     println("GroupViewModel: Group loaded successfully")

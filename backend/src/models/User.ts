@@ -15,6 +15,7 @@ export interface User extends Document {
   groupName?: string; //chanage this later to group field
   bio?: string;
   profilePicture?: string;
+  averageRating?: number; // Average rating from other users
   livingPreferences?: {
     schedule?: 'Morning' | 'Night' | 'Flexible';
     drinking?: 'None' | 'Occasional' | 'Regular';
@@ -58,6 +59,12 @@ const userSchema = new Schema<User>({
   },
   profilePicture: {
     type: String, // URL to image
+  },
+  averageRating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5
   },
   livingPreferences: {
     schedule: {

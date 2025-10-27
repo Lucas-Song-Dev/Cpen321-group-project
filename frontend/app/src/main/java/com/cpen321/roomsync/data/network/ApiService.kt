@@ -82,4 +82,14 @@ interface ApiService {
     // User endpoints
     @DELETE("api/user/users/me")
     suspend fun deleteUser(): Response<ApiResponse<Any>>
+
+    // Rating endpoints
+    @POST("api/rating")
+    suspend fun submitRating(@Body request: SubmitRatingRequest): Response<RatingResponse>
+
+    @GET("api/rating/{userId}")
+    suspend fun getUserRatings(@Path("userId") userId: String): Response<UserRatingsResponse>
+
+    @GET("api/rating/user/{userId}/group/{groupId}")
+    suspend fun getUserRatingsInGroup(@Path("userId") userId: String, @Path("groupId") groupId: String): Response<UserRatingsResponse>
 }

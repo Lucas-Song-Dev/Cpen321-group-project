@@ -205,6 +205,14 @@ fun AppNavigation() {
                         onOpenPolls = {
                             navController.navigate(NavRoutes.POLLING)
                         },
+                        onLeaveGroup = {
+                            println("Navigation: Leave group called")
+                            groupViewModel.leaveGroup()
+                            // Navigate to group selection after leaving
+                            navController.navigate(NavRoutes.GROUP_SELECTION) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        },
                         onLogout = {
                             println("Navigation: Logout called")
                             authViewModel.logout()
@@ -241,6 +249,8 @@ fun AppNavigation() {
                         GroupDetailsScreen(
                             groupName = groupName,
                             viewModel = taskViewModel,
+                            groupId = groupId,
+                            currentUserId = currentUserId,
                             onBack = {
                                 navController.popBackStack()
                             }

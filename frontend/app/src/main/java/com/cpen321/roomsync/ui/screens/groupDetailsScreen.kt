@@ -19,16 +19,21 @@ import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cpen321.roomsync.ui.viewmodels.TaskViewModel
 import com.cpen321.roomsync.ui.viewmodels.ViewModelGroupMember
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun GroupDetailsScreen(
     groupName: String = "My Group",
     viewModel: TaskViewModel,  // Inject ViewModel from parent
+    groupId: String = "",
+    currentUserId: String = "",
     onBack: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -43,158 +48,177 @@ fun GroupDetailsScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Header
-            Text(
-                text = "Group Details",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-
-            // Group info card
-            Card(
-                modifier = Modifier.fillMaxWidth()
+            // Top bar with back button - THICKER PADDING
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.background,
+                shadowElevation = 4.dp
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 40.dp, bottom = 12.dp),
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    Text(
-                        text = "Group Name:",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = groupName,
-                        fontSize = 18.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "Members:",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "${uiState.groupMembers.size} members",
-                        fontSize = 18.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Group Code section
-                    Text(
-                        text = "Group Code:",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Group code display with copy functionality
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        ),
-                        shape = RoundedCornerShape(12.dp)
+                    IconButton(
+                        onClick = onBack
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Share this code with new members:",
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-                                
-                                Text(
-                                    text = groupUiState.group?.groupCode ?: "Loading...",
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            
-                            IconButton(
-                                onClick = {
-                                    groupUiState.group?.groupCode?.let { code ->
-                                        clipboardManager.setText(AnnotatedString(code))
-                                        showCopyToast = true
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Share,
-                                    contentDescription = "Copy group code",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Members list
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
                     Text(
-                        text = "Group Members",
-                        fontSize = 18.sp,
+                        text = "Group Details",
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        color = MaterialTheme.colorScheme.primary
                     )
-
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.groupMembers) { member ->
-                            MemberCard(
-                                member = member,
-                                onClick = { selectedMember = member }
-                            )
-                        }
-                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Back button
-            Button(
-                onClick = onBack,
-                modifier = Modifier.fillMaxWidth()
+            // Main content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                Text("Back to Home")
+                // Group info card
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Group Name:",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = groupName,
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Members:",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "${groupUiState.group?.members?.size ?: 0} members",
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Group Code section
+                        Text(
+                            text = "Group Code:",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Group code display with copy functionality
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Share this code with new members:",
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+                                    
+                                    Text(
+                                        text = groupUiState.group?.groupCode ?: "Loading...",
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                
+                                IconButton(
+                                    onClick = {
+                                        groupUiState.group?.groupCode?.let { code ->
+                                            clipboardManager.setText(AnnotatedString(code))
+                                            showCopyToast = true
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = "Copy group code",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Members list
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Group Members",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(groupUiState.group?.members ?: emptyList()) { member ->
+                                MemberCard(
+                                    member = member,
+                                    onClick = { selectedMember = member }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -202,6 +226,8 @@ fun GroupDetailsScreen(
         selectedMember?.let { member ->
             MemberDetailDialog(
                 member = member,
+                groupId = groupId,
+                currentUserId = currentUserId,
                 onDismiss = { selectedMember = null }
             )
         }
@@ -325,8 +351,81 @@ fun MemberCard(
 @Composable
 fun MemberDetailDialog(
     member: ViewModelGroupMember,
+    groupId: String = "",
+    currentUserId: String = "",
     onDismiss: () -> Unit
 ) {
+    var showRatingDialog by remember { mutableStateOf(false) }
+    val ratingViewModel: com.cpen321.roomsync.ui.viewmodels.RatingViewModel = viewModel()
+    val ratingUiState by ratingViewModel.uiState.collectAsState()
+    
+    // Get current user's join date to calculate roommate duration
+    val taskViewModel: com.cpen321.roomsync.ui.viewmodels.TaskViewModel = viewModel()
+    val taskUiState by taskViewModel.uiState.collectAsState()
+    val currentUserMember = taskUiState.groupMembers.find { it.id == currentUserId }
+    
+    // Calculate time since joining
+    val joinDateText = remember(member.joinDate) {
+        val joinDate = member.joinDate ?: return@remember "Unknown"
+        val now = java.util.Date()
+        val diffMs = now.time - joinDate.time
+        val days = (diffMs / (1000 * 60 * 60 * 24)).toInt()
+        
+        println("MemberDetailDialog: Join date calculation - Member: ${member.name}, Join Date: $joinDate, Days: $days")
+        
+        when {
+            days == 0 -> "Today"
+            days == 1 -> "Yesterday"
+            days < 7 -> "$days days ago"
+            days < 30 -> "${days / 7} weeks ago"
+            days < 365 -> "${days / 30} months ago"
+            else -> "${days / 365} years ago"
+        }
+    }
+    
+    // Calculate roommate duration (time both users have been in the group together)
+    val roommateDurationText = remember(member.joinDate, currentUserMember?.joinDate) {
+        if (member.id == currentUserId) {
+            return@remember null // Don't show for yourself
+        }
+        
+        val memberJoinDate = member.joinDate ?: return@remember "Unknown"
+        val currentUserJoinDate = currentUserMember?.joinDate ?: return@remember "Unknown"
+        
+        println("MemberDetailDialog: Roommate duration calculation")
+        println("  - Member ${member.name} joined: $memberJoinDate")
+        println("  - Current user joined: $currentUserJoinDate")
+        
+        // The roommate duration is from the later join date (when both were in the group)
+        val laterJoinDate = if (memberJoinDate.time > currentUserJoinDate.time) memberJoinDate else currentUserJoinDate
+        val now = java.util.Date()
+        val durationMs = now.time - laterJoinDate.time
+        val days = (durationMs / (1000 * 60 * 60 * 24)).toInt()
+        
+        println("  - Later join date: $laterJoinDate")
+        println("  - Days as roommates: $days")
+        
+        when {
+            days == 0 -> "Since today"
+            days == 1 -> "1 day"
+            days < 7 -> "$days days"
+            days < 30 -> "${days / 7} week${if (days / 7 != 1) "s" else ""}"
+            days < 365 -> "${days / 30} month${if (days / 30 != 1) "s" else ""}"
+            else -> "${days / 365} year${if (days / 365 != 1) "s" else ""}"
+        }
+    }
+    
+    // Load user ratings when dialog opens
+    LaunchedEffect(member.id) {
+        println("MemberDetailDialog: Loading ratings for member: ${member.id}")
+        ratingViewModel.getUserRatings(member.id)
+    }
+    
+    // Debug: Log rating state changes
+    LaunchedEffect(ratingUiState.totalRatings, ratingUiState.averageRating) {
+        println("MemberDetailDialog: Rating state changed - total: ${ratingUiState.totalRatings}, avg: ${ratingUiState.averageRating}, ratings count: ${ratingUiState.ratings.size}")
+    }
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -379,7 +478,8 @@ fun MemberDetailDialog(
         },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
                 // Bio section
                 Column {
@@ -423,10 +523,138 @@ fun MemberDetailDialog(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Recently joined",
+                        text = joinDateText,
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                }
+                
+                // Roommate duration section (only show for other users)
+                if (roommateDurationText != null) {
+                    Column {
+                        Text(
+                            text = "Roommates For",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = roommateDurationText,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                
+                // Rating section
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Rating",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (member.id != currentUserId) {
+                            TextButton(onClick = { showRatingDialog = true }) {
+                                Text("Rate User")
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Star rating display - show blank if no ratings
+                        val averageRating = ratingUiState.averageRating
+                        val filledStars = if (ratingUiState.totalRatings > 0) 
+                            averageRating.toInt() else 0
+                        
+                        repeat(5) { index ->
+                            Text(
+                                text = "★",
+                                fontSize = 20.sp,
+                                color = if (index < filledStars) 
+                                    MaterialTheme.colorScheme.primary 
+                                else 
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.padding(horizontal = 2.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (ratingUiState.totalRatings > 0) 
+                                "(${ratingUiState.totalRatings} rating${if (ratingUiState.totalRatings != 1) "s" else ""})" 
+                            else 
+                                "(No ratings yet)",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                // Reviews section
+                if (ratingUiState.ratings.isNotEmpty()) {
+                    Column {
+                        Text(
+                            text = "Reviews",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        ratingUiState.ratings.take(3).forEach { rating ->
+                            if (!rating.testimonial.isNullOrBlank()) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            repeat(5) { index ->
+                                                Text(
+                                                    text = "★",
+                                                    fontSize = 14.sp,
+                                                    color = if (index < rating.rating) 
+                                                        MaterialTheme.colorScheme.primary 
+                                                    else 
+                                                        MaterialTheme.colorScheme.surfaceVariant
+                                                )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = rating.testimonial,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (ratingUiState.ratings.size > 3) {
+                            Text(
+                                text = "+${ratingUiState.ratings.size - 3} more reviews",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
                 }
             }
         },
@@ -436,4 +664,125 @@ fun MemberDetailDialog(
             }
         }
     )
+    
+    // Rating Dialog
+    if (showRatingDialog) {
+        RatingDialog(
+            memberName = member.name,
+            onDismiss = { showRatingDialog = false },
+            onSubmit = { rating, testimonial ->
+                ratingViewModel.submitRating(
+                    ratedUserId = member.id,
+                    groupId = groupId,
+                    rating = rating,
+                    testimonial = testimonial
+                )
+                // Close both the rating dialog and profile dialog immediately
+                showRatingDialog = false
+                onDismiss()
+            }
+        )
+    }
+}
+
+@Composable
+fun RatingDialog(
+    memberName: String,
+    onDismiss: () -> Unit,
+    onSubmit: (rating: Int, testimonial: String) -> Unit
+) {
+    var selectedRating by remember { mutableStateOf(0) }
+    var testimonial by remember { mutableStateOf("") }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rate $memberName") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                // Star rating selector
+                Text(
+                    text = "Select Rating",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    repeat(5) { index ->
+                        IconButton(
+                            onClick = { selectedRating = index + 1 }
+                        ) {
+                            Text(
+                                text = "★",
+                                fontSize = 32.sp,
+                                color = if (index < selectedRating) 
+                                    MaterialTheme.colorScheme.primary 
+                                else 
+                                    MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        }
+                    }
+                }
+                
+                // Testimonial input
+                Text(
+                    text = "Review (Optional)",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                OutlinedTextField(
+                    value = testimonial,
+                    onValueChange = { 
+                        if (it.length <= 500) testimonial = it 
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    placeholder = { Text("Share your experience as a roommate...") },
+                    maxLines = 5,
+                    supportingText = {
+                        Text(
+                            text = "${testimonial.length}/500",
+                            fontSize = 12.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.End
+                        )
+                    }
+                )
+                
+                Text(
+                    text = "Note: Both you and the user must have been in the group for at least 30 days to submit a rating. Time spent together is automatically calculated.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (selectedRating > 0) {
+                        onSubmit(selectedRating, testimonial.trim())
+                    }
+                },
+                enabled = selectedRating > 0
+            ) {
+                Text("Submit Rating")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun rememberScrollState(): androidx.compose.foundation.ScrollState {
+    return remember { androidx.compose.foundation.ScrollState(0) }
 }
