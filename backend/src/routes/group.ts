@@ -205,6 +205,75 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   });
 }));
 
+// @desc    Remove a member from group (owner only)
+// @route   DELETE /api/group/member/:memberId
+// @access  Private
+router.delete('/member/:memberId', asyncHandler(async (req: Request, res: Response) => {
+  const { memberId } = req.params;
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] GROUP REMOVE MEMBER: Removing member ${memberId} from group`);
+
+  // Get user's current group
+  const group = await Group.findOne({ 
+    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+  });
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'User is not a member of any group'
+    });
+  }
+
+  // Check if user is the owner
+  if (group.owner.toString() !== req.user!._id.toString()) {
+    return res.status(403).json({
+      success: false,
+      message: 'Only the group owner can remove members'
+    });
+  }
+
+  // Check if trying to remove the owner
+  if (memberId === group.owner.toString()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Cannot remove the group owner'
+    });
+  }
+
+  // Remove member from group
+  const initialMemberCount = group.members.length;
+  group.members = group.members.filter(member => 
+    member.userId.toString() !== memberId
+  );
+
+  if (group.members.length === initialMemberCount) {
+    return res.status(404).json({
+      success: false,
+      message: 'Member not found in group'
+    });
+  }
+
+  await group.save();
+
+  // Update user's groupName to null
+  await UserModel.findByIdAndUpdate(memberId, { 
+    groupName: null 
+  });
+
+  // Populate group with updated member information
+  await group.populate('owner', 'name email bio averageRating');
+  await group.populate('members.userId', 'name email bio averageRating');
+
+  console.log(`[${timestamp}] GROUP REMOVE MEMBER: Successfully removed member ${memberId}`);
+  
+  res.status(200).json({
+    success: true,
+    message: 'Member removed successfully',
+    data: group
+  });
+}));
+
 // @desc    Leave current group
 // @route   DELETE /api/group/leave
 // @access  Private

@@ -34,7 +34,9 @@ data class TaskItem(
     val description: String?,
     val difficulty: Int,
     val recurrence: String,
+    val requiredPeople: Int,
     val createdBy: String,
+    val createdById: String,
     val status: TaskStatus,
     val createdAt: Date,
     val completedAt: Date?,
@@ -54,6 +56,8 @@ fun convertViewModelTask(viewModelTask: ViewModelTaskItem): TaskItem {
         difficulty = viewModelTask.difficulty,
         recurrence = viewModelTask.recurrence,
         createdBy = viewModelTask.createdBy,
+        createdById = viewModelTask.createdById,
+        requiredPeople = viewModelTask.requiredPeople,
         status = when (viewModelTask.status) {
             ViewModelTaskStatus.INCOMPLETE -> TaskStatus.INCOMPLETE
             ViewModelTaskStatus.IN_PROGRESS -> TaskStatus.IN_PROGRESS
@@ -81,8 +85,10 @@ fun TaskScreen(
 
     var showAddTaskDialog by remember { mutableStateOf(false) }
     var showAssignDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<TaskItem?>(null) }
     var currentTab by remember { mutableStateOf(0) }
+    var showWeeklyView by remember { mutableStateOf(true) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -125,16 +131,103 @@ fun TaskScreen(
                 }
             }
 
+            // Weekly View Toggle and Controls
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Weekly Tasks",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(
+                                onClick = { viewModel.changeWeek(-1) },
+                                enabled = !uiState.isLoading
+                            ) {
+                                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous Week")
+                            }
+                            
+                            Text(
+                                text = viewModel.getWeekDisplayText(),
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+                            
+                            IconButton(
+                                onClick = { viewModel.changeWeek(1) },
+                                enabled = !uiState.isLoading
+                            ) {
+                                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next Week")
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(
+                            onClick = { viewModel.assignWeeklyTasks() },
+                            enabled = !uiState.isAssigningWeekly && !uiState.isLoading,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            if (uiState.isAssigningWeekly) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Icon(Icons.Default.Settings, contentDescription = null)
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Auto-Assign Week")
+                        }
+                        
+                        IconButton(
+                            onClick = { showAddTaskDialog = true }
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Add Task")
+                        }
+                    }
+                }
+            }
+
             // Tab Row
             TabRow(selectedTabIndex = currentTab) {
                 Tab(
                     selected = currentTab == 0,
                     onClick = { currentTab = 0 },
-                    text = { Text("All Tasks") }
+                    text = { Text("Weekly View") }
                 )
                 Tab(
                     selected = currentTab == 1,
                     onClick = { currentTab = 1 },
+                    text = { Text("All Tasks") }
+                )
+                Tab(
+                    selected = currentTab == 2,
+                    onClick = { currentTab = 2 },
                     text = { Text("My Tasks") }
                 )
             }
@@ -147,7 +240,12 @@ fun TaskScreen(
                 contentPadding = PaddingValues(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val tasks = if (currentTab == 0) uiState.tasks.map { convertViewModelTask(it) } else uiState.myTasks.map { convertViewModelTask(it) }
+                val tasks = when (currentTab) {
+                    0 -> uiState.weeklyTasks.map { convertViewModelTask(it) }
+                    1 -> uiState.tasks.map { convertViewModelTask(it) }
+                    2 -> uiState.myTasks.map { convertViewModelTask(it) }
+                    else -> emptyList()
+                }
                 
                 if (tasks.isEmpty()) {
                     item {
@@ -166,11 +264,20 @@ fun TaskScreen(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = if (currentTab == 0) "No tasks yet" else "No tasks assigned to you",
+                                    text = when (currentTab) {
+                                        0 -> "No tasks assigned for this week"
+                                        1 -> "No tasks yet"
+                                        2 -> "No tasks assigned to you"
+                                        else -> "No tasks"
+                                    },
                                     fontSize = 16.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 if (currentTab == 0) {
+                                    Button(onClick = { viewModel.assignWeeklyTasks() }) {
+                                        Text("Auto-Assign Tasks")
+                                    }
+                                } else if (currentTab == 1) {
                                     Button(onClick = { showAddTaskDialog = true }) {
                                         Text("Create First Task")
                                     }
@@ -195,7 +302,10 @@ fun TaskScreen(
                                 selectedTask = task
                                 showAssignDialog = true 
                             },
-                            onDeleteClick = { viewModel.deleteTask(task.id) }
+                            onDeleteClick = {
+                                selectedTask = task
+                                showDeleteConfirmation = true
+                            }
                         )
                     }
                 }
@@ -206,8 +316,8 @@ fun TaskScreen(
         if (showAddTaskDialog) {
             AddTaskDialog(
                 onDismiss = { showAddTaskDialog = false },
-                onCreateTask = { name, description, difficulty, recurrence, assignedMembers ->
-                    viewModel.createTask(name, description, difficulty, recurrence, assignedMembers)
+                onCreateTask = { name, description, difficulty, recurrence, requiredPeople, assignedMembers ->
+                    viewModel.createTask(name, description, difficulty, recurrence, requiredPeople, assignedMembers)
                     showAddTaskDialog = false
                 },
                 groupMembers = uiState.groupMembers
@@ -226,6 +336,41 @@ fun TaskScreen(
                     viewModel.assignTask(selectedTask!!.id, userIds)
                     showAssignDialog = false
                     selectedTask = null
+                }
+            )
+        }
+
+        // Delete Task Confirmation Dialog
+        if (showDeleteConfirmation && selectedTask != null) {
+            AlertDialog(
+                onDismissRequest = { 
+                    showDeleteConfirmation = false
+                    selectedTask = null
+                },
+                title = { Text("Delete Task") },
+                text = { 
+                    Text("Are you sure you want to delete '${selectedTask!!.name}'? This action cannot be undone.")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.deleteTask(selectedTask!!.id)
+                            showDeleteConfirmation = false
+                            selectedTask = null
+                        }
+                    ) {
+                        Text("Delete", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteConfirmation = false
+                            selectedTask = null
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
                 }
             )
         }
@@ -299,7 +444,7 @@ fun TaskCard(
                                     Icon(Icons.Default.Add, contentDescription = null)
                                 }
                             )
-                            if (task.createdBy == currentUserId) {
+                            if (task.createdById == currentUserId) {
                                 DropdownMenuItem(
                                     text = { Text("Delete") },
                                     onClick = {
@@ -400,7 +545,7 @@ fun TaskCard(
             // Created info
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Created by ${task.createdBy} • ${task.recurrence}",
+                text = "Created by ${task.createdBy} • ${task.recurrence} • ${task.requiredPeople} people needed",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -437,13 +582,14 @@ fun TaskStatusChip(
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
-    onCreateTask: (String, String?, Int, String, List<String>) -> Unit,
+    onCreateTask: (String, String?, Int, String, Int, List<String>) -> Unit,
     groupMembers: List<ViewModelGroupMember>
 ) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var difficulty by remember { mutableStateOf(1) }
     var recurrence by remember { mutableStateOf("one-time") }
+    var requiredPeople by remember { mutableStateOf(1) }
     var selectedMembers by remember { mutableStateOf<List<String>>(emptyList()) }
 
     AlertDialog(
@@ -518,6 +664,38 @@ fun AddTaskDialog(
                     }
                 }
                 
+                // Required people selector
+                Text(
+                    text = "Required People: $requiredPeople",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    repeat(10) { index ->
+                        val peopleCount = index + 1
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (requiredPeople == peopleCount) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                )
+                                .clickable { requiredPeople = peopleCount },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = peopleCount.toString(),
+                                color = if (requiredPeople == peopleCount) Color.White else MaterialTheme.colorScheme.onSurface,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+                
                 // Member assignment
                 Text(
                     text = "Assign to members (optional):",
@@ -555,6 +733,7 @@ fun AddTaskDialog(
                             if (description.trim().isEmpty()) null else description.trim(),
                             difficulty,
                             recurrence,
+                            requiredPeople,
                             selectedMembers
                         )
                     }

@@ -40,9 +40,11 @@ fun GroupDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val groupViewModel: com.cpen321.roomsync.ui.viewmodels.GroupViewModel = viewModel()
     val groupUiState by groupViewModel.uiState.collectAsState()
-
+    
     var selectedMember by remember { mutableStateOf<ViewModelGroupMember?>(null) }
     var showCopyToast by remember { mutableStateOf(false) }
+    var memberToKick by remember { mutableStateOf<ViewModelGroupMember?>(null) }
+    var showKickConfirmation by remember { mutableStateOf(false) }
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -211,22 +213,21 @@ fun GroupDetailsScreen(
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Show owner first
-                            groupUiState.group?.owner?.let { owner ->
-                                item {
-                                    MemberCard(
-                                        member = owner.copy(isAdmin = true),
-                                        onClick = { selectedMember = owner }
-                                    )
-                                }
-                            }
-                            
-                            // Then show other members
+                            // Show all members (including owner) from the group data
                             groupUiState.group?.members?.let { members ->
                                 items(members) { member ->
+                                    val isOwner = member.id == groupUiState.group?.owner?.id
+                                    val isCurrentUserOwner = groupUiState.group?.owner?.id == currentUserId
                                     MemberCard(
-                                        member = member,
-                                        onClick = { selectedMember = member }
+                                        member = if (isOwner) member.copy(isAdmin = true) else member,
+                                        onClick = { selectedMember = member },
+                                        onRemove = if (!isOwner && isCurrentUserOwner) {
+                                            { 
+                                                memberToKick = member
+                                                showKickConfirmation = true
+                                            }
+                                        } else null,
+                                        showRemoveButton = !isOwner && isCurrentUserOwner
                                     )
                                 }
                             }
@@ -283,13 +284,52 @@ fun GroupDetailsScreen(
                 }
             }
         }
+
+        // Kick member confirmation dialog
+        if (showKickConfirmation && memberToKick != null) {
+            AlertDialog(
+                onDismissRequest = { 
+                    showKickConfirmation = false
+                    memberToKick = null
+                },
+                title = { Text("Kick Member") },
+                text = { 
+                    Text("Are you sure you want to kick ${memberToKick?.name} from the group? This action cannot be undone.")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            memberToKick?.let { member ->
+                                groupViewModel.removeMember(member.id)
+                            }
+                            showKickConfirmation = false
+                            memberToKick = null
+                        }
+                    ) {
+                        Text("Kick", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showKickConfirmation = false
+                            memberToKick = null
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
 }
 
 @Composable
 fun MemberCard(
     member: ViewModelGroupMember,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    onRemove: (() -> Unit)? = null,
+    showRemoveButton: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -366,6 +406,19 @@ fun MemberCard(
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+
+            // Kick member button (only for non-admin members, owner only)
+            if (showRemoveButton && !member.isAdmin && onRemove != null) {
+                IconButton(
+                    onClick = onRemove
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Kick member from group",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }

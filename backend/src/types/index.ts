@@ -51,6 +51,7 @@ export interface ITask extends Document {
   createdBy: Types.ObjectId;  // User ID
   difficulty: 1 | 2 | 3 | 4 | 5; // Weight of task
   recurrence: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'one-time';
+  requiredPeople: number; // Number of people needed to complete the task
   assignments: Array<{
     userId: Types.ObjectId; 
     weekStart: Date;
@@ -111,6 +112,7 @@ export interface CreateTaskRequest {
   description?: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
   recurrence: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'one-time';
+  requiredPeople: number;
 }
 
 export interface CreateRatingRequest {

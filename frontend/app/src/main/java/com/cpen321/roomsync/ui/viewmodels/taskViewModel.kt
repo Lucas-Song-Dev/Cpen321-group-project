@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.*
+import java.text.SimpleDateFormat
 
 data class TaskItem(
     val id: String,
@@ -16,7 +17,9 @@ data class TaskItem(
     val description: String?,
     val difficulty: Int,
     val recurrence: String,
+    val requiredPeople: Int,
     val createdBy: String,
+    val createdById: String,
     val status: TaskStatus,
     val createdAt: Date,
     val completedAt: Date?,
@@ -35,8 +38,28 @@ data class TaskUiState(
     val error: String? = null,
     val showAddTaskDialog: Boolean = false,
     val showAssignDialog: Boolean = false,
-    val selectedTask: TaskItem? = null
+    val selectedTask: TaskItem? = null,
+    val currentWeekStart: Date = Date(),
+    val weeklyTasks: List<TaskItem> = emptyList(),
+    val isAssigningWeekly: Boolean = false
 )
+
+// Helper function to get current week start (Monday)
+fun getCurrentWeekStart(): Date {
+    val calendar = Calendar.getInstance()
+    calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+    calendar.set(Calendar.HOUR_OF_DAY, 0)
+    calendar.set(Calendar.MINUTE, 0)
+    calendar.set(Calendar.SECOND, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
+    return calendar.time
+}
+
+// Helper function to format date for API
+fun formatDateForApi(date: Date): String {
+    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    return formatter.format(date)
+}
 
 data class ViewModelGroupMember(
     val id: String,
@@ -72,17 +95,22 @@ class TaskViewModel(
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
     
     init {
+        // Initialize current week start
+        _uiState.value = _uiState.value.copy(currentWeekStart = getCurrentWeekStart())
         loadTasks()
         loadMyTasks()
         loadGroupMembers()
+        loadWeeklyTasks()
     }
     
     private fun loadTasks() {
         viewModelScope.launch {
             try {
+                println("TaskViewModel: Loading all tasks...")
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 
                 val response = taskRepository.getTasks()
+                println("TaskViewModel: Get tasks response - success: ${response.success}, data count: ${response.data?.size ?: 0}")
                 if (response.success && response.data != null) {
                     val tasks = response.data.map { task ->
                         TaskItem(
@@ -91,7 +119,9 @@ class TaskViewModel(
                             description = task.description,
                             difficulty = task.difficulty,
                             recurrence = task.recurrence,
+                            requiredPeople = task.requiredPeople,
                             createdBy = task.createdBy.name ?: "Unknown",
+                            createdById = task.createdBy._id,
                             status = when (task.assignments.find { it.userId._id == currentUserId }?.status) {
                                 "incomplete" -> TaskStatus.INCOMPLETE
                                 "in-progress" -> TaskStatus.IN_PROGRESS
@@ -134,7 +164,9 @@ class TaskViewModel(
                             description = task.description,
                             difficulty = task.difficulty,
                             recurrence = task.recurrence,
+                            requiredPeople = task.requiredPeople,
                             createdBy = task.createdBy.name ?: "Unknown",
+                            createdById = task.createdBy._id,
                             status = when (task.assignments.find { it.userId._id == currentUserId }?.status) {
                                 "incomplete" -> TaskStatus.INCOMPLETE
                                 "in-progress" -> TaskStatus.IN_PROGRESS
@@ -160,20 +192,30 @@ class TaskViewModel(
         }
     }
     
-    fun createTask(name: String, description: String?, difficulty: Int, recurrence: String, assignedMemberIds: List<String> = emptyList()) {
+    fun createTask(name: String, description: String?, difficulty: Int, recurrence: String, requiredPeople: Int, assignedMemberIds: List<String> = emptyList()) {
         viewModelScope.launch {
             try {
-                val response = taskRepository.createTask(name, description, difficulty, recurrence, assignedMemberIds)
+                println("TaskViewModel: Creating task - name: $name, difficulty: $difficulty, recurrence: $recurrence, requiredPeople: $requiredPeople")
+                val response = taskRepository.createTask(name, description, difficulty, recurrence, requiredPeople, assignedMemberIds)
+                println("TaskViewModel: Create task response - success: ${response.success}, message: ${response.message}")
+                
                 if (response.success) {
-                    // Refresh tasks after successful creation
+                    println("TaskViewModel: Task created successfully, refreshing all task lists")
+                    // Small delay to ensure backend has processed the task
+                    kotlinx.coroutines.delay(500)
+                    // Refresh all task lists after successful creation
                     loadTasks()
                     loadMyTasks()
+                    loadWeeklyTasks()
                 } else {
+                    println("TaskViewModel: Task creation failed: ${response.message}")
                     _uiState.value = _uiState.value.copy(
                         error = response.message ?: "Failed to create task"
                     )
                 }
             } catch (e: Exception) {
+                println("TaskViewModel: Exception during task creation: ${e.message}")
+                e.printStackTrace()
                 _uiState.value = _uiState.value.copy(
                     error = "Failed to create task: ${e.message}"
                 )
@@ -312,23 +354,14 @@ class TaskViewModel(
                         )
                     }
                     
-                    // Add the owner if not already in members
-                    val ownerInMembers = groupMembers.any { it.id == group.owner._id }
-                    val allMembers = if (!ownerInMembers) {
-                        println("TaskViewModel: Owner not in members list, adding separately")
-                        val ownerMember = ViewModelGroupMember(
-                            id = group.owner._id,
-                            name = group.owner.name ?: "Unknown",
-                            email = group.owner.email,
-                            isAdmin = true,
-                            joinDate = Date(System.currentTimeMillis()), // Owner joined when group was created
-                            bio = group.owner.bio ?: "No bio available",
-                            profilePicture = null
-                        )
-                        listOf(ownerMember) + groupMembers
-                    } else {
-                        groupMembers
-                    }
+                     // Ensure owner is marked as admin in the members list
+                     val allMembers = groupMembers.map { member ->
+                         if (member.id == group.owner._id) {
+                             member.copy(isAdmin = true)
+                         } else {
+                             member
+                         }
+                     }
                     
                     println("TaskViewModel: Final member count: ${allMembers.size}")
                     _uiState.value = _uiState.value.copy(groupMembers = allMembers)
@@ -353,5 +386,97 @@ class TaskViewModel(
     fun refreshTasks() {
         loadTasks()
         loadMyTasks()
+        loadWeeklyTasks()
+    }
+    
+    private fun loadWeeklyTasks() {
+        viewModelScope.launch {
+            try {
+                val weekStart = formatDateForApi(_uiState.value.currentWeekStart)
+                val response = taskRepository.getTasksForWeek(weekStart)
+                if (response.success && response.data != null) {
+                    val tasks = response.data.map { task ->
+                        TaskItem(
+                            id = task._id,
+                            name = task.name,
+                            description = task.description,
+                            difficulty = task.difficulty,
+                            recurrence = task.recurrence,
+                            requiredPeople = task.requiredPeople,
+                            createdBy = task.createdBy.name ?: "Unknown",
+                            createdById = task.createdBy._id,
+                            status = when (task.assignments.find { it.userId._id == currentUserId }?.status) {
+                                "incomplete" -> TaskStatus.INCOMPLETE
+                                "in-progress" -> TaskStatus.IN_PROGRESS
+                                "completed" -> TaskStatus.COMPLETED
+                                else -> TaskStatus.INCOMPLETE
+                            },
+                            createdAt = Date(task.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
+                            completedAt = task.assignments.find { it.userId._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
+                            assignedTo = task.assignments.map { it.userId.name ?: "Unknown" }
+                        )
+                    }
+                    _uiState.value = _uiState.value.copy(weeklyTasks = tasks)
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = response.message ?: "Failed to load weekly tasks"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Failed to load weekly tasks: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    fun assignWeeklyTasks() {
+        viewModelScope.launch {
+            try {
+                println("TaskViewModel: Starting weekly task assignment...")
+                _uiState.value = _uiState.value.copy(isAssigningWeekly = true)
+                val response = taskRepository.assignWeeklyTasks()
+                println("TaskViewModel: Assign weekly tasks response - success: ${response.success}, message: ${response.message}")
+                
+                if (response.success) {
+                    println("TaskViewModel: Weekly assignment successful, refreshing all task lists")
+                    // Refresh all task lists after assignment
+                    loadTasks()
+                    loadMyTasks()
+                    loadWeeklyTasks()
+                } else {
+                    println("TaskViewModel: Weekly assignment failed: ${response.message}")
+                    _uiState.value = _uiState.value.copy(
+                        error = response.message ?: "Failed to assign weekly tasks"
+                    )
+                }
+            } catch (e: Exception) {
+                println("TaskViewModel: Exception during weekly assignment: ${e.message}")
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    error = "Failed to assign weekly tasks: ${e.message}"
+                )
+            } finally {
+                _uiState.value = _uiState.value.copy(isAssigningWeekly = false)
+            }
+        }
+    }
+    
+    fun changeWeek(weekOffset: Int) {
+        val calendar = Calendar.getInstance()
+        calendar.time = _uiState.value.currentWeekStart
+        calendar.add(Calendar.WEEK_OF_YEAR, weekOffset)
+        _uiState.value = _uiState.value.copy(currentWeekStart = calendar.time)
+        loadWeeklyTasks()
+    }
+    
+    fun getWeekDisplayText(): String {
+        val formatter = SimpleDateFormat("MMM dd", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        calendar.time = _uiState.value.currentWeekStart
+        val weekStart = formatter.format(calendar.time)
+        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        val weekEnd = formatter.format(calendar.time)
+        return "$weekStart - $weekEnd"
     }
 }

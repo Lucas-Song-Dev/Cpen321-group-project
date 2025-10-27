@@ -14,12 +14,12 @@ router.use(protect);
 // @route   POST /api/task
 // @access  Private
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
-  const { name, description, difficulty, recurrence, assignedUserIds } = req.body;
+  const { name, description, difficulty, recurrence, requiredPeople, assignedUserIds } = req.body;
 
-  if (!name || !difficulty || !recurrence) {
+  if (!name || !difficulty || !recurrence || !requiredPeople) {
     return res.status(400).json({
       success: false,
-      message: 'Task name, difficulty, and recurrence are required'
+      message: 'Task name, difficulty, recurrence, and required people are required'
     });
   }
 
@@ -27,6 +27,13 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     return res.status(400).json({
       success: false,
       message: 'Difficulty must be between 1 and 5'
+    });
+  }
+
+  if (requiredPeople < 1 || requiredPeople > 10) {
+    return res.status(400).json({
+      success: false,
+      message: 'Required people must be between 1 and 10'
     });
   }
 
@@ -50,10 +57,11 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     createdBy: req.user!._id,
     difficulty,
     recurrence,
+    requiredPeople,
     assignments: []
   });
 
-  // If assignedUserIds provided, assign task to users for current week
+  // Only assign task if specific users are provided
   if (assignedUserIds && assignedUserIds.length > 0) {
     const startOfWeek = new Date();
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
@@ -64,7 +72,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
       assignment.weekStart.getTime() !== startOfWeek.getTime()
     );
     
-    // Add new assignments
+    // Assign to specified users
     assignedUserIds.forEach((userId: string) => {
       task.assignments.push({
         userId: userId as any,
@@ -72,13 +80,13 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
         status: 'incomplete'
       });
     });
-    
-    await task.save();
   }
+  
+  await task.save();
 
   // Populate references
-  await task.populate('createdBy', 'fullname nickname');
-  await task.populate('assignments.userId', 'fullname nickname');
+  await task.populate('createdBy', 'name email');
+  await task.populate('assignments.userId', 'name email');
 
   res.status(201).json({
     success: true,
@@ -92,12 +100,17 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // @route   GET /api/task
 // @access  Private
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
+  console.log(`[${new Date().toISOString()}] GET /api/task - User:`, req.user?._id);
+  
   // Get user's current group
   const group = await Group.findOne({ 
     'members.userId': req.user!._id 
   });
 
+  console.log(`[${new Date().toISOString()}] GET /api/task - Group found:`, group ? group._id : 'null');
+
   if (!group) {
+    console.log(`[${new Date().toISOString()}] GET /api/task - User not in any group`);
     return res.status(404).json({
       success: false,
       message: 'User is not a member of any group'
@@ -106,15 +119,15 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 
   // Get tasks for the group
   const tasks = await Task.find({ groupId: group._id })
-    .populate('createdBy', 'fullname nickname')
-    .populate('assignments.userId', 'fullname nickname')
+    .populate('createdBy', 'name email')
+    .populate('assignments.userId', 'name email')
     .sort({ createdAt: -1 });
+
+  console.log(`[${new Date().toISOString()}] GET /api/task - Found ${tasks.length} tasks`);
 
   res.status(200).json({
     success: true,
-    data: {
-      tasks
-    }
+    data: tasks
   });
 }));
 
@@ -145,15 +158,13 @@ router.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
     'assignments.userId': req.user!._id,
     'assignments.weekStart': startOfWeek
   })
-    .populate('createdBy', 'fullname nickname')
-    .populate('assignments.userId', 'fullname nickname')
+    .populate('createdBy', 'name email')
+    .populate('assignments.userId', 'name email')
     .sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,
-    data: {
-      tasks
-    }
+    data: tasks
   });
 }));
 
@@ -213,8 +224,8 @@ router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
   await task.save();
 
   // Populate references
-  await task.populate('createdBy', 'fullname nickname');
-  await task.populate('assignments.userId', 'fullname nickname');
+  await task.populate('createdBy', 'name email');
+  await task.populate('assignments.userId', 'name email');
 
   res.status(200).json({
     success: true,
@@ -292,14 +303,143 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
   await task.save();
 
   // Populate references
-  await task.populate('createdBy', 'fullname nickname');
-  await task.populate('assignments.userId', 'fullname nickname');
+  await task.populate('createdBy', 'name email');
+  await task.populate('assignments.userId', 'name email');
 
   res.status(200).json({
     success: true,
     data: {
       task
     }
+  });
+}));
+
+// @desc    Algorithmically assign all tasks for current week
+// @route   POST /api/task/assign-weekly
+// @access  Private
+router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) => {
+  // Get user's current group
+  const group = await Group.findOne({ 
+    'members.userId': req.user!._id 
+  }).populate('members.userId', 'name email');
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'User is not a member of any group'
+    });
+  }
+
+  // Get current week start
+  const startOfWeek = new Date();
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  // Get all tasks for the group
+  const tasks = await Task.find({ groupId: group._id });
+  
+  if (tasks.length === 0) {
+    return res.status(200).json({
+      success: true,
+      message: 'No tasks to assign',
+      data: { assignedTasks: 0 }
+    });
+  }
+
+  // Get all group members (owner is already in members array)
+  const allMembers = group.members.map(member => ({ 
+    userId: member.userId, 
+    isOwner: member.userId.toString() === group.owner.toString() 
+  }));
+
+  let assignedTasksCount = 0;
+
+  // Algorithm: Assign tasks based on required people count
+  for (const task of tasks) {
+    // Skip if task is not recurring (but allow one-time tasks)
+    if (task.recurrence === 'one-time') {
+      // For one-time tasks, only assign if they haven't been assigned yet
+      if (task.assignments.length > 0) continue;
+    }
+
+    // Remove existing assignment for this week
+    task.assignments = task.assignments.filter((assignment: any) => 
+      assignment.weekStart.getTime() !== startOfWeek.getTime()
+    );
+
+    // Use the requiredPeople field to determine how many people to assign
+    const actualNumAssignees = Math.min(task.requiredPeople, allMembers.length);
+
+    // Shuffle members for fair distribution
+    const shuffledMembers = [...allMembers].sort(() => Math.random() - 0.5);
+    const selectedMembers = shuffledMembers.slice(0, actualNumAssignees);
+
+    console.log(`[${new Date().toISOString()}] Auto-assigning task "${task.name}" (required: ${task.requiredPeople}) to ${selectedMembers.length} members`);
+
+    // Assign task to selected members
+    selectedMembers.forEach(member => {
+      task.assignments.push({
+        userId: member.userId,
+        weekStart: startOfWeek,
+        status: 'incomplete'
+      });
+    });
+
+    await task.save();
+    assignedTasksCount++;
+  }
+
+  // Populate all tasks with user details
+  const populatedTasks = await Task.find({ groupId: group._id })
+    .populate('createdBy', 'name email')
+    .populate('assignments.userId', 'name email');
+
+  res.status(200).json({
+    success: true,
+    message: `Successfully assigned ${assignedTasksCount} tasks for the week`,
+    data: populatedTasks
+  });
+}));
+
+// @desc    Get tasks for a specific week
+// @route   GET /api/task/week/:weekStart
+// @access  Private
+router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) => {
+  const { weekStart } = req.params;
+  
+  // Parse week start date
+  const weekStartDate = new Date(weekStart);
+  if (isNaN(weekStartDate.getTime())) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid week start date'
+    });
+  }
+
+  // Get user's current group
+  const group = await Group.findOne({ 
+    'members.userId': req.user!._id 
+  });
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'User is not a member of any group'
+    });
+  }
+
+  // Get tasks for the group with assignments for the specified week
+  const tasks = await Task.find({ 
+    groupId: group._id,
+    'assignments.weekStart': weekStartDate
+  })
+    .populate('createdBy', 'name email')
+    .populate('assignments.userId', 'name email')
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    data: tasks
   });
 }));
 

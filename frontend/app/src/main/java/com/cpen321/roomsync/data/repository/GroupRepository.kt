@@ -88,4 +88,32 @@ class GroupRepository {
             ApiResponse(false, "Unexpected error: ${e.message}")
         }
     }
+
+    suspend fun removeMember(memberId: String): GroupResponse {
+        return try {
+            println("GroupRepository: Removing member with ID: $memberId")
+            val response = RetrofitInstance.api.removeMember(memberId)
+            println("GroupRepository: Remove member response code: ${response.code()}")
+            
+            if (response.isSuccessful) {
+                val body = response.body()
+                println("GroupRepository: Remove member response body: $body")
+                body ?: GroupResponse(false, "Empty response from server")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                println("GroupRepository: Remove member error response: $errorBody")
+                GroupResponse(false, errorBody ?: "Remove member failed: ${response.code()}")
+            }
+        } catch (e: IOException) {
+            println("GroupRepository: Remove member IOException: ${e.message}")
+            GroupResponse(false, "Network error: ${e.message}")
+        } catch (e: HttpException) {
+            println("GroupRepository: Remove member HttpException: ${e.code()} - ${e.message()}")
+            GroupResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
+        } catch (e: Exception) {
+            println("GroupRepository: Remove member Exception: ${e.message}")
+            e.printStackTrace()
+            GroupResponse(false, "Unexpected error: ${e.message}")
+        }
+    }
 }

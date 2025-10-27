@@ -79,41 +79,17 @@ class GroupViewModel(
                     val group = response.data
                     println("GroupViewModel: Group data received: ${group.name}, id: ${group._id}")
                     
-                    val groupMembers = group.members.mapIndexed { index, member ->
+                    // Log member details for debugging
+                    group.members.forEachIndexed { index, member ->
                         println("GroupViewModel: Processing member $index - Name: ${member.userId.name}, Join Date String: '${member.joinDate}'")
-                        
                         val joinDate = parseIsoDate(member.joinDate)
                         val now = Date()
                         val durationMs = now.time - joinDate.time
                         val days = (durationMs / (1000 * 60 * 60 * 24)).toInt()
-                        
                         println("GroupViewModel: Member ${member.userId.name} - Join Date: $joinDate, Days ago: $days")
-                        
-                        ViewModelGroupMember(
-                            id = member.userId._id,
-                            name = member.userId.name ?: "Unknown",
-                            email = member.userId.email,
-                            joinDate = joinDate,
-                            moveInDate = member.moveInDate?.let { parseIsoDate(it) }
-                        )
                     }
                     
-                    val owner = ViewModelGroupMember(
-                        id = group.owner._id,
-                        name = group.owner.name ?: "Unknown",
-                        email = group.owner.email,
-                        joinDate = Date(System.currentTimeMillis())
-                    )
-                    
-                    val uiGroup = Group(
-                        id = group._id,
-                        name = group.name,
-                        groupCode = group.groupCode,
-                        owner = owner,
-                        members = groupMembers,
-                        createdAt = parseIsoDate(group.createdAt),
-                        updatedAt = parseIsoDate(group.updatedAt)
-                    )
+                    val uiGroup = convertApiGroupToViewModel(group)
                     
                     println("GroupViewModel: Group loaded successfully")
                     _uiState.value = _uiState.value.copy(
@@ -220,7 +196,74 @@ class GroupViewModel(
         }
     }
     
+    private fun convertApiGroupToViewModel(apiGroup: ApiGroup): Group {
+        val groupMembers = apiGroup.members.map { member ->
+            val joinDate = parseIsoDate(member.joinDate)
+            
+            ViewModelGroupMember(
+                id = member.userId._id,
+                name = member.userId.name ?: "Unknown",
+                email = member.userId.email,
+                joinDate = joinDate,
+                moveInDate = member.moveInDate?.let { parseIsoDate(it) }
+            )
+        }
+        
+        val owner = ViewModelGroupMember(
+            id = apiGroup.owner._id,
+            name = apiGroup.owner.name ?: "Unknown",
+            email = apiGroup.owner.email,
+            joinDate = Date(System.currentTimeMillis())
+        )
+        
+        return Group(
+            id = apiGroup._id,
+            name = apiGroup.name,
+            groupCode = apiGroup.groupCode,
+            owner = owner,
+            members = groupMembers,
+            createdAt = parseIsoDate(apiGroup.createdAt),
+            updatedAt = parseIsoDate(apiGroup.updatedAt)
+        )
+    }
+    
     fun refreshGroup() {
         loadGroup()
+    }
+    
+    fun removeMember(memberId: String) {
+        viewModelScope.launch {
+            try {
+                println("GroupViewModel: Removing member with ID: $memberId")
+                _uiState.value = _uiState.value.copy(isLoading = true)
+                
+                val response = groupRepository.removeMember(memberId)
+                
+                if (response.success && response.data != null) {
+                    println("GroupViewModel: Member removed successfully")
+                    // Convert API group to ViewModel group
+                    val apiGroup = response.data
+                    val group = convertApiGroupToViewModel(apiGroup)
+                    _uiState.value = _uiState.value.copy(
+                        group = group,
+                        isLoading = false,
+                        error = null
+                    )
+                } else {
+                    println("GroupViewModel: Failed to remove member: ${response.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = response.message ?: "Failed to remove member"
+                    )
+                }
+            } catch (e: Exception) {
+                println("GroupViewModel: Exception during member removal: ${e.message}")
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Failed to remove member: ${e.message}"
+                )
+            }
+        }
     }
 }

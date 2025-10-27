@@ -48,6 +48,9 @@ interface ApiService {
     @DELETE("api/group/leave")
     suspend fun leaveGroup(): Response<ApiResponse<Any>>
 
+    @DELETE("api/group/member/{memberId}")
+    suspend fun removeMember(@Path("memberId") memberId: String): Response<GroupResponse>
+
     // Task endpoints
     @GET("api/task")
     suspend fun getTasks(): Response<TasksResponse>
@@ -66,6 +69,12 @@ interface ApiService {
 
     @DELETE("api/task/{id}")
     suspend fun deleteTask(@Path("id") taskId: String): Response<ApiResponse<Any>>
+
+    @POST("api/task/assign-weekly")
+    suspend fun assignWeeklyTasks(): Response<TasksResponse>
+
+    @GET("api/task/week/{weekStart}")
+    suspend fun getTasksForWeek(@Path("weekStart") weekStart: String): Response<TasksResponse>
 
     // Chat endpoints
     @GET("api/chat/{groupId}/messages")
