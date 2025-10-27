@@ -20,7 +20,7 @@ class SocketManager {
     private var userJoinedCallback: ((JSONObject) -> Unit)? = null
     private var userLeftCallback: ((JSONObject) -> Unit)? = null
     
-    fun connect(serverUrl: String = "http://10.0.2.2:4000", token: String? = null) {
+    fun connect(serverUrl: String = "http://10.0.2.2:3000", token: String? = null) {
         try {
             val options = IO.Options().apply {
                 forceNew = true

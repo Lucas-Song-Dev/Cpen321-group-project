@@ -250,49 +250,9 @@ class TaskViewModel(
     }
     
     fun loadGroupMembers() {
-        // TODO: Replace with actual API call to get group members
-        // Create proper group member profiles
-        val userBio = getUserBio() // Get actual user bio from storage
-        val groupMembers = listOf(
-            ViewModelGroupMember(
-                id = currentUserId,
-                name = "You",
-                email = "you@example.com",
-                isAdmin = true,
-                joinDate = Date(),
-                bio = userBio.ifEmpty { "Tap to add your bio and tell your roommates about yourself!" },
-                profilePicture = null
-            ),
-            ViewModelGroupMember(
-                id = "member-a",
-                name = "Alex Chen",
-                email = "alex.chen@example.com",
-                isAdmin = false,
-                joinDate = Date(),
-                bio = "Computer Science student, loves coding and gaming",
-                profilePicture = null
-            ),
-            ViewModelGroupMember(
-                id = "member-b", 
-                name = "Blake Johnson",
-                email = "blake.johnson@example.com",
-                isAdmin = false,
-                joinDate = Date(),
-                bio = "Engineering student, enjoys outdoor activities and photography",
-                profilePicture = null
-            ),
-            ViewModelGroupMember(
-                id = "member-c",
-                name = "Casey Smith", 
-                email = "casey.smith@example.com",
-                isAdmin = false,
-                joinDate = Date(),
-                bio = "Business student, passionate about music and art",
-                profilePicture = null
-            )
-        )
-        
-        _uiState.value = _uiState.value.copy(groupMembers = groupMembers)
+        // This method is now handled by GroupViewModel
+        // Group members will be loaded through the GroupViewModel and passed to this screen
+        // The actual group members are displayed in GroupDetailsScreen via GroupViewModel
     }
 
     fun clearError() {

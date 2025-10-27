@@ -90,7 +90,7 @@ fun GroupDetailsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "${uiState.groupMembers.size} members",
+                        text = "${(groupUiState.group?.members?.size ?: 0) + if (groupUiState.group?.owner != null) 1 else 0} members",
                         fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -177,11 +177,24 @@ fun GroupDetailsScreen(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(uiState.groupMembers) { member ->
-                            MemberCard(
-                                member = member,
-                                onClick = { selectedMember = member }
-                            )
+                        // Show owner first
+                        groupUiState.group?.owner?.let { owner ->
+                            item {
+                                MemberCard(
+                                    member = owner.copy(isAdmin = true),
+                                    onClick = { selectedMember = owner }
+                                )
+                            }
+                        }
+                        
+                        // Then show other members
+                        groupUiState.group?.members?.let { members ->
+                            items(members) { member ->
+                                MemberCard(
+                                    member = member,
+                                    onClick = { selectedMember = member }
+                                )
+                            }
                         }
                     }
                 }
