@@ -368,13 +368,20 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     );
 
     // Use the requiredPeople field to determine how many people to assign
-    const actualNumAssignees = Math.min(task.requiredPeople, allMembers.length);
+    // Fallback to 1 if requiredPeople is undefined (for existing tasks created before schema fix)
+    const requiredPeople = task.requiredPeople || 1;
+    const actualNumAssignees = Math.min(requiredPeople, allMembers.length);
 
     // Shuffle members for fair distribution
     const shuffledMembers = [...allMembers].sort(() => Math.random() - 0.5);
     const selectedMembers = shuffledMembers.slice(0, actualNumAssignees);
 
-    console.log(`[${new Date().toISOString()}] Auto-assigning task "${task.name}" (required: ${task.requiredPeople}) to ${selectedMembers.length} members`);
+    console.log(`[${new Date().toISOString()}] Auto-assigning task "${task.name}" (required: ${requiredPeople}) to ${selectedMembers.length} members`);
+
+    // Ensure requiredPeople is set (fallback for existing tasks)
+    if (!task.requiredPeople) {
+      task.requiredPeople = 1;
+    }
 
     // Assign task to selected members
     selectedMembers.forEach(member => {
