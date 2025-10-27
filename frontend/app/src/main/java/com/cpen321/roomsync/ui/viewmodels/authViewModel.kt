@@ -73,53 +73,53 @@ class AuthViewModel(
         }
     }
 
-    // Bypass authentication for testing
-    fun bypassAuth() {
-        viewModelScope.launch {
-            val response = AuthResponse(
-                success = true,
-                message = "Bypass authentication successful",
-                user = User(
-                    _id = "test-user-id",
-                    email = "test@example.com",
-                    name = "Test User",
-                    dob = null,
-                    gender = null,
-                    profileComplete = false,
-                    bio = null,
-                    profilePicture = null,
-                    livingPreferences = null,
-                    groupName = "Test Group"
-                ),
-                token = "bypass-token"
-            )
-            RetrofitInstance.setAuthToken("bypass-token")
-            _authState.value = response
-        }
-    }
-
-    // Bypass authentication for second test user
-    fun bypassAuthUser2() {
-        viewModelScope.launch {
-            val response = AuthResponse(
-                success = true,
-                message = "Bypass authentication successful (User 2)",
-                user = User(
-                    _id = "test2-user-id",
-                    email = "test2@example.com",
-                    name = "Test User 2",
-                    dob = null,
-                    gender = null,
-                    profileComplete = false,
-                    bio = null,
-                    profilePicture = null,
-                    livingPreferences = null,
-                    groupName = ""
-                ),
-                token = "bypass-token-2"
-            )
-            RetrofitInstance.setAuthToken("bypass-token-2")
-            _authState.value = response
-        }
-    }
+//    // Bypass authentication for testing
+//    fun bypassAuth() {
+//        viewModelScope.launch {
+//            val response = AuthResponse(
+//                success = true,
+//                message = "Bypass authentication successful",
+//                user = User(
+//                    _id = "test-user-id",
+//                    email = "test@example.com",
+//                    name = "Test User",
+//                    dob = null,
+//                    gender = null,
+//                    profileComplete = false,
+//                    bio = null,
+//                    profilePicture = null,
+//                    livingPreferences = null,
+//                    groupName = "Test Group"
+//                ),
+//                token = "bypass-token"
+//            )
+//            RetrofitInstance.setAuthToken("bypass-token")
+//            _authState.value = response
+//        }
+//    }
+//
+//    // Bypass authentication for second test user
+//    fun bypassAuthUser2() {
+//        viewModelScope.launch {
+//            val response = AuthResponse(
+//                success = true,
+//                message = "Bypass authentication successful (User 2)",
+//                user = User(
+//                    _id = "test2-user-id",
+//                    email = "test2@example.com",
+//                    name = "Test User 2",
+//                    dob = null,
+//                    gender = null,
+//                    profileComplete = false,
+//                    bio = null,
+//                    profilePicture = null,
+//                    livingPreferences = null,
+//                    groupName = ""
+//                ),
+//                token = "bypass-token-2"
+//            )
+//            RetrofitInstance.setAuthToken("bypass-token-2")
+//            _authState.value = response
+//        }
+//    }
 }
