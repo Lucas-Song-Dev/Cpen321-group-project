@@ -14,7 +14,7 @@ router.use(protect);
 // @route   POST /api/task
 // @access  Private
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
-  const { name, description, difficulty, recurrence, requiredPeople, assignedUserIds } = req.body;
+  const { name, description, difficulty, recurrence, requiredPeople, deadline, assignedUserIds } = req.body;
 
   if (!name || !difficulty || !recurrence || !requiredPeople) {
     return res.status(400).json({
@@ -34,6 +34,21 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     return res.status(400).json({
       success: false,
       message: 'Required people must be between 1 and 10'
+    });
+  }
+
+  // Validate deadline for one-time tasks
+  if (recurrence === 'one-time' && !deadline) {
+    return res.status(400).json({
+      success: false,
+      message: 'Deadline is required for one-time tasks'
+    });
+  }
+
+  if (deadline && new Date(deadline) <= new Date()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Deadline must be in the future'
     });
   }
 
@@ -58,6 +73,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     difficulty,
     recurrence,
     requiredPeople,
+    deadline: deadline ? new Date(deadline) : undefined,
     assignments: []
   });
 
@@ -362,10 +378,16 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
       if (task.assignments.length > 0) continue;
     }
 
-    // Remove existing assignment for this week
-    task.assignments = task.assignments.filter((assignment: any) => 
-      assignment.weekStart.getTime() !== startOfWeek.getTime()
+    // Check if task already has assignments for this week
+    const hasAssignmentForThisWeek = task.assignments.some((assignment: any) => 
+      assignment.weekStart.getTime() === startOfWeek.getTime()
     );
+    
+    // Skip if already assigned for this week
+    if (hasAssignmentForThisWeek) {
+      console.log(`[${new Date().toISOString()}] Skipping task "${task.name}" - already assigned for this week`);
+      continue;
+    }
 
     // Use the requiredPeople field to determine how many people to assign
     // Fallback to 1 if requiredPeople is undefined (for existing tasks created before schema fix)
@@ -491,6 +513,71 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: 'Task deleted successfully'
+  });
+}));
+
+// @desc    Get tasks for a specific date
+// @route   GET /api/task/date/:date
+// @access  Private
+router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
+  const { date } = req.params;
+  const targetDate = new Date(date);
+  
+  if (isNaN(targetDate.getTime())) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid date format'
+    });
+  }
+
+  // Get user's current group
+  const group = await Group.findOne({ 
+    'members.userId': req.user!._id 
+  });
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'User is not a member of any group'
+    });
+  }
+
+  // Get start and end of the target date
+  const startOfDay = new Date(targetDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  
+  const endOfDay = new Date(targetDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  // Find tasks that should appear on this date
+  const tasks = await Task.find({
+    groupId: group._id,
+    $or: [
+      // One-time tasks with deadline on this date
+      {
+        recurrence: 'one-time',
+        deadline: {
+          $gte: startOfDay,
+          $lte: endOfDay
+        }
+      },
+      // Recurring tasks that have assignments for this week
+      {
+        recurrence: { $ne: 'one-time' },
+        'assignments.weekStart': {
+          $gte: new Date(startOfDay.getTime() - startOfDay.getDay() * 24 * 60 * 60 * 1000),
+          $lt: new Date(startOfDay.getTime() + (7 - startOfDay.getDay()) * 24 * 60 * 60 * 1000)
+        }
+      }
+    ]
+  })
+  .populate('createdBy', 'name email')
+  .populate('assignments.userId', 'name email')
+  .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    data: tasks
   });
 }));
 

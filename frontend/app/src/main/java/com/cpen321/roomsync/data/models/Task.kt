@@ -9,6 +9,7 @@ data class Task(
     val difficulty: Int,
     val recurrence: String,
     val requiredPeople: Int,
+    val deadline: String? = null,
     val assignments: List<TaskAssignment>,
     val createdAt: String,
     val updatedAt: String
@@ -27,6 +28,7 @@ data class CreateTaskRequest(
     val difficulty: Int,
     val recurrence: String,
     val requiredPeople: Int,
+    val deadline: String? = null,
     val assignedUserIds: List<String>? = null
 )
 
