@@ -17,11 +17,23 @@ import retrofit2.http.DELETE
 
 
 interface ApiService {
+    //Authentication
     @POST("api/auth/login")
     suspend fun login(@Body request: AuthRequest): Response<AuthResponse>
 
     @POST("api/auth/signup")
     suspend fun signup(@Body request: AuthRequest): Response<AuthResponse>
+
+    //Profile
+    @PUT("api/users/profile")
+    suspend fun updateProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
+
+    @PUT("api/users/optionalProfile")
+    suspend fun updateOptionalProfile(@Body request: ProfileUpdateRequest): Response<ProfileResponse>
+
+    @GET("api/users/profile")
+    suspend fun getProfile(@Query("email") email: String): Response<ProfileResponse>
+
 
     // Group endpoints
     @POST("api/group")
@@ -70,14 +82,6 @@ interface ApiService {
 
     @DELETE("api/chat/{groupId}/message/{messageId}")
     suspend fun deleteMessage(@Path("groupId") groupId: String, @Path("messageId") messageId: String): Response<ApiResponse<Any>>
-    @PUT("api/users/profile")
-    suspend fun updateProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
-
-    @PUT("api/users/optionalProfile")
-    suspend fun updateOptionalProfile(@Body request: ProfileUpdateRequest): Response<ProfileResponse>
-
-    @GET("api/users/profile")
-    suspend fun getProfile(@Query("email") email: String): Response<ProfileResponse>
 
     // User endpoints
     @DELETE("api/user/users/me")

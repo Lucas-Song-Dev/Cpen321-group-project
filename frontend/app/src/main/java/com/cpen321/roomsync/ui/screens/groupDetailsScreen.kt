@@ -207,10 +207,22 @@ fun GroupDetailsScreen(
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(groupUiState.group?.members ?: emptyList()) { member ->
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Show owner first
+                        groupUiState.group?.owner?.let { owner ->
+                            item {
+                                MemberCard(
+                                    member = owner.copy(isAdmin = true),
+                                    onClick = { selectedMember = owner }
+                                )
+                            }
+                        }
+                        
+                        // Then show other members
+                        groupUiState.group?.members?.let { members ->
+                            items(members) { member ->
                                 MemberCard(
                                     member = member,
                                     onClick = { selectedMember = member }
@@ -219,6 +231,16 @@ fun GroupDetailsScreen(
                         }
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Back button
+            Button(
+                onClick = onBack,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Back to Home")
             }
         }
 
