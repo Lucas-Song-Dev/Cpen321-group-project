@@ -48,11 +48,12 @@ class TaskRepository {
         description: String?,
         difficulty: Int,
         recurrence: String,
+        requiredPeople: Int,
         assignedUserIds: List<String>? = null
     ): TaskResponse {
         return try {
             val response = RetrofitInstance.api.createTask(
-                CreateTaskRequest(name, description, difficulty, recurrence, assignedUserIds)
+                CreateTaskRequest(name, description, difficulty, recurrence, requiredPeople, assignedUserIds)
             )
             if (response.isSuccessful) {
                 response.body() ?: TaskResponse(false, "Empty response from server")
@@ -120,6 +121,42 @@ class TaskRepository {
             ApiResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
         } catch (e: Exception) {
             ApiResponse(false, "Unexpected error: ${e.message}")
+        }
+    }
+
+    suspend fun assignWeeklyTasks(): TasksResponse {
+        return try {
+            val response = RetrofitInstance.api.assignWeeklyTasks()
+            if (response.isSuccessful) {
+                response.body() ?: TasksResponse(false, "Empty response from server")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                TasksResponse(false, errorBody ?: "Assign weekly tasks failed: ${response.code()}")
+            }
+        } catch (e: IOException) {
+            TasksResponse(false, "Network error: ${e.message}")
+        } catch (e: HttpException) {
+            TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
+        } catch (e: Exception) {
+            TasksResponse(false, "Unexpected error: ${e.message}")
+        }
+    }
+
+    suspend fun getTasksForWeek(weekStart: String): TasksResponse {
+        return try {
+            val response = RetrofitInstance.api.getTasksForWeek(weekStart)
+            if (response.isSuccessful) {
+                response.body() ?: TasksResponse(false, "Empty response from server")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                TasksResponse(false, errorBody ?: "Get tasks for week failed: ${response.code()}")
+            }
+        } catch (e: IOException) {
+            TasksResponse(false, "Network error: ${e.message}")
+        } catch (e: HttpException) {
+            TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
+        } catch (e: Exception) {
+            TasksResponse(false, "Unexpected error: ${e.message}")
         }
     }
 }

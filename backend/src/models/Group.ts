@@ -42,12 +42,12 @@ const GroupSchema = new Schema<IGroup>({
 
 // Virtual for member count
 GroupSchema.virtual('memberCount').get(function() {
-  return this.members.length;
+  return this.members?.length || 0;
 });
 
 // Virtual to check if group is full (max 8 members)
 GroupSchema.virtual('isFull').get(function() {
-  return this.members.length >= 8;
+  return (this.members?.length || 0) >= 8;
 });
 
 //I DON'T THINK WE NEED THIS- it creates an warning when: npm run dev

@@ -51,6 +51,7 @@ export interface ITask extends Document {
   createdBy: Types.ObjectId;  // User ID
   difficulty: 1 | 2 | 3 | 4 | 5; // Weight of task
   recurrence: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'one-time';
+  requiredPeople: number; // Number of people needed to complete the task
   assignments: Array<{
     userId: Types.ObjectId; 
     weekStart: Date;
@@ -87,21 +88,9 @@ export interface IRating extends Document {
   ratedUserId: Types.ObjectId; // User being rated
   raterUserId: Types.ObjectId; // User giving the rating
   groupId: Types.ObjectId;
-  objectiveRating: {
-    overallScore: number; //we need to calculate this using ratings below
-    taskCompletionRate: number; // 0-100%
-    punctualityScore: number; // 1-5
-    cleanlinessScore: number; // 1-5
-  };
-  subjectiveRating: {
-    overallScore: number; // 1-5
-    testimonial?: string;
-  };
-  cohabitationPeriod: {
-    startDate: Date;
-    endDate?: Date;
-    durationInDays: number;
-  };
+  rating: number; // 1-5 star rating
+  testimonial?: string; // Optional text review (max 500 chars)
+  timeSpentMinutes: number; // Time spent together in minutes (auto-calculated from join dates)
   createdAt: Date;
 }
 
@@ -123,6 +112,7 @@ export interface CreateTaskRequest {
   description?: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
   recurrence: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'one-time';
+  requiredPeople: number;
 }
 
 export interface CreateRatingRequest {

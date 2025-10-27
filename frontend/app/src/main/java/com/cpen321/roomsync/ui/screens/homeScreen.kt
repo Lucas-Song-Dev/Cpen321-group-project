@@ -20,11 +20,13 @@ fun HomeScreen(
     onOpenChat: () -> Unit = {},
     onOpenTasks: () -> Unit = {},
     onOpenPolls: () -> Unit = {},
+    onLeaveGroup: () -> Unit = {},
     onLogout: () -> Unit = {},
     onDeleteAccount: () -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLeaveGroupDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -33,7 +35,7 @@ fun HomeScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Top bar with hamburger menu
+            // Top bar with hamburger menu - INCREASED PADDING
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.background,
@@ -42,8 +44,8 @@ fun HomeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(start = 16.dp, end = 16.dp, top = 40.dp, bottom = 12.dp),
+                    verticalAlignment = Alignment.Bottom
                 ) {
                     IconButton(
                         onClick = { showMenu = true }
@@ -251,6 +253,18 @@ fun HomeScreen(
             DropdownMenuItem(
                 text = { 
                     Text(
+                        "Leave Group",
+                        color = MaterialTheme.colorScheme.error
+                    ) 
+                },
+                onClick = {
+                    showLeaveGroupDialog = true
+                    showMenu = false
+                }
+            )
+            DropdownMenuItem(
+                text = { 
+                    Text(
                         "Delete Account",
                         color = MaterialTheme.colorScheme.error
                     ) 
@@ -270,6 +284,33 @@ fun HomeScreen(
                 onClick = {
                     onLogout()
                     showMenu = false
+                }
+            )
+        }
+        
+        // Leave group confirmation dialog
+        if (showLeaveGroupDialog) {
+            AlertDialog(
+                onDismissRequest = { showLeaveGroupDialog = false },
+                title = { Text("Leave Group") },
+                text = { Text("Are you sure you want to leave this group? You can join another group later.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showLeaveGroupDialog = false
+                            onLeaveGroup()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Leave")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showLeaveGroupDialog = false }) {
+                        Text("Cancel")
+                    }
                 }
             )
         }

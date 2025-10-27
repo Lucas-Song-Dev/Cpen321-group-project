@@ -501,27 +501,35 @@ fun ChatScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Top App Bar
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = groupName,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "4 members online",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
+            // Top App Bar with extra padding
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    TopAppBar(
+                        title = {
+                            Column {
+                                Text(
+                                    text = groupName,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "4 members online",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            }
+                        },
                 actions = {
                     IconButton(onClick = { showPollDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Create Poll")
@@ -534,6 +542,8 @@ fun ChatScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
+                }
+            }
 
             // Messages List
             println("ChatScreen: Current UI state: $uiState")

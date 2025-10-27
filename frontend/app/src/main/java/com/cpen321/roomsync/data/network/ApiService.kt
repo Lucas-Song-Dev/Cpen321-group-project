@@ -17,11 +17,23 @@ import retrofit2.http.DELETE
 
 
 interface ApiService {
+    //Authentication
     @POST("api/auth/login")
     suspend fun login(@Body request: AuthRequest): Response<AuthResponse>
 
     @POST("api/auth/signup")
     suspend fun signup(@Body request: AuthRequest): Response<AuthResponse>
+
+    //Profile
+    @PUT("api/users/profile")
+    suspend fun updateProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
+
+    @PUT("api/users/optionalProfile")
+    suspend fun updateOptionalProfile(@Body request: ProfileUpdateRequest): Response<ProfileResponse>
+
+    @GET("api/users/profile")
+    suspend fun getProfile(@Query("email") email: String): Response<ProfileResponse>
+
 
     // Group endpoints
     @POST("api/group")
@@ -35,6 +47,9 @@ interface ApiService {
 
     @DELETE("api/group/leave")
     suspend fun leaveGroup(): Response<ApiResponse<Any>>
+
+    @DELETE("api/group/member/{memberId}")
+    suspend fun removeMember(@Path("memberId") memberId: String): Response<GroupResponse>
 
     // Task endpoints
     @GET("api/task")
@@ -55,6 +70,12 @@ interface ApiService {
     @DELETE("api/task/{id}")
     suspend fun deleteTask(@Path("id") taskId: String): Response<ApiResponse<Any>>
 
+    @POST("api/task/assign-weekly")
+    suspend fun assignWeeklyTasks(): Response<TasksResponse>
+
+    @GET("api/task/week/{weekStart}")
+    suspend fun getTasksForWeek(@Path("weekStart") weekStart: String): Response<TasksResponse>
+
     // Chat endpoints
     @GET("api/chat/{groupId}/messages")
     suspend fun getMessages(@Path("groupId") groupId: String): Response<MessagesResponse>
@@ -70,16 +91,18 @@ interface ApiService {
 
     @DELETE("api/chat/{groupId}/message/{messageId}")
     suspend fun deleteMessage(@Path("groupId") groupId: String, @Path("messageId") messageId: String): Response<ApiResponse<Any>>
-    @PUT("api/users/profile")
-    suspend fun updateProfile(@Body profileSetRequest: ProfileSetRequest): Response<ProfileResponse>
-
-    @PUT("api/users/optionalProfile")
-    suspend fun updateOptionalProfile(@Body request: ProfileUpdateRequest): Response<ProfileResponse>
-
-    @GET("api/users/profile")
-    suspend fun getProfile(@Query("email") email: String): Response<ProfileResponse>
 
     // User endpoints
     @DELETE("api/user/users/me")
     suspend fun deleteUser(): Response<ApiResponse<Any>>
+
+    // Rating endpoints
+    @POST("api/rating")
+    suspend fun submitRating(@Body request: SubmitRatingRequest): Response<RatingResponse>
+
+    @GET("api/rating/{userId}")
+    suspend fun getUserRatings(@Path("userId") userId: String): Response<UserRatingsResponse>
+
+    @GET("api/rating/user/{userId}/group/{groupId}")
+    suspend fun getUserRatingsInGroup(@Path("userId") userId: String, @Path("groupId") groupId: String): Response<UserRatingsResponse>
 }

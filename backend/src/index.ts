@@ -10,6 +10,7 @@ import { authenticate } from "./middleware/auth";
 import groupRouter from "./routes/group";
 import taskRouter from "./routes/task";
 import chatRouter from "./routes/chat";
+import ratingRouter from "./routes/rating";
 import { SocketHandler } from "./socket/socketHandler";
 
 
@@ -57,6 +58,7 @@ app.use("/api/user", authenticate, userRouter);  //protected with auth middlewar
 app.use("/api/group", authenticate, groupRouter);  //protected with auth middleware
 app.use("/api/task", authenticate, taskRouter);  //protected with auth middleware
 app.use("/api/chat", authenticate, chatRouter);  //protected with auth middleware
+app.use("/api/rating", ratingRouter);  //uses its own auth middleware
 app.use("/api", userRouter);  //protected with auth middleware
 
 console.log('Attempting to connect to MongoDB with URI:', config.MONGODB_URI);
