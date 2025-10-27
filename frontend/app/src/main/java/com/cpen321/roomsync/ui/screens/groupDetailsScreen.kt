@@ -27,6 +27,7 @@ import com.cpen321.roomsync.ui.viewmodels.TaskViewModel
 import com.cpen321.roomsync.ui.viewmodels.ViewModelGroupMember
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 
 @Composable
 fun GroupDetailsScreen(
@@ -207,40 +208,41 @@ fun GroupDetailsScreen(
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
 
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Show owner first
-                        groupUiState.group?.owner?.let { owner ->
-                            item {
-                                MemberCard(
-                                    member = owner.copy(isAdmin = true),
-                                    onClick = { selectedMember = owner }
-                                )
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Show owner first
+                            groupUiState.group?.owner?.let { owner ->
+                                item {
+                                    MemberCard(
+                                        member = owner.copy(isAdmin = true),
+                                        onClick = { selectedMember = owner }
+                                    )
+                                }
                             }
-                        }
-                        
-                        // Then show other members
-                        groupUiState.group?.members?.let { members ->
-                            items(members) { member ->
-                                MemberCard(
-                                    member = member,
-                                    onClick = { selectedMember = member }
-                                )
+                            
+                            // Then show other members
+                            groupUiState.group?.members?.let { members ->
+                                items(members) { member ->
+                                    MemberCard(
+                                        member = member,
+                                        onClick = { selectedMember = member }
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // Back button
-            Button(
-                onClick = onBack,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Back to Home")
+                // Back button
+                Button(
+                    onClick = onBack,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Back to Home")
+                }
             }
         }
 
@@ -802,9 +804,4 @@ fun RatingDialog(
             }
         }
     )
-}
-
-@Composable
-fun rememberScrollState(): androidx.compose.foundation.ScrollState {
-    return remember { androidx.compose.foundation.ScrollState(0) }
 }
