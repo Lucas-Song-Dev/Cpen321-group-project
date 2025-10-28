@@ -603,35 +603,10 @@ Frameworks and libraries are software packages that provide reusable functionali
 
 The following sequence diagrams illustrate how the components and interfaces defined in the high-level design interact to realize the five most critical use cases of the RoomSync application.
 
-1. [**Use Case 1: Login (User Authentication)**](#uc1)
-```mermaid
-sequenceDiagram
-    actor User
-    participant F as :Frontend
-    participant G as :GoogleAuth
-    participant B as :Backend
-    participant A as :AuthService
-    participant D as :UserDB
 
-    User->>F: Click "Login" button
-    F->>G: Request OAuth authentication
-    G->>User: Display Google account selection
-    User->>G: Select account and authorize
-    G->>F: Return ID token
-    F->>B: POST /api/auth/login(token)
-    B->>A: verifyGoogleToken(token)
-    A->>G: Verify token with Google
-    G->>A: Return email and user info
-    A->>B: Return verified credentials
-    B->>D: SELECT * FROM users WHERE email = {email}
-    D->>B: Return user document
-    B->>A: login(email)
-    A->>A: Generate JWT token
-    A->>B: Return user data + JWT
-    B->>F: Return AuthResponse (success, user, token)
-    F->>F: Store JWT in secure storage
-    F->>User: Navigate to home screen
-```
+1. [**Use Case 1: Login (User Authentication)**](#uc1)
+
+<img width="1285" height="905" alt="image" src="https://github.com/user-attachments/assets/7eca3408-7890-4715-9399-7fdd0fbdc6ee" />
 
 2. [**Use Case 9: Create Group**](#uc9)
 ```mermaid
