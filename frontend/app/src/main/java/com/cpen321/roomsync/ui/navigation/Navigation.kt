@@ -185,9 +185,19 @@ fun AppNavigation() {
                     
                     // Monitor auth state for deletion success (when auth becomes null)
                     LaunchedEffect(authState) {
-                        // If auth state becomes null and we're not in auth screen, go to auth
                         if (authState == null) {
-                            println("Navigation: Auth state is null, navigating to AUTH screen")
+                            println("Navigation: Auth cleared -> navigating to AUTH")
+                            navController.navigate(NavRoutes.AUTH) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    }
+                    LaunchedEffect(groupUiState.group) {
+                        if (!groupUiState.isLoading && groupUiState.group == null) {
+                            println("Navigation: Group is null -> navigating to GROUP_SELECTION")
+                            navController.navigate(NavRoutes.GROUP_SELECTION) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     }
                     
@@ -208,10 +218,6 @@ fun AppNavigation() {
                         onLeaveGroup = {
                             println("Navigation: Leave group called")
                             groupViewModel.leaveGroup()
-                            // Navigate to group selection after leaving
-                            navController.navigate(NavRoutes.GROUP_SELECTION) {
-                                popUpTo(0) { inclusive = true }
-                            }
                         },
                         onLogout = {
                             println("Navigation: Logout called")
@@ -223,10 +229,6 @@ fun AppNavigation() {
                         onDeleteAccount = {
                             println("Navigation: Delete account called")
                             authViewModel.deleteUser()
-                            // Navigate after deletion completes
-                            navController.navigate(NavRoutes.AUTH) {
-                                popUpTo(0) { inclusive = true }
-                            }
                         }
                     )
                 }

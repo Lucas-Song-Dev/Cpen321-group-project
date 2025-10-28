@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { UserModel } from '../models/User';
+import Group from '../models/Group';
 
 export const UserController = {
   setProfile: async (req: Request, res: Response) => {
@@ -175,7 +176,33 @@ export const UserController = {
       }
 
       console.log(`[${timestamp}] DELETE USER: Deleting user with ID: ${userId}`);
-      
+
+      // Remove user from any group memberships first
+      const group = await Group.findOne({ 'members.userId': userId });
+      if (group) {
+        console.log(`[${timestamp}] DELETE USER: Removing user from group ${group._id}`);
+        // Filter out the user from members
+        group.members = group.members.filter((m: any) => m.userId.toString() !== userId.toString());
+
+        // If the user was the owner, transfer ownership or handle empty group
+        if (group.owner && group.owner.toString() === userId.toString()) {
+          if (group.members.length > 0) {
+            // Transfer ownership to the first remaining member
+            group.owner = group.members[0].userId as any;
+            console.log(`[${timestamp}] DELETE USER: Transferred ownership to ${group.owner}`);
+          } else {
+            // No members left; delete the group
+            await group.deleteOne();
+            console.log(`[${timestamp}] DELETE USER: Group ${group._id} deleted as it has no members`);
+          }
+        }
+
+        // Save group if it still exists and has members
+        if (group.members && group.members.length > 0) {
+          await group.save();
+        }
+      }
+
       // Delete the user
       const deletedUser = await UserModel.findByIdAndDelete(userId);
       
@@ -188,7 +215,7 @@ export const UserController = {
       
       return res.json({
         success: true,
-        message: 'Account deleted successfully'
+        message: 'Account deleted successfully and group membership updated'
       });
     } catch (err) {
       console.error(`[${timestamp}] DELETE USER: Error:`, err);
