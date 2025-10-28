@@ -111,13 +111,25 @@ class ChatViewModel(
     }
     
     private fun setupSocketListeners() {
+        // Clear any existing listeners first to prevent duplicates
+        socketManager.clearListeners()
+        
         // Listen for new messages
         socketManager.onNewMessage { messageData ->
             println("ChatViewModel: Received new message via socket: $messageData")
             viewModelScope.launch {
                 try {
+                    val messageId = messageData.optString("id", "")
+                    
+                    // Check if message already exists to prevent duplicates
+                    val existingMessage = _uiState.value.messages.find { it.id == messageId }
+                    if (existingMessage != null) {
+                        println("ChatViewModel: Message already exists, skipping duplicate: $messageId")
+                        return@launch
+                    }
+                    
                     val newMessage = ChatMessage(
-                        id = messageData.optString("id", ""),
+                        id = messageId,
                         content = messageData.optString("content", ""),
                         senderName = messageData.optString("senderName", "User"),
                         senderId = messageData.optString("senderId", ""),

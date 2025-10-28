@@ -154,47 +154,22 @@ class SocketManager {
     fun onNewMessage(callback: (JSONObject) -> Unit) {
         println("SocketManager: Setting up new-message callback")
         newMessageCallback = callback
-        // If socket is already connected, register the listener now
-        if (socket?.connected() == true) {
-            socket?.on("new-message") { args ->
-                if (args.isNotEmpty()) {
-                    callback(args[0] as JSONObject)
-                }
-            }
-        }
+        // Don't register listener here - it's already registered in registerListeners()
     }
     
     fun onPollUpdate(callback: (JSONObject) -> Unit) {
         pollUpdateCallback = callback
-        if (socket?.connected() == true) {
-            socket?.on("poll-update") { args ->
-                if (args.isNotEmpty()) {
-                    callback(args[0] as JSONObject)
-                }
-            }
-        }
+        // Don't register listener here - it's already registered in registerListeners()
     }
     
     fun onUserJoined(callback: (JSONObject) -> Unit) {
         userJoinedCallback = callback
-        if (socket?.connected() == true) {
-            socket?.on("user-joined") { args ->
-                if (args.isNotEmpty()) {
-                    callback(args[0] as JSONObject)
-                }
-            }
-        }
+        // Don't register listener here - it's already registered in registerListeners()
     }
     
     fun onUserLeft(callback: (JSONObject) -> Unit) {
         userLeftCallback = callback
-        if (socket?.connected() == true) {
-            socket?.on("user-left") { args ->
-                if (args.isNotEmpty()) {
-                    callback(args[0] as JSONObject)
-                }
-            }
-        }
+        // Don't register listener here - it's already registered in registerListeners()
     }
     
     fun onAuthenticated(callback: (Boolean) -> Unit) {
@@ -202,10 +177,26 @@ class SocketManager {
     }
     
     fun disconnect() {
+        // Clear all callbacks to prevent memory leaks
+        newMessageCallback = null
+        pollUpdateCallback = null
+        userJoinedCallback = null
+        userLeftCallback = null
+        onAuthenticatedCallback = null
+        
         socket?.disconnect()
         socket = null
         _connectionState.value = false
         isAuthenticated = false
+    }
+    
+    fun clearListeners() {
+        // Clear all callbacks without disconnecting
+        newMessageCallback = null
+        pollUpdateCallback = null
+        userJoinedCallback = null
+        userLeftCallback = null
+        onAuthenticatedCallback = null
     }
 }
 
