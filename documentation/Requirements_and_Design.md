@@ -9,15 +9,13 @@
 | October 28, 2025 | Section 3.4 - Use Case Descriptions | Added missing use cases (Logout, Delete account, Set mandatory profile fields). Renumbered all use cases sequentially (1-24) and improved naming consistency to match use case diagram. Added references to Google OAuth 2.0 API interaction. Addresses M2 feedback about missing use cases and naming inconsistencies. |
 | October 28, 2025 | Section 3.5 - Formal Use Case Specifications | Updated use case titles to match renumbered sequence (Use Case 9: Create Group, Use Case 17: Create Poll, Use Case 18: Add Task, Use Case 21-22: Rate Roommate). Ensures consistency between formal specifications and use case list. |
 | October 28, 2025 | Section 3.7 - Non-Functional Requirements | Replaced previous NFRs with concrete, measurable requirements: API Response Time (<200ms), Application Load Time (<5s cold start), and UI Accessibility (42px minimum touch targets). Added detailed justifications citing industry research (UPCore Technologies, App Institute, UX Movement) and specific testing methodologies. Addresses M2 feedback requesting justification for NFR values. |
-| October 28, 2025 | Section 4.1 - Main Components and Interfaces | Added detailed REST API endpoint specifications and internal component interface signatures with parameters, return types, and descriptions as required for M3. This provides clear contract definitions between front-end and back-end components. |
-| October 28, 2025 | Section 4.3 - External APIs and Services | Clarified that external modules are third-party APIs accessed over the network. Made APIs concrete (Google OAuth 2.0 API, Firebase Cloud Messaging). Removed Express.js and Mongoose which are libraries, not external APIs. Addresses M2 feedback about specificity and proper categorization. |
-| October 28, 2025 | Section 4.4 - Frameworks and Libraries | Reorganized to clearly separate frameworks/libraries (Jetpack Compose, Retrofit, Express.js, Mongoose, Socket.IO) from external APIs. Moved Express.js and Mongoose from external modules to this section where they belong. |
-| October 28, 2025 | Section 4.5 - Programming Languages and Runtime | Created new section to separate programming languages (Kotlin, TypeScript) and runtime environments (ART, Node.js) from frameworks. Addresses M2 feedback that languages are not frameworks. |
-| October 28, 2025 | Section 4.6 - Database and Cloud Infrastructure | Separated database and infrastructure from frameworks for better organization. Clarifies MongoDB deployment strategy (self-hosted on GCP, not MongoDB Atlas). |
-| October 28, 2025 | Section 4.7 - High-Level Architecture and Component Dependencies | Added textual description of backend decomposition into domain-specific services (Authentication, User Management, Group Management, Chat, Task, Rating, Moderation) instead of presenting backend as monolithic. Lists specific file paths for each service and describes inter-service dependencies. Addresses M2 feedback about missing by-domain decomposition. |
-| October 28, 2025 | Section 4.8 - Sequence Diagrams for Major Use Cases | Added five sequence diagrams (Login, Create Group, Send Message, Add Task, Rate Roommate) using Mermaid notation with consistent naming conventions (colon prefixes for lifelines), database-like query notation (SELECT, INSERT, UPDATE), and loop constructs where applicable. Diagrams illustrate component interactions and message flows for the most critical use cases as required for M3. |
-| October 28, 2025 | Section 4.9 - High-Level Design Diagram | Moved diagram to after sequence diagrams and added detailed description of components shown in diagram including decomposed backend services. Describes key dependency relationships based on actual implementation. |
-| October 28, 2025 | Section 4.10 - Non-Functional Requirements Implementation | Updated implementation details to align with new NFRs. Described concrete techniques for achieving API response time targets (database indexing, connection pooling, lean queries), cold start performance (lazy loading, AOT compilation, coroutines), and accessibility compliance (Jetpack Compose modifiers, Material Design 3 defaults, automated scanner integration). Includes verification commands for testing each requirement. |
+| October 28, 2025 | Section 4.1 - Main Components | Added detailed REST API endpoint specifications and internal component interface signatures with parameters, return types, and descriptions as required for M3. This provides clear contract definitions between front-end and back-end components. |
+| October 28, 2025 | Section 4.3 - External Modules | Clarified that external modules are third-party APIs accessed over the network. Made APIs concrete (Google OAuth 2.0 API, Firebase Cloud Messaging). Removed Express.js and Mongoose which are libraries, not external APIs. Addresses M2 feedback about specificity and proper categorization. |
+| October 28, 2025 | Section 4.4 - Frameworks and Libraries | Reorganized to clearly separate frameworks/libraries (Jetpack Compose, Retrofit, Express.js, Mongoose, Socket.IO) from external APIs. Moved Express.js and Mongoose from external modules to this section where they belong. Consolidated programming languages, runtime environments, database, and cloud infrastructure into this section to follow template format. |
+| October 28, 2025 | Section 4.5 - Dependencies Diagram | Added high-level design diagram with textual description of backend decomposition into domain-specific services (Authentication, User Management, Group Management, Chat, Task, Rating, Moderation) instead of presenting backend as monolithic. Lists specific file paths for each service and describes inter-service dependencies. Addresses M2 feedback about missing by-domain decomposition. |
+| October 28, 2025 | Section 4.6 - Use Case Sequence Diagram | Added five sequence diagrams (Login, Create Group, Send Message, Add Task, Rate Roommate) using Mermaid notation with proper syntax. Fixed participant declarations to use 'participant ID as :DisplayName' format per GitHub Mermaid specification to display UML instance notation (colon prefixes). Includes database-like query notation (SELECT, INSERT, UPDATE), loop constructs, and alt blocks to show conditional flows. Added anchor links to reference use cases from section 3.5. Diagrams illustrate component interactions and message flows for the most critical use cases as required for M3. |
+| October 28, 2025 | Section 4.7 - Design of Non-Functional Requirements | Updated implementation details to align with new NFRs. Described concrete techniques for achieving API response time targets (database indexing, connection pooling, lean queries), cold start performance (lazy loading, AOT compilation, coroutines), and accessibility compliance (Jetpack Compose modifiers, Material Design 3 defaults, automated scanner integration). Includes verification commands for testing each requirement. Added anchor links to reference NFRs from section 3.7. |
+| October 28, 2025 | Document Structure | Reorganized entire section 4 to match the official M3 template format exactly: 4.1 Main Components, 4.2 Databases, 4.3 External Modules, 4.4 Frameworks and Libraries, 4.5 Dependencies Diagram, 4.6 Use Case Sequence Diagram, 4.7 Design of Non-Functional Requirements. Consolidated duplicate sections and ensured proper anchor linking throughout. |
 
 ---
 
@@ -304,18 +302,27 @@ The diagram should NOT include internal components like databases, as these are 
 
 
 ### **3.7. Non-Functional Requirements**
+
 <a name="nfr1"></a>
+Api Latency: 
+https://www.upcoretech.com/insights/top-mobile-app-performance-metrics/
+Slow response times are universally detrimental to sentiment, engagement, conversions, and churn. Leading apps deliver response times under 300 ms consistently, with 100 ms or less optimal for interactions. Degraded response times are symptoms of sluggish code and infrastructure.
 
 1. **API Response Time Requirement**
     - **Description**: API response times for login, signup (with all required data entered), message send (not downstream message delivery), and user profile fetch must be under 200ms on Wi-Fi 5+ connection on a 16GB Android phone running Android API 33.
     - **Justification**: According to UPCore Technologies' mobile app performance research, slow response times are universally detrimental to user sentiment, engagement, conversions, and churn. Leading mobile apps deliver response times under 300ms consistently, with 100ms or less optimal for interactions. Degraded response times are symptoms of sluggish code and infrastructure. To ensure end-to-end user experience remains under the 300ms threshold for perceived responsiveness, API latency must be kept under 200ms to account for network overhead, client-side rendering, and processing time. This 200ms target allows for a 100ms buffer for UI updates and animations while staying within the critical 300ms window that maintains user flow and prevents perceived lag.
     - **Testing Method**: Timing starts when sending a cURL request to the API with required parameters and ends when receiving a 200 OK response from the server. Error responses (400s, 500s) are excluded from measurements as optimization should target successful operations.
 
+Front End timing:
+https://appinstitute.com/improving-app-responsiveness-key-metrics-to-track/
+<a name="nfr2"></a>
 2. **Application Load Time Requirement**
     - **Description**: The application cold start (launching app when not in memory) must complete within 5 seconds on a 16GB Android phone running Android API 33 on Wi-Fi 5-7 connection.
     - **Justification**: According to App Institute's responsiveness research, app load time is a critical metric for user retention. Users expect immediate access to functionality, and delays during cold start create negative first impressions and increase abandonment rates. The 5-second threshold is based on industry benchmarks for productivity apps, balancing the need for quick startup with the complexity of initializing authentication, database connections, and UI components. This ensures users can access core features (group chat, tasks) quickly enough for time-sensitive household coordination scenarios (e.g., coordinating grocery runs, responding to locked-out roommates).
     - **Testing Method**: Time measurement begins when the app icon is tapped on the Android home screen (with app not in memory) and ends when the user can interact with the first screen (login screen for new users, home dashboard for authenticated users).
 
+Accessibility: https://uxmovement.com/mobile/optimal-size-and-spacing-for-mobile-buttons/
+<a name="nfr3"></a>
 3. **UI Accessibility Requirement**
     - **Description**: All interactive buttons and touch targets must have a minimum touch target size of 42x42 pixels to ensure accessibility and ease of use.
     - **Justification**: According to UX Movement's mobile usability research on optimal button sizing and spacing, smaller buttons increase error rates and user frustration, particularly for users with motor impairments, larger fingers, or when using the app in motion (walking between rooms). The 42-pixel minimum is based on empirical studies showing this size provides adequate touch accuracy across diverse user populations without requiring excessive screen space. This is critical for RoomSync's core interactions (sending messages, marking tasks complete, creating polls) which users often perform quickly while multitasking in shared living spaces.
@@ -324,7 +331,7 @@ The diagram should NOT include internal components like databases, as these are 
 ---
 
 ## 4. Designs Specification
-### **4.1. Main Components and Interfaces**
+### **4.1. Main Components**
 1. **Front-End Mobile Application (Android/Kotlin)**
     - **Purpose**: Provides the user interface and handles all user interactions. It enables authentication, profile management, group management, messaging, task management, and roommate rating.
     - **Interfaces**: The front-end communicates with the back-end via HTTP/REST endpoints.
@@ -538,8 +545,8 @@ The diagram should NOT include internal components like databases, as these are 
         - **Ratings**: Objective and subjective roommate ratings.
         - **Reports**: Flagged messages and reviews for LLM moderation.
 
-### **4.3. External APIs and Services**
-External APIs are third-party services accessed over the internet that provide functionality not implemented within the RoomSync application.
+### **4.3. External Modules**
+External modules are third-party services accessed over the internet that provide functionality not implemented within the RoomSync application.
 
 1. **Google OAuth 2.0 API**
     - **Provider**: Google Identity Platform
@@ -600,8 +607,6 @@ Frameworks and libraries are software packages that provide reusable functionali
     - **Purpose**: Verifies Google OAuth ID tokens received from the Android client. Validates token signatures against Google's public keys.
     - **Usage**: `verifyIdToken()` method extracts user email, name, and Google ID from tokens.
 
-### **4.5. Programming Languages and Runtime Environments**
-
 **Programming Languages:**
 - **Kotlin**: Statically-typed JVM language for Android development. Required by course assignment. Provides null safety, coroutines, and modern functional programming features.
 - **TypeScript**: Strongly-typed superset of JavaScript for backend development. Required by course assignment. Provides compile-time type checking and enhanced IDE support.
@@ -610,23 +615,15 @@ Frameworks and libraries are software packages that provide reusable functionali
 - **Android Runtime (ART)**: Executes Kotlin bytecode on Android devices (API 33 minimum).
 - **Node.js v18+**: JavaScript runtime for executing TypeScript (compiled to JavaScript) on the server.
 
-### **4.6. Database and Cloud Infrastructure**
+**Database:**
+- **MongoDB**: NoSQL document database storing all persistent application data in JSON-like BSON format. Collections include Users, Groups, Messages, Tasks, and Ratings. Self-hosted on Google Cloud Compute Engine VM.
 
-1. **MongoDB**
-    - **Type**: NoSQL Document Database
-    - **Purpose**: Stores all persistent application data in JSON-like BSON format. Collections include Users, Groups, Messages, Tasks, and Ratings.
-    - **Reason**: Chosen over MySQL for schema flexibility, native JSON support, and strong integration with Node.js via Mongoose. Handles nested documents (e.g., group members, task assignments) more naturally than relational tables.
-    - **Deployment**: Self-hosted on Google Cloud Compute Engine VM (not using prohibited MongoDB Atlas managed service).
+**Cloud Infrastructure:**
+- **Google Cloud Platform (GCP)**: Cloud infrastructure provider hosting the Node.js backend and MongoDB database on Compute Engine VMs. Provides scalable, reliable infrastructure with 99.95% uptime SLA. Required by course assignment.
 
-2. **Google Cloud Platform (GCP)**
-    - **Type**: Cloud Infrastructure Provider
-    - **Purpose**: Hosts the Node.js backend and MongoDB database on Compute Engine VMs. Provides scalable, reliable infrastructure with 99.95% uptime SLA.
-    - **Services Used**: 
-        - **Compute Engine**: Virtual machines running Ubuntu with Node.js and MongoDB
-        - **Cloud Storage**: (Future) for user-uploaded profile pictures
-    - **Reason**: Required by course assignment. Offers student credits and integrates well with Google OAuth.
+### **4.5. Dependencies Diagram**
 
-### **4.7. High-Level Architecture and Component Dependencies**
+![RoomSync high level design](images/HighLevelDesign.webp)
 
 **System Architecture:**
 The RoomSync system follows a client-server architecture with three main tiers:
@@ -665,205 +662,204 @@ Rather than a monolithic backend, the server is organized into domain-specific m
 - **Backend Server** → Google Cloud Compute Engine (deployment)
 - **MongoDB** → Google Cloud Compute Engine (hosted on same or separate VM)
 
-See section 4.9 for the visual high-level design diagram.
-
-### **4.8. Sequence Diagrams for Major Use Cases**
+### **4.6. Use Case Sequence Diagram (5 Most Major Use Cases)**
 
 The following sequence diagrams illustrate how the components and interfaces defined in the high-level design interact to realize the five most critical use cases of the RoomSync application.
 
-#### **4.8.1. Use Case 1: Login (User Authentication)**
+1. [**Use Case 1: Login (User Authentication)**](#uc1)
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :GoogleAuth
-    participant :Backend
-    participant :AuthService
-    participant :UserDB
+    participant F as :Frontend
+    participant G as :GoogleAuth
+    participant B as :Backend
+    participant A as :AuthService
+    participant D as :UserDB
 
-    User->>:Frontend: Click "Login" button
-    :Frontend->>:GoogleAuth: Request OAuth authentication
-    :GoogleAuth->>User: Display Google account selection
-    User->>:GoogleAuth: Select account and authorize
-    :GoogleAuth->>:Frontend: Return ID token
-    :Frontend->>:Backend: POST /api/auth/login(token)
-    :Backend->>:AuthService: verifyGoogleToken(token)
-    :AuthService->>:GoogleAuth: Verify token with Google
-    :GoogleAuth->>:AuthService: Return email and user info
-    :AuthService->>:Backend: Return verified credentials
-    :Backend->>:UserDB: SELECT * FROM users WHERE email = {email}
-    :UserDB->>:Backend: Return user document
-    :Backend->>:AuthService: login(email)
-    :AuthService->>:AuthService: Generate JWT token
-    :AuthService->>:Backend: Return user data + JWT
-    :Backend->>:Frontend: Return AuthResponse (success, user, token)
-    :Frontend->>:Frontend: Store JWT in secure storage
-    :Frontend->>User: Navigate to home screen
+    User->>F: Click "Login" button
+    F->>G: Request OAuth authentication
+    G->>User: Display Google account selection
+    User->>G: Select account and authorize
+    G->>F: Return ID token
+    F->>B: POST /api/auth/login(token)
+    B->>A: verifyGoogleToken(token)
+    A->>G: Verify token with Google
+    G->>A: Return email and user info
+    A->>B: Return verified credentials
+    B->>D: SELECT * FROM users WHERE email = {email}
+    D->>B: Return user document
+    B->>A: login(email)
+    A->>A: Generate JWT token
+    A->>B: Return user data + JWT
+    B->>F: Return AuthResponse (success, user, token)
+    F->>F: Store JWT in secure storage
+    F->>User: Navigate to home screen
 ```
 
-#### **4.8.2. Use Case 6: Create Roommate Group**
+2. [**Use Case 9: Create Group**](#uc2)
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :Backend
-    participant :AuthMiddleware
-    participant :GroupDB
+    participant F as :Frontend
+    participant B as :Backend
+    participant M as :AuthMiddleware
+    participant D as :GroupDB
 
-    User->>:Frontend: Enter group name and click "Create Group"
-    :Frontend->>:Backend: POST /api/group(name, JWT token)
-    :Backend->>:AuthMiddleware: Verify JWT token
-    :AuthMiddleware->>:Backend: Attach authenticated user
-    :Backend->>:Backend: Validate group name
-    :Backend->>:GroupDB: SELECT * FROM groups WHERE members.userId = {userId}
-    :GroupDB->>:Backend: Return existing group (or null)
+    User->>F: Enter group name and click "Create Group"
+    F->>B: POST /api/group(name, JWT token)
+    B->>M: Verify JWT token
+    M->>B: Attach authenticated user
+    B->>B: Validate group name
+    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
+    D->>B: Return existing group (or null)
     alt User already in group
-        :Backend->>:Frontend: Return error: "Already in a group"
-        :Frontend->>User: Display error message
+        B->>F: Return error: "Already in a group"
+        F->>User: Display error message
     else User not in group
-        :Backend->>:Backend: Generate unique 4-char code
-        :Backend->>:GroupDB: INSERT group (name, code, owner, members)
-        :GroupDB->>:Backend: Return created group
-        :Backend->>:GroupDB: UPDATE users SET groupName WHERE id = {userId}
-        :GroupDB->>:Backend: Confirm update
-        :Backend->>:Frontend: Return GroupResponse (group + code)
-        :Frontend->>User: Display group dashboard with code
+        B->>B: Generate unique 4-char code
+        B->>D: INSERT group (name, code, owner, members)
+        D->>B: Return created group
+        B->>D: UPDATE users SET groupName WHERE id = {userId}
+        D->>B: Confirm update
+        B->>F: Return GroupResponse (group + code)
+        F->>User: Display group dashboard with code
         User->>User: Share group code with roommates
     end
 ```
 
-#### **4.8.3. Use Case 16: Send Message (Group Chat)**
+3. [**Use Case 16: Send Message**](#uc3)
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :Backend
-    participant :AuthMiddleware
-    participant :MessageDB
-    participant :SocketIO
-    participant :OtherClients
+    participant F as :Frontend
+    participant B as :Backend
+    participant M as :AuthMiddleware
+    participant D as :MessageDB
+    participant S as :SocketIO
+    participant O as :OtherClients
 
-    User->>:Frontend: Type message and click "Send"
-    :Frontend->>:Backend: POST /api/chat/:groupId/message(content, JWT)
-    :Backend->>:AuthMiddleware: Verify JWT token
-    :AuthMiddleware->>:Backend: Attach authenticated user
-    :Backend->>:Backend: Validate message content
-    :Backend->>:MessageDB: SELECT * FROM groups WHERE id = {groupId}
-    :MessageDB->>:Backend: Return group
-    :Backend->>:Backend: Verify user is group member
+    User->>F: Type message and click "Send"
+    F->>B: POST /api/chat/:groupId/message(content, JWT)
+    B->>M: Verify JWT token
+    M->>B: Attach authenticated user
+    B->>B: Validate message content
+    B->>D: SELECT * FROM groups WHERE id = {groupId}
+    D->>B: Return group
+    B->>B: Verify user is group member
     alt User not member
-        :Backend->>:Frontend: Return 403 Forbidden
-        :Frontend->>User: Display error
+        B->>F: Return 403 Forbidden
+        F->>User: Display error
     else User is member
-        :Backend->>:MessageDB: INSERT message (groupId, senderId, content, type)
-        :MessageDB->>:Backend: Return created message
-        :Backend->>:MessageDB: SELECT user.name WHERE id = {senderId}
-        :MessageDB->>:Backend: Return message with sender
-        :Backend->>:SocketIO: Broadcast new-message event to groupId room
-        :SocketIO->>:OtherClients: Emit new-message with data
-        :OtherClients->>:OtherClients: Display message in real-time
-        :Backend->>:Frontend: Return MessageResponse
-        :Frontend->>User: Display sent message
+        B->>D: INSERT message (groupId, senderId, content, type)
+        D->>B: Return created message
+        B->>D: SELECT user.name WHERE id = {senderId}
+        D->>B: Return message with sender
+        B->>S: Broadcast new-message event to groupId room
+        S->>O: Emit new-message with data
+        O->>O: Display message in real-time
+        B->>F: Return MessageResponse
+        F->>User: Display sent message
     end
 ```
 
-#### **4.8.4. Use Case 18: Add Task**
+4. [**Use Case 18: Add Task**](#uc4)
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :Backend
-    participant :AuthMiddleware
-    participant :TaskDB
+    participant F as :Frontend
+    participant B as :Backend
+    participant M as :AuthMiddleware
+    participant D as :TaskDB
 
-    User->>:Frontend: Fill task form (name, difficulty, recurrence)
-    User->>:Frontend: Click "Create Task"
-    :Frontend->>:Backend: POST /api/task(name, difficulty, recurrence, requiredPeople, JWT)
-    :Backend->>:AuthMiddleware: Verify JWT token
-    :AuthMiddleware->>:Backend: Attach authenticated user
-    :Backend->>:Backend: Validate task parameters
-    :Backend->>:TaskDB: SELECT * FROM groups WHERE members.userId = {userId}
-    :TaskDB->>:Backend: Return group
+    User->>F: Fill task form (name, difficulty, recurrence)
+    User->>F: Click "Create Task"
+    F->>B: POST /api/task(name, difficulty, recurrence, requiredPeople, JWT)
+    B->>M: Verify JWT token
+    M->>B: Attach authenticated user
+    B->>B: Validate task parameters
+    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
+    D->>B: Return group
     alt User not in group
-        :Backend->>:Frontend: Return 404: Not in any group
-        :Frontend->>User: Display error
+        B->>F: Return 404: Not in any group
+        F->>User: Display error
     else User in group
-        :Backend->>:TaskDB: INSERT task (name, difficulty, recurrence, groupId)
-        :TaskDB->>:Backend: Return created task
+        B->>D: INSERT task (name, difficulty, recurrence, groupId)
+        D->>B: Return created task
         alt Specific users assigned
-            :Backend->>:Backend: Calculate current week start
+            B->>B: Calculate current week start
             loop For each userId in assignedUserIds
-                :Backend->>:TaskDB: INSERT assignment (taskId, userId, weekStart, status)
+                B->>D: INSERT assignment (taskId, userId, weekStart, status)
             end
-            :TaskDB->>:Backend: Confirm assignments created
+            D->>B: Confirm assignments created
         end
-        :Backend->>:TaskDB: SELECT user.name, user.email WHERE id IN (createdBy, assignments.userId)
-        :TaskDB->>:Backend: Return populated task
-        :Backend->>:Frontend: Return TaskResponse
-        :Frontend->>User: Display task in task list
-        :Frontend->>User: Show assigned members
+        B->>D: SELECT user.name, user.email WHERE id IN (createdBy, assignments.userId)
+        D->>B: Return populated task
+        B->>F: Return TaskResponse
+        F->>User: Display task in task list
+        F->>User: Show assigned members
     end
 ```
 
-#### **4.8.5. Use Case 21-22: Rate Roommate**
+5. [**Use Case 21-22: Rate Roommate and Write Testimonial**](#uc5)
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :Backend
-    participant :AuthMiddleware
-    participant :RatingDB
+    participant F as :Frontend
+    participant B as :Backend
+    participant M as :AuthMiddleware
+    participant D as :RatingDB
 
-    User->>:Frontend: Select roommate to rate
-    :Frontend->>:Backend: GET /api/group() to verify duration
-    :Backend->>:RatingDB: SELECT * FROM groups WHERE members.userId = {userId}
-    :RatingDB->>:Backend: Return group data with join dates
-    :Backend->>:Frontend: Return group with join dates
-    :Frontend->>:Frontend: Calculate days in group together
+    User->>F: Select roommate to rate
+    F->>B: GET /api/group() to verify duration
+    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
+    D->>B: Return group data with join dates
+    B->>F: Return group with join dates
+    F->>F: Calculate days in group together
     alt Less than 30 days together
-        :Frontend->>User: Display error: "Minimum 30 days required"
+        F->>User: Display error: "Minimum 30 days required"
     else 30+ days together
-        :Frontend->>User: Display rating form
-        User->>:Frontend: Enter rating (1-5) and testimonial
-        User->>:Frontend: Click "Submit Rating"
-        :Frontend->>:Backend: POST /api/rating(ratedUserId, groupId, rating, testimonial, JWT)
-        :Backend->>:AuthMiddleware: Verify JWT token
-        :AuthMiddleware->>:Backend: Attach authenticated user
-        :Backend->>:Backend: Validate rating (1-5) and testimonial length
-        :Backend->>:Backend: Check not rating self
-        :Backend->>:RatingDB: SELECT * FROM groups WHERE id = {groupId}
-        :RatingDB->>:Backend: Return group with members
-        :Backend->>:Backend: Calculate time both users in group
-        :Backend->>:Backend: Verify both users >= 30 days
+        F->>User: Display rating form
+        User->>F: Enter rating (1-5) and testimonial
+        User->>F: Click "Submit Rating"
+        F->>B: POST /api/rating(ratedUserId, groupId, rating, testimonial, JWT)
+        B->>M: Verify JWT token
+        M->>B: Attach authenticated user
+        B->>B: Validate rating (1-5) and testimonial length
+        B->>B: Check not rating self
+        B->>D: SELECT * FROM groups WHERE id = {groupId}
+        D->>B: Return group with members
+        B->>B: Calculate time both users in group
+        B->>B: Verify both users >= 30 days
         alt Duration requirement not met
-            :Backend->>:Frontend: Return 400: Minimum duration not met
-            :Frontend->>User: Display error with remaining days
+            B->>F: Return 400: Minimum duration not met
+            F->>User: Display error with remaining days
         else Duration requirement met
-            :Backend->>:RatingDB: UPSERT rating (ratedUserId, raterUserId, groupId, rating, testimonial)
-            :RatingDB->>:Backend: Return rating
+            B->>D: UPSERT rating (ratedUserId, raterUserId, groupId, rating, testimonial)
+            D->>B: Return rating
             loop Calculate average rating
-                :Backend->>:RatingDB: SELECT AVG(rating) FROM ratings WHERE ratedUserId = {ratedUserId}
-                :RatingDB->>:Backend: Return average rating
+                B->>D: SELECT AVG(rating) FROM ratings WHERE ratedUserId = {ratedUserId}
+                D->>B: Return average rating
             end
-            :Backend->>:RatingDB: UPDATE users SET averageRating WHERE id = {ratedUserId}
-            :RatingDB->>:Backend: Confirm update
-            :Backend->>:Frontend: Return RatingResponse (success)
-            :Frontend->>User: Display success message
-            :Frontend->>User: Show updated rating on profile
+            B->>D: UPDATE users SET averageRating WHERE id = {ratedUserId}
+            D->>B: Confirm update
+            B->>F: Return RatingResponse (success)
+            F->>User: Display success message
+            F->>User: Show updated rating on profile
         end
     end
 ```
 
-### **4.10. Non-Functional Requirements Implementation**
+### **4.7. Design of Non-Functional Requirements**
 
 This section describes how each non-functional requirement from section 3.7 is implemented in the system.
 
-#### **4.10.1. API Response Time Implementation**
+1. [**API Response Time Requirement**](#nfr1)
+
 **Requirement**: API response times for login, signup, message send, and user profile fetch must be under 200ms on Wi-Fi 5+ on Android API 33.
 
 **Implementation**:
@@ -883,7 +879,8 @@ curl -w "@curl-format.txt" -o /dev/null -s -X POST https://api.roomsync.com/api/
   -H "Content-Type: application/json" -d '{"token":"<GOOGLE_ID_TOKEN>"}'
 ```
 
-#### **4.10.2. Application Load Time Implementation**
+2. [**Application Load Time Requirement**](#nfr2)
+
 **Requirement**: Cold start must complete within 5 seconds on Android API 33 with Wi-Fi 5-7.
 
 **Implementation**:
@@ -904,7 +901,8 @@ adb shell am start -W com.roomsync.app/.MainActivity
 # Output: TotalTime: 3542 (milliseconds)
 ```
 
-#### **4.10.3. UI Accessibility Implementation**
+3. [**UI Accessibility Requirement**](#nfr3)
+
 **Requirement**: All interactive buttons must have minimum 42x42 pixel touch targets.
 
 **Implementation**:
@@ -935,31 +933,3 @@ adb shell am start -W com.roomsync.app/.MainActivity
 ./gradlew :app:lintDebug
 # Scans for accessibility issues including touch target sizes
 ```
-
-### **4.9. High-Level Design Diagram**
-images/HighLevelDesign.webp
-![RoomSync high level design](images/HighLevelDesign.webp)
-
-**Diagram Description:**
-The high-level design diagram shows the major components and their relationships in the RoomSync system. The architecture includes:
-
-- **Android Frontend (Kotlin/Jetpack Compose)**: Mobile client application
-- **Google OAuth 2.0 API**: External authentication service
-- **Backend Services** (decomposed by domain):
-  - Authentication Service
-  - User Management Service
-  - Group Management Service
-  - Chat Service (with WebSocket support)
-  - Task Management Service
-  - Rating Service
-- **MongoDB Database**: Persistent data storage
-- **Google Cloud Platform**: Infrastructure and deployment
-
-**Key Dependency Relationships:** 
-- Frontend calls Authentication Service, API Gateway
-- API Gateway routes to Group Management, Chat Service, Task Management Service
-- Authentication Service integrates with Google Auth API and User Database
-- Group Management Service accesses Group Database and User Database
-- Chat Service utilizes Chat Database and Firebase FCM for notifications
-- Task Management Service manages Task Database, integrates with Google Maps API for location-based features
-- All services can access Firebase FCM for push notifications
