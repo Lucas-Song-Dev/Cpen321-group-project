@@ -74,10 +74,12 @@ class GroupRepository {
     suspend fun leaveGroup(): ApiResponse<Any> {
         return try {
             val response = RetrofitInstance.api.leaveGroup()
+            println("GroupRepository.leaveGroup: HTTP ${response.code()} isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful) {
                 response.body() ?: ApiResponse(false, "Empty response from server")
             } else {
                 val errorBody = response.errorBody()?.string()
+                println("GroupRepository.leaveGroup: errorBody=$errorBody")
                 ApiResponse(false, errorBody ?: "Leave group failed: ${response.code()}")
             }
         } catch (e: IOException) {

@@ -192,12 +192,13 @@ fun AppNavigation() {
                             }
                         }
                     }
-                    LaunchedEffect(groupUiState.group) {
-                        if (!groupUiState.isLoading && groupUiState.group == null) {
-                            println("Navigation: Group is null -> navigating to GROUP_SELECTION")
+                    LaunchedEffect(groupUiState.leftGroup) {
+                        if (groupUiState.leftGroup) {
+                            println("Navigation: leftGroup event -> navigating to GROUP_SELECTION")
                             navController.navigate(NavRoutes.GROUP_SELECTION) {
                                 popUpTo(0) { inclusive = true }
                             }
+                            groupViewModel.consumeLeftGroupEvent()
                         }
                     }
                     

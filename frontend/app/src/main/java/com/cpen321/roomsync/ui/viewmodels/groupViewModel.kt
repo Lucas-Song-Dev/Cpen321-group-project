@@ -25,7 +25,8 @@ data class Group(
 data class GroupUiState(
     val group: Group? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val leftGroup: Boolean = false
 )
 
 class GroupViewModel(
@@ -176,10 +177,12 @@ class GroupViewModel(
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 
                 val response = groupRepository.leaveGroup()
-                if (response.success) {
+                if (response.success || (response.message?.contains("not a member", ignoreCase = true) == true)) {
+                    println("GroupViewModel: Leave group treated as success (success=${response.success}, message='${response.message}')")
                     _uiState.value = _uiState.value.copy(
                         group = null,
-                        isLoading = false
+                        isLoading = false,
+                        leftGroup = true
                     )
                 } else {
                     _uiState.value = _uiState.value.copy(
@@ -193,6 +196,12 @@ class GroupViewModel(
                     isLoading = false
                 )
             }
+        }
+    }
+
+    fun consumeLeftGroupEvent() {
+        if (_uiState.value.leftGroup) {
+            _uiState.value = _uiState.value.copy(leftGroup = false)
         }
     }
     
