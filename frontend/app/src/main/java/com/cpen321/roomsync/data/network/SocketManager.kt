@@ -13,6 +13,7 @@ class SocketManager {
     val connectionState: StateFlow<Boolean> = _connectionState.asStateFlow()
     private var isAuthenticated = false
     private var onAuthenticatedCallback: ((Boolean) -> Unit)? = null
+    private var listenersRegistered = false
     
     // Store callback references
     private var newMessageCallback: ((JSONObject) -> Unit)? = null
@@ -25,8 +26,9 @@ class SocketManager {
             val options = IO.Options().apply {
                 forceNew = true
                 reconnection = true
-                reconnectionAttempts = 5
-                reconnectionDelay = 1000
+                reconnectionAttempts = 10
+                reconnectionDelay = 2000
+                timeout = 20000
             }
             
             socket = IO.socket(serverUrl, options)
@@ -75,8 +77,12 @@ class SocketManager {
             socket?.on("reconnect") {
                 println("SocketManager: Socket reconnected")
                 _connectionState.value = true
-                // Re-register listeners after reconnection
-                registerListeners()
+                // Don't re-register listeners, they should still be active
+                // Just re-authenticate if needed
+                if (token != null) {
+                    println("SocketManager: Re-authenticating after reconnect")
+                    socket?.emit("authenticate", token)
+                }
             }
             
             socket?.on("reconnect_error") { args ->
@@ -91,6 +97,11 @@ class SocketManager {
     }
     
     private fun registerListeners() {
+        if (listenersRegistered) {
+            println("SocketManager: Listeners already registered, skipping")
+            return
+        }
+        
         println("SocketManager: Registering all listeners")
         
         socket?.on("new-message") { args ->
@@ -119,10 +130,22 @@ class SocketManager {
                 userLeftCallback?.invoke(args[0] as JSONObject)
             }
         }
+        
+        listenersRegistered = true
+        println("SocketManager: All listeners registered successfully")
     }
     
     fun isConnected(): Boolean {
         return socket?.connected() == true && isAuthenticated
+    }
+    
+    fun getConnectionStatus(): String {
+        return when {
+            socket == null -> "Not initialized"
+            !socket!!.connected() -> "Disconnected"
+            !isAuthenticated -> "Connected but not authenticated"
+            else -> "Connected and authenticated"
+        }
     }
     
     fun joinGroup(groupId: String) {
@@ -210,6 +233,7 @@ class SocketManager {
         userJoinedCallback = null
         userLeftCallback = null
         onAuthenticatedCallback = null
+        listenersRegistered = false
     }
 }
 

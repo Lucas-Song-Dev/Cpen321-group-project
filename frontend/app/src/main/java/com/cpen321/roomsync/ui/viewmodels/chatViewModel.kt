@@ -62,11 +62,29 @@ class ChatViewModel(
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
     
     private val socketManager = SocketManager()
+    private var lastMessageRefreshTime = 0L
+    private val messageRefreshInterval = 30000L // 30 seconds
     
     init {
         connectToChat()
         loadMessages()
         SharedPollRepository.setCurrentUserId(currentUserId)
+        
+        // Set up periodic message refresh to catch any missed messages
+        startPeriodicMessageRefresh()
+    }
+    
+    private fun startPeriodicMessageRefresh() {
+        viewModelScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(messageRefreshInterval)
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - lastMessageRefreshTime > messageRefreshInterval) {
+                    println("ChatViewModel: Periodic message refresh triggered")
+                    loadMessages()
+                }
+            }
+        }
     }
     
     private fun connectToChat() {
@@ -114,15 +132,17 @@ class ChatViewModel(
     }
     
     private fun setupSocketListeners() {
-        // Clear any existing listeners first to prevent duplicates
-        socketManager.clearListeners()
+        // Don't clear listeners here - they should persist across reconnections
+        // Only set up callbacks
         
         // Listen for new messages
         socketManager.onNewMessage { messageData ->
             println("ChatViewModel: Received new message via socket: $messageData")
+            println("ChatViewModel: Connection status: ${socketManager.getConnectionStatus()}")
             viewModelScope.launch {
                 try {
                     val messageId = messageData.optString("id", "")
+                    println("ChatViewModel: Processing message with ID: $messageId")
                     
                     // Check if message already exists to prevent duplicates
                     val existingMessage = _uiState.value.messages.find { it.id == messageId }
@@ -181,6 +201,7 @@ class ChatViewModel(
     private fun loadMessages() {
         viewModelScope.launch {
             try {
+                lastMessageRefreshTime = System.currentTimeMillis()
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 
                 val response = chatRepository.getMessages(groupId)
@@ -423,6 +444,7 @@ class ChatViewModel(
     
     fun refreshMessages() {
         println("ChatViewModel: Manually refreshing messages")
+        lastMessageRefreshTime = 0L // Force refresh
         loadMessages()
     }
     
