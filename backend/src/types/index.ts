@@ -2,29 +2,27 @@
 import { Document, Types } from 'mongoose';
 
 
-// User related types
+// User related types - matches the actual User model
 export interface IUser extends Document {
   _id: string;
-  googleId: string;
   email: string;
-  fullname: {
-    firstName: string;
-    lastName: string;
-  };
-  dateOfBirth: Date;
-  gender: 'male' | 'female' | 'other' | 'prefer-not-to-say';
-  nickname?: string;
+  name: string;
+  googleId?: string;
+  dob?: Date;
+  gender?: 'Male' | 'Female' | 'Prefer-not-to-say';
+  profileComplete: boolean;
+  groupName?: string;
   bio?: string;
   profilePicture?: string;
+  averageRating?: number;
   livingPreferences?: {
-    schedule: 'morning' | 'night' | 'flexible';
-    drinking: 'never' | 'occasionally' | 'regularly';
-    partying: 'never' | 'occasionally' | 'regularly';
-    noise: 'quiet' | 'moderate' | 'loud';
-    profession: 'student' | 'professional' | 'other';
+    schedule?: 'Morning' | 'Night' | 'Flexible';
+    drinking?: 'None' | 'Occasional' | 'Regular';
+    partying?: 'None' | 'Occasional' | 'Regular';
+    noise?: 'Quiet' | 'Moderate' | 'Loud';
+    profession?: 'Student' | 'Worker' | 'Unemployed';
   };
-  createdAt: Date;
-  updatedAt: Date;
+  isOffensive?: boolean;
 }
 
 // Group related types
@@ -52,6 +50,7 @@ export interface ITask extends Document {
   difficulty: 1 | 2 | 3 | 4 | 5; // Weight of task
   recurrence: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'one-time';
   requiredPeople: number; // Number of people needed to complete the task
+  deadline?: Date; // Optional deadline for one-time tasks
   assignments: Array<{
     userId: Types.ObjectId; 
     weekStart: Date;

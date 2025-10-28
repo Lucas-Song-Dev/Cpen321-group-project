@@ -58,9 +58,9 @@ export const verifyGoogleToken = async (idToken: string): Promise<GoogleTokenPay
 // Generate JWT tokens
 export const generateTokens = (user: IUser): AuthTokens => {
   const payload = {
-    userId: user._id,
+    userId: user._id.toString(),
     email: user.email,
-    name: user.fullname,
+    name: user.name,
   };
 
   // const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
@@ -89,7 +89,7 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
         await user.save();
       }
       console.log('Returning existing user by Google ID');
-      return user;
+      return user as IUser;
     }
 
     // Try to find existing user by email
@@ -101,7 +101,7 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
       user.googleId = payload.sub;
       await user.save();
       console.log('Linked Google account to existing user');
-      return user;
+      return user as IUser;
     }
 
     // Create new user
@@ -109,18 +109,16 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
     const newUser = new User({
       googleId: payload.sub,
       email: payload.email,
-      fullname: {
-        firstName: payload.given_name,
-        lastName: payload.family_name,
-      },
+      name: `${payload.given_name} ${payload.family_name}`.trim(),
+      profileComplete: false,
       // Note: We'll require additional fields during profile completion
-      dateOfBirth: new Date('1900-01-01'), // Placeholder - will be required later
-      gender: 'prefer-not-to-say', // Placeholder - will be required later
+      dob: new Date('1900-01-01'), // Placeholder - will be required later
+      gender: 'Prefer-not-to-say', // Placeholder - will be required later
     });
 
     await newUser.save();
     console.log('New user created successfully');
-    return newUser;
+    return newUser as IUser;
   } catch (error) {
     console.error('Error in findOrCreateUser:', error);
     throw new AppError('Failed to create or find user', 500);
@@ -141,7 +139,7 @@ export const getUserFromToken = async (token: string): Promise<IUser | null> => 
   try {
     const decoded = verifyJWT(token);
     const user = await User.findById(decoded.userId);
-    return user;
+    return user as IUser | null;
   } catch (error) {
     return null;
   }

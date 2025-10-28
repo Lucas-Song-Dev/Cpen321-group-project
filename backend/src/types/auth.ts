@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { User } from '../models/User';
+import { IUser } from './index';
 
 // Zod schemas
 // ------------------------------------------------------------
@@ -21,13 +21,7 @@ export type AuthenticateUserResponse = {
 // ------------------------------------------------------------
 export type AuthResult = {
   token: string;
-  user: User;
+  user: IUser;
 };
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: User;
-    }
-  }
-}
+// Remove duplicate declaration - already defined in express.d.ts

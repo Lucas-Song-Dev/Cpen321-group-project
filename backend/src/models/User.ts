@@ -101,3 +101,6 @@ const userSchema = new Schema<User>({
 });
 
 export const UserModel = model<User>("User", userSchema);
+
+// Default export for compatibility
+export default UserModel;

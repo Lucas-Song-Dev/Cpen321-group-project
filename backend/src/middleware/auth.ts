@@ -3,19 +3,7 @@ import jwt from "jsonwebtoken";
 import { config } from "../config";
 import { UserModel } from "../models/User";
 
-// Extend Express Request interface
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        _id: string;
-        email: string;
-        name: string;
-        groupName?: string;
-      };
-    }
-  }
-}
+// Request interface is already defined in types/express.d.ts
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const timestamp = new Date().toISOString();
