@@ -105,4 +105,11 @@ interface ApiService {
 
     @GET("api/rating/user/{userId}/group/{groupId}")
     suspend fun getUserRatingsInGroup(@Path("userId") userId: String, @Path("groupId") groupId: String): Response<UserRatingsResponse>
+
+    // Report endpoints
+    @PUT("api/users/report")
+    suspend fun reportUser(@Body request: ReportUserRequest): Response<ReportUserResponse>
+
+//    @GET("api/users/{userId}/status")
+//    suspend fun getUserStatus(@Path("userId") userId: String): Response<UserStatusResponse>
 }

@@ -29,6 +29,12 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.cpen321.roomsync.data.models.ReportUserRequest
+import com.cpen321.roomsync.data.network.RetrofitInstance
+import androidx.compose.material3.CircularProgressIndicator
+
 @Composable
 fun GroupDetailsScreen(
     groupName: String = "My Group",
@@ -40,7 +46,7 @@ fun GroupDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val groupViewModel: com.cpen321.roomsync.ui.viewmodels.GroupViewModel = viewModel()
     val groupUiState by groupViewModel.uiState.collectAsState()
-    
+
     var selectedMember by remember { mutableStateOf<ViewModelGroupMember?>(null) }
     var showCopyToast by remember { mutableStateOf(false) }
     var memberToKick by remember { mutableStateOf<ViewModelGroupMember?>(null) }
@@ -74,9 +80,9 @@ fun GroupDetailsScreen(
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.width(16.dp))
-                    
+
                     Text(
                         text = "Group Details",
                         fontSize = 20.sp,
@@ -165,7 +171,7 @@ fun GroupDetailsScreen(
                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                                         modifier = Modifier.padding(bottom = 8.dp)
                                     )
-                                    
+
                                     Text(
                                         text = groupUiState.group?.groupCode ?: "Loading...",
                                         fontSize = 24.sp,
@@ -173,7 +179,7 @@ fun GroupDetailsScreen(
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                 }
-                                
+
                                 IconButton(
                                     onClick = {
                                         groupUiState.group?.groupCode?.let { code ->
@@ -222,7 +228,7 @@ fun GroupDetailsScreen(
                                         member = if (isOwner) member.copy(isAdmin = true) else member,
                                         onClick = { selectedMember = member },
                                         onRemove = if (!isOwner && isCurrentUserOwner) {
-                                            { 
+                                            {
                                                 memberToKick = member
                                                 showKickConfirmation = true
                                             }
@@ -263,7 +269,7 @@ fun GroupDetailsScreen(
                 kotlinx.coroutines.delay(2000)
                 showCopyToast = false
             }
-            
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -288,12 +294,12 @@ fun GroupDetailsScreen(
         // Kick member confirmation dialog
         if (showKickConfirmation && memberToKick != null) {
             AlertDialog(
-                onDismissRequest = { 
+                onDismissRequest = {
                     showKickConfirmation = false
                     memberToKick = null
                 },
                 title = { Text("Kick Member") },
-                text = { 
+                text = {
                     Text("Are you sure you want to kick ${memberToKick?.name} from the group? This action cannot be undone.")
                 },
                 confirmButton = {
@@ -435,21 +441,21 @@ fun MemberDetailDialog(
     var showRatingDialog by remember { mutableStateOf(false) }
     val ratingViewModel: com.cpen321.roomsync.ui.viewmodels.RatingViewModel = viewModel()
     val ratingUiState by ratingViewModel.uiState.collectAsState()
-    
+
     // Get current user's join date to calculate roommate duration
     val taskViewModel: com.cpen321.roomsync.ui.viewmodels.TaskViewModel = viewModel()
     val taskUiState by taskViewModel.uiState.collectAsState()
     val currentUserMember = taskUiState.groupMembers.find { it.id == currentUserId }
-    
+
     // Calculate time since joining
     val joinDateText = remember(member.joinDate) {
         val joinDate = member.joinDate ?: return@remember "Unknown"
         val now = java.util.Date()
         val diffMs = now.time - joinDate.time
         val days = (diffMs / (1000 * 60 * 60 * 24)).toInt()
-        
+
         println("MemberDetailDialog: Join date calculation - Member: ${member.name}, Join Date: $joinDate, Days: $days")
-        
+
         when {
             days == 0 -> "Today"
             days == 1 -> "Yesterday"
@@ -459,29 +465,29 @@ fun MemberDetailDialog(
             else -> "${days / 365} years ago"
         }
     }
-    
+
     // Calculate roommate duration (time both users have been in the group together)
     val roommateDurationText = remember(member.joinDate, currentUserMember?.joinDate) {
         if (member.id == currentUserId) {
             return@remember null // Don't show for yourself
         }
-        
+
         val memberJoinDate = member.joinDate ?: return@remember "Unknown"
         val currentUserJoinDate = currentUserMember?.joinDate ?: return@remember "Unknown"
-        
+
         println("MemberDetailDialog: Roommate duration calculation")
         println("  - Member ${member.name} joined: $memberJoinDate")
         println("  - Current user joined: $currentUserJoinDate")
-        
+
         // The roommate duration is from the later join date (when both were in the group)
         val laterJoinDate = if (memberJoinDate.time > currentUserJoinDate.time) memberJoinDate else currentUserJoinDate
         val now = java.util.Date()
         val durationMs = now.time - laterJoinDate.time
         val days = (durationMs / (1000 * 60 * 60 * 24)).toInt()
-        
+
         println("  - Later join date: $laterJoinDate")
         println("  - Days as roommates: $days")
-        
+
         when {
             days == 0 -> "Since today"
             days == 1 -> "1 day"
@@ -491,18 +497,18 @@ fun MemberDetailDialog(
             else -> "${days / 365} year${if (days / 365 != 1) "s" else ""}"
         }
     }
-    
+
     // Load user ratings when dialog opens
     LaunchedEffect(member.id) {
         println("MemberDetailDialog: Loading ratings for member: ${member.id}")
         ratingViewModel.getUserRatings(member.id)
     }
-    
+
     // Debug: Log rating state changes
     LaunchedEffect(ratingUiState.totalRatings, ratingUiState.averageRating) {
         println("MemberDetailDialog: Rating state changed - total: ${ratingUiState.totalRatings}, avg: ${ratingUiState.averageRating}, ratings count: ${ratingUiState.ratings.size}")
     }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -605,7 +611,7 @@ fun MemberDetailDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                
+
                 // Roommate duration section (only show for other users)
                 if (roommateDurationText != null) {
                     Column {
@@ -623,7 +629,7 @@ fun MemberDetailDialog(
                         )
                     }
                 }
-                
+
                 // Rating section
                 Column {
                     Row(
@@ -650,32 +656,32 @@ fun MemberDetailDialog(
                     ) {
                         // Star rating display - show blank if no ratings
                         val averageRating = ratingUiState.averageRating
-                        val filledStars = if (ratingUiState.totalRatings > 0) 
+                        val filledStars = if (ratingUiState.totalRatings > 0)
                             averageRating.toInt() else 0
-                        
+
                         repeat(5) { index ->
                             Text(
                                 text = "★",
                                 fontSize = 20.sp,
-                                color = if (index < filledStars) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
+                                color = if (index < filledStars)
+                                    MaterialTheme.colorScheme.primary
+                                else
                                     MaterialTheme.colorScheme.surfaceVariant,
                                 modifier = Modifier.padding(horizontal = 2.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (ratingUiState.totalRatings > 0) 
-                                "(${ratingUiState.totalRatings} rating${if (ratingUiState.totalRatings != 1) "s" else ""})" 
-                            else 
+                            text = if (ratingUiState.totalRatings > 0)
+                                "(${ratingUiState.totalRatings} rating${if (ratingUiState.totalRatings != 1) "s" else ""})"
+                            else
                                 "(No ratings yet)",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
-                
+
                 // Reviews section
                 if (ratingUiState.ratings.isNotEmpty()) {
                     Column {
@@ -686,7 +692,7 @@ fun MemberDetailDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         ratingUiState.ratings.take(3).forEach { rating ->
                             if (!rating.testimonial.isNullOrBlank()) {
                                 Card(
@@ -705,9 +711,9 @@ fun MemberDetailDialog(
                                                 Text(
                                                     text = "★",
                                                     fontSize = 14.sp,
-                                                    color = if (index < rating.rating) 
-                                                        MaterialTheme.colorScheme.primary 
-                                                    else 
+                                                    color = if (index < rating.rating)
+                                                        MaterialTheme.colorScheme.primary
+                                                    else
                                                         MaterialTheme.colorScheme.surfaceVariant
                                                 )
                                             }
@@ -722,7 +728,7 @@ fun MemberDetailDialog(
                                 }
                             }
                         }
-                        
+
                         if (ratingUiState.ratings.size > 3) {
                             Text(
                                 text = "+${ratingUiState.ratings.size - 3} more reviews",
@@ -733,6 +739,94 @@ fun MemberDetailDialog(
                         }
                     }
                 }
+
+                // Report button (only for other users)
+                if (member.id != currentUserId) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    var isReporting by remember { mutableStateOf(false) }
+                    var showSuccess by remember { mutableStateOf(false) }
+                    var errorMessage by remember { mutableStateOf<String?>(null) }
+                    val coroutineScope = rememberCoroutineScope()
+
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                isReporting = true
+                                errorMessage = null
+                                try {
+                                    val response = RetrofitInstance.api.reportUser(
+                                        ReportUserRequest(
+                                            reportedUserId = member.id,
+                                            reporterId = currentUserId,
+                                            groupId = groupId
+                                        )
+                                    )
+
+                                    if (response.isSuccessful && response.body()?.success == true) {
+                                        showSuccess = true
+                                        println("User reported successfully: ${response.body()?.data?.isOffensive}")
+                                    } else {
+                                        errorMessage = response.body()?.message ?: "Failed to report user"
+                                        println("Report failed: ${response.body()?.message}")
+                                    }
+                                } catch (e: Exception) {
+                                    errorMessage = "Network error: ${e.message}"
+                                    println("Error reporting user: ${e.message}")
+                                    e.printStackTrace()
+                                } finally {
+                                    isReporting = false
+                                }
+                            }
+                        },
+                        enabled = !isReporting && !showSuccess,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (showSuccess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        when {
+                            isReporting -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Analyzing...")
+                            }
+                            showSuccess -> {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Report Submitted")
+                            }
+                            else -> {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Report User")
+                            }
+                        }
+                    }
+
+                    // Show error message if any
+                    if (errorMessage != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = errorMessage!!,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
@@ -741,7 +835,7 @@ fun MemberDetailDialog(
             }
         }
     )
-    
+
     // Rating Dialog
     if (showRatingDialog) {
         RatingDialog(
@@ -770,7 +864,7 @@ fun RatingDialog(
 ) {
     var selectedRating by remember { mutableStateOf(0) }
     var testimonial by remember { mutableStateOf("") }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Rate $memberName") },
@@ -796,15 +890,15 @@ fun RatingDialog(
                             Text(
                                 text = "★",
                                 fontSize = 32.sp,
-                                color = if (index < selectedRating) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
+                                color = if (index < selectedRating)
+                                    MaterialTheme.colorScheme.primary
+                                else
                                     MaterialTheme.colorScheme.surfaceVariant
                             )
                         }
                     }
                 }
-                
+
                 // Testimonial input
                 Text(
                     text = "Review (Optional)",
@@ -813,8 +907,8 @@ fun RatingDialog(
                 )
                 OutlinedTextField(
                     value = testimonial,
-                    onValueChange = { 
-                        if (it.length <= 500) testimonial = it 
+                    onValueChange = {
+                        if (it.length <= 500) testimonial = it
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -830,7 +924,7 @@ fun RatingDialog(
                         )
                     }
                 )
-                
+
                 Text(
                     text = "Note: Both you and the user must have been in the group for at least 30 days to submit a rating. Time spent together is automatically calculated.",
                     fontSize = 12.sp,
