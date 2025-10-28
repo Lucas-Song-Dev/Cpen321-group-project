@@ -35,7 +35,10 @@ class SocketManager {
                 println("SocketManager: Socket connected")
                 _connectionState.value = true
                 
-                // Listen for authentication response FIRST (must be registered before emitting authenticate)
+                // Register all listeners FIRST to catch any messages that arrive during authentication
+                registerListeners()
+                
+                // Listen for authentication response
                 socket?.on("authenticated") { args ->
                     if (args.isNotEmpty()) {
                         val data = args[0] as JSONObject
@@ -50,9 +53,6 @@ class SocketManager {
                     }
                 }
                 
-                // Register all other listeners after connection
-                registerListeners()
-                
                 // Authenticate if token is provided
                 if (token != null) {
                     println("SocketManager: Authenticating with token")
@@ -61,13 +61,26 @@ class SocketManager {
             }
             
             socket?.on(Socket.EVENT_DISCONNECT) {
+                println("SocketManager: Socket disconnected")
                 _connectionState.value = false
                 isAuthenticated = false
             }
             
-            socket?.on(Socket.EVENT_CONNECT_ERROR) {
+            socket?.on(Socket.EVENT_CONNECT_ERROR) { args ->
+                println("SocketManager: Connection error: ${args.joinToString()}")
                 _connectionState.value = false
                 isAuthenticated = false
+            }
+            
+            socket?.on("reconnect") {
+                println("SocketManager: Socket reconnected")
+                _connectionState.value = true
+                // Re-register listeners after reconnection
+                registerListeners()
+            }
+            
+            socket?.on("reconnect_error") { args ->
+                println("SocketManager: Reconnection error: ${args.joinToString()}")
             }
             
             socket?.connect()

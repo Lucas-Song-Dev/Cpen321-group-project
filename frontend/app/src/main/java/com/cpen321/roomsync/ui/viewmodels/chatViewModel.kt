@@ -88,6 +88,9 @@ class ChatViewModel(
                         // Update connection state
                         _uiState.value = _uiState.value.copy(isConnected = true, isLoading = false)
                         println("ChatViewModel: Connected and joined group successfully")
+                        
+                        // Refresh messages after successful connection to catch any missed messages
+                        loadMessages()
                     } else {
                         _uiState.value = _uiState.value.copy(
                             error = "Authentication failed",
@@ -184,7 +187,7 @@ class ChatViewModel(
                 println("ChatViewModel: Got response: $response")
                 if (response.success && response.data?.messages != null) {
                     println("ChatViewModel: Mapping ${response.data.messages.size} messages")
-                    val messages = response.data.messages.map { message ->
+                    val newMessages = response.data.messages.map { message ->
                         println("ChatViewModel: Processing message: $message")
                         ChatMessage(
                             id = message._id,
@@ -199,8 +202,18 @@ class ChatViewModel(
                             }
                         )
                     }
+                    
+                    // Merge with existing messages, avoiding duplicates
+                    val existingMessages = _uiState.value.messages
+                    val existingIds = existingMessages.map { it.id }.toSet()
+                    val uniqueNewMessages = newMessages.filter { it.id !in existingIds }
+                    val allMessages = existingMessages + uniqueNewMessages
+                    
+                    // Sort by timestamp
+                    val sortedMessages = allMessages.sortedBy { it.timestamp }
+                    
                     _uiState.value = _uiState.value.copy(
-                        messages = messages,
+                        messages = sortedMessages,
                         isLoading = false
                     )
                 } else {
@@ -406,6 +419,16 @@ class ChatViewModel(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+    
+    fun refreshMessages() {
+        println("ChatViewModel: Manually refreshing messages")
+        loadMessages()
+    }
+    
+    fun reconnect() {
+        println("ChatViewModel: Manually reconnecting to chat")
+        connectToChat()
     }
     
     override fun onCleared() {
