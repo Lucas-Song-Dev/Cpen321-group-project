@@ -15,7 +15,7 @@
 | October 28, 2025 | Section 4.5 - Programming Languages and Runtime | Created new section to separate programming languages (Kotlin, TypeScript) and runtime environments (ART, Node.js) from frameworks. Addresses M2 feedback that languages are not frameworks. |
 | October 28, 2025 | Section 4.6 - Database and Cloud Infrastructure | Separated database and infrastructure from frameworks for better organization. Clarifies MongoDB deployment strategy (self-hosted on GCP, not MongoDB Atlas). |
 | October 28, 2025 | Section 4.7 - High-Level Architecture and Component Dependencies | Added textual description of backend decomposition into domain-specific services (Authentication, User Management, Group Management, Chat, Task, Rating, Moderation) instead of presenting backend as monolithic. Lists specific file paths for each service and describes inter-service dependencies. Addresses M2 feedback about missing by-domain decomposition. |
-| October 28, 2025 | Section 4.8 - Sequence Diagrams for Major Use Cases | Added five sequence diagrams (Login, Create Group, Send Message, Add Task, Rate Roommate) using Mermaid notation with consistent naming conventions (colon prefixes for lifelines), database-like query notation (SELECT, INSERT, UPDATE), and loop constructs where applicable. Diagrams illustrate component interactions and message flows for the most critical use cases as required for M3. |
+| October 28, 2025 | Section 4.8 - Sequence Diagrams for Major Use Cases | Added five sequence diagrams (Login, Create Group, Send Message, Add Task, Rate Roommate) using Mermaid notation with proper syntax. Fixed participant declarations to use 'participant ID as :DisplayName' format per GitHub Mermaid specification to display UML instance notation (colon prefixes). Includes database-like query notation (SELECT, INSERT, UPDATE), loop constructs, and alt blocks to show conditional flows. Diagrams illustrate component interactions and message flows for the most critical use cases as required for M3. |
 | October 28, 2025 | Section 4.9 - High-Level Design Diagram | Moved diagram to after sequence diagrams and added detailed description of components shown in diagram including decomposed backend services. Describes key dependency relationships based on actual implementation. |
 | October 28, 2025 | Section 4.10 - Non-Functional Requirements Implementation | Updated implementation details to align with new NFRs. Described concrete techniques for achieving API response time targets (database indexing, connection pooling, lean queries), cold start performance (lazy loading, AOT compilation, coroutines), and accessibility compliance (Jetpack Compose modifiers, Material Design 3 defaults, automated scanner integration). Includes verification commands for testing each requirement. |
 
@@ -676,97 +676,97 @@ The following sequence diagrams illustrate how the components and interfaces def
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :GoogleAuth
-    participant :Backend
-    participant :AuthService
-    participant :UserDB
+    participant F as :Frontend
+    participant G as :GoogleAuth
+    participant B as :Backend
+    participant A as :AuthService
+    participant D as :UserDB
 
-    User->>:Frontend: Click "Login" button
-    :Frontend->>:GoogleAuth: Request OAuth authentication
-    :GoogleAuth->>User: Display Google account selection
-    User->>:GoogleAuth: Select account and authorize
-    :GoogleAuth->>:Frontend: Return ID token
-    :Frontend->>:Backend: POST /api/auth/login(token)
-    :Backend->>:AuthService: verifyGoogleToken(token)
-    :AuthService->>:GoogleAuth: Verify token with Google
-    :GoogleAuth->>:AuthService: Return email and user info
-    :AuthService->>:Backend: Return verified credentials
-    :Backend->>:UserDB: SELECT * FROM users WHERE email = {email}
-    :UserDB->>:Backend: Return user document
-    :Backend->>:AuthService: login(email)
-    :AuthService->>:AuthService: Generate JWT token
-    :AuthService->>:Backend: Return user data + JWT
-    :Backend->>:Frontend: Return AuthResponse (success, user, token)
-    :Frontend->>:Frontend: Store JWT in secure storage
-    :Frontend->>User: Navigate to home screen
+    User->>F: Click "Login" button
+    F->>G: Request OAuth authentication
+    G->>User: Display Google account selection
+    User->>G: Select account and authorize
+    G->>F: Return ID token
+    F->>B: POST /api/auth/login(token)
+    B->>A: verifyGoogleToken(token)
+    A->>G: Verify token with Google
+    G->>A: Return email and user info
+    A->>B: Return verified credentials
+    B->>D: SELECT * FROM users WHERE email = {email}
+    D->>B: Return user document
+    B->>A: login(email)
+    A->>A: Generate JWT token
+    A->>B: Return user data + JWT
+    B->>F: Return AuthResponse (success, user, token)
+    F->>F: Store JWT in secure storage
+    F->>User: Navigate to home screen
 ```
 
-#### **4.8.2. Use Case 6: Create Roommate Group**
+#### **4.8.2. Use Case 9: Create Group**
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :Backend
-    participant :AuthMiddleware
-    participant :GroupDB
+    participant F as :Frontend
+    participant B as :Backend
+    participant M as :AuthMiddleware
+    participant D as :GroupDB
 
-    User->>:Frontend: Enter group name and click "Create Group"
-    :Frontend->>:Backend: POST /api/group(name, JWT token)
-    :Backend->>:AuthMiddleware: Verify JWT token
-    :AuthMiddleware->>:Backend: Attach authenticated user
-    :Backend->>:Backend: Validate group name
-    :Backend->>:GroupDB: SELECT * FROM groups WHERE members.userId = {userId}
-    :GroupDB->>:Backend: Return existing group (or null)
+    User->>F: Enter group name and click "Create Group"
+    F->>B: POST /api/group(name, JWT token)
+    B->>M: Verify JWT token
+    M->>B: Attach authenticated user
+    B->>B: Validate group name
+    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
+    D->>B: Return existing group (or null)
     alt User already in group
-        :Backend->>:Frontend: Return error: "Already in a group"
-        :Frontend->>User: Display error message
+        B->>F: Return error: "Already in a group"
+        F->>User: Display error message
     else User not in group
-        :Backend->>:Backend: Generate unique 4-char code
-        :Backend->>:GroupDB: INSERT group (name, code, owner, members)
-        :GroupDB->>:Backend: Return created group
-        :Backend->>:GroupDB: UPDATE users SET groupName WHERE id = {userId}
-        :GroupDB->>:Backend: Confirm update
-        :Backend->>:Frontend: Return GroupResponse (group + code)
-        :Frontend->>User: Display group dashboard with code
+        B->>B: Generate unique 4-char code
+        B->>D: INSERT group (name, code, owner, members)
+        D->>B: Return created group
+        B->>D: UPDATE users SET groupName WHERE id = {userId}
+        D->>B: Confirm update
+        B->>F: Return GroupResponse (group + code)
+        F->>User: Display group dashboard with code
         User->>User: Share group code with roommates
     end
 ```
 
-#### **4.8.3. Use Case 16: Send Message (Group Chat)**
+#### **4.8.3. Use Case 16: Send Message**
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :Backend
-    participant :AuthMiddleware
-    participant :MessageDB
-    participant :SocketIO
-    participant :OtherClients
+    participant F as :Frontend
+    participant B as :Backend
+    participant M as :AuthMiddleware
+    participant D as :MessageDB
+    participant S as :SocketIO
+    participant O as :OtherClients
 
-    User->>:Frontend: Type message and click "Send"
-    :Frontend->>:Backend: POST /api/chat/:groupId/message(content, JWT)
-    :Backend->>:AuthMiddleware: Verify JWT token
-    :AuthMiddleware->>:Backend: Attach authenticated user
-    :Backend->>:Backend: Validate message content
-    :Backend->>:MessageDB: SELECT * FROM groups WHERE id = {groupId}
-    :MessageDB->>:Backend: Return group
-    :Backend->>:Backend: Verify user is group member
+    User->>F: Type message and click "Send"
+    F->>B: POST /api/chat/:groupId/message(content, JWT)
+    B->>M: Verify JWT token
+    M->>B: Attach authenticated user
+    B->>B: Validate message content
+    B->>D: SELECT * FROM groups WHERE id = {groupId}
+    D->>B: Return group
+    B->>B: Verify user is group member
     alt User not member
-        :Backend->>:Frontend: Return 403 Forbidden
-        :Frontend->>User: Display error
+        B->>F: Return 403 Forbidden
+        F->>User: Display error
     else User is member
-        :Backend->>:MessageDB: INSERT message (groupId, senderId, content, type)
-        :MessageDB->>:Backend: Return created message
-        :Backend->>:MessageDB: SELECT user.name WHERE id = {senderId}
-        :MessageDB->>:Backend: Return message with sender
-        :Backend->>:SocketIO: Broadcast new-message event to groupId room
-        :SocketIO->>:OtherClients: Emit new-message with data
-        :OtherClients->>:OtherClients: Display message in real-time
-        :Backend->>:Frontend: Return MessageResponse
-        :Frontend->>User: Display sent message
+        B->>D: INSERT message (groupId, senderId, content, type)
+        D->>B: Return created message
+        B->>D: SELECT user.name WHERE id = {senderId}
+        D->>B: Return message with sender
+        B->>S: Broadcast new-message event to groupId room
+        S->>O: Emit new-message with data
+        O->>O: Display message in real-time
+        B->>F: Return MessageResponse
+        F->>User: Display sent message
     end
 ```
 
@@ -775,86 +775,86 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :Backend
-    participant :AuthMiddleware
-    participant :TaskDB
+    participant F as :Frontend
+    participant B as :Backend
+    participant M as :AuthMiddleware
+    participant D as :TaskDB
 
-    User->>:Frontend: Fill task form (name, difficulty, recurrence)
-    User->>:Frontend: Click "Create Task"
-    :Frontend->>:Backend: POST /api/task(name, difficulty, recurrence, requiredPeople, JWT)
-    :Backend->>:AuthMiddleware: Verify JWT token
-    :AuthMiddleware->>:Backend: Attach authenticated user
-    :Backend->>:Backend: Validate task parameters
-    :Backend->>:TaskDB: SELECT * FROM groups WHERE members.userId = {userId}
-    :TaskDB->>:Backend: Return group
+    User->>F: Fill task form (name, difficulty, recurrence)
+    User->>F: Click "Create Task"
+    F->>B: POST /api/task(name, difficulty, recurrence, requiredPeople, JWT)
+    B->>M: Verify JWT token
+    M->>B: Attach authenticated user
+    B->>B: Validate task parameters
+    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
+    D->>B: Return group
     alt User not in group
-        :Backend->>:Frontend: Return 404: Not in any group
-        :Frontend->>User: Display error
+        B->>F: Return 404: Not in any group
+        F->>User: Display error
     else User in group
-        :Backend->>:TaskDB: INSERT task (name, difficulty, recurrence, groupId)
-        :TaskDB->>:Backend: Return created task
+        B->>D: INSERT task (name, difficulty, recurrence, groupId)
+        D->>B: Return created task
         alt Specific users assigned
-            :Backend->>:Backend: Calculate current week start
+            B->>B: Calculate current week start
             loop For each userId in assignedUserIds
-                :Backend->>:TaskDB: INSERT assignment (taskId, userId, weekStart, status)
+                B->>D: INSERT assignment (taskId, userId, weekStart, status)
             end
-            :TaskDB->>:Backend: Confirm assignments created
+            D->>B: Confirm assignments created
         end
-        :Backend->>:TaskDB: SELECT user.name, user.email WHERE id IN (createdBy, assignments.userId)
-        :TaskDB->>:Backend: Return populated task
-        :Backend->>:Frontend: Return TaskResponse
-        :Frontend->>User: Display task in task list
-        :Frontend->>User: Show assigned members
+        B->>D: SELECT user.name, user.email WHERE id IN (createdBy, assignments.userId)
+        D->>B: Return populated task
+        B->>F: Return TaskResponse
+        F->>User: Display task in task list
+        F->>User: Show assigned members
     end
 ```
 
-#### **4.8.5. Use Case 21-22: Rate Roommate**
+#### **4.8.5. Use Case 21-22: Rate Roommate and Write Testimonial**
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant :Frontend
-    participant :Backend
-    participant :AuthMiddleware
-    participant :RatingDB
+    participant F as :Frontend
+    participant B as :Backend
+    participant M as :AuthMiddleware
+    participant D as :RatingDB
 
-    User->>:Frontend: Select roommate to rate
-    :Frontend->>:Backend: GET /api/group() to verify duration
-    :Backend->>:RatingDB: SELECT * FROM groups WHERE members.userId = {userId}
-    :RatingDB->>:Backend: Return group data with join dates
-    :Backend->>:Frontend: Return group with join dates
-    :Frontend->>:Frontend: Calculate days in group together
+    User->>F: Select roommate to rate
+    F->>B: GET /api/group() to verify duration
+    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
+    D->>B: Return group data with join dates
+    B->>F: Return group with join dates
+    F->>F: Calculate days in group together
     alt Less than 30 days together
-        :Frontend->>User: Display error: "Minimum 30 days required"
+        F->>User: Display error: "Minimum 30 days required"
     else 30+ days together
-        :Frontend->>User: Display rating form
-        User->>:Frontend: Enter rating (1-5) and testimonial
-        User->>:Frontend: Click "Submit Rating"
-        :Frontend->>:Backend: POST /api/rating(ratedUserId, groupId, rating, testimonial, JWT)
-        :Backend->>:AuthMiddleware: Verify JWT token
-        :AuthMiddleware->>:Backend: Attach authenticated user
-        :Backend->>:Backend: Validate rating (1-5) and testimonial length
-        :Backend->>:Backend: Check not rating self
-        :Backend->>:RatingDB: SELECT * FROM groups WHERE id = {groupId}
-        :RatingDB->>:Backend: Return group with members
-        :Backend->>:Backend: Calculate time both users in group
-        :Backend->>:Backend: Verify both users >= 30 days
+        F->>User: Display rating form
+        User->>F: Enter rating (1-5) and testimonial
+        User->>F: Click "Submit Rating"
+        F->>B: POST /api/rating(ratedUserId, groupId, rating, testimonial, JWT)
+        B->>M: Verify JWT token
+        M->>B: Attach authenticated user
+        B->>B: Validate rating (1-5) and testimonial length
+        B->>B: Check not rating self
+        B->>D: SELECT * FROM groups WHERE id = {groupId}
+        D->>B: Return group with members
+        B->>B: Calculate time both users in group
+        B->>B: Verify both users >= 30 days
         alt Duration requirement not met
-            :Backend->>:Frontend: Return 400: Minimum duration not met
-            :Frontend->>User: Display error with remaining days
+            B->>F: Return 400: Minimum duration not met
+            F->>User: Display error with remaining days
         else Duration requirement met
-            :Backend->>:RatingDB: UPSERT rating (ratedUserId, raterUserId, groupId, rating, testimonial)
-            :RatingDB->>:Backend: Return rating
+            B->>D: UPSERT rating (ratedUserId, raterUserId, groupId, rating, testimonial)
+            D->>B: Return rating
             loop Calculate average rating
-                :Backend->>:RatingDB: SELECT AVG(rating) FROM ratings WHERE ratedUserId = {ratedUserId}
-                :RatingDB->>:Backend: Return average rating
+                B->>D: SELECT AVG(rating) FROM ratings WHERE ratedUserId = {ratedUserId}
+                D->>B: Return average rating
             end
-            :Backend->>:RatingDB: UPDATE users SET averageRating WHERE id = {ratedUserId}
-            :RatingDB->>:Backend: Confirm update
-            :Backend->>:Frontend: Return RatingResponse (success)
-            :Frontend->>User: Display success message
-            :Frontend->>User: Show updated rating on profile
+            B->>D: UPDATE users SET averageRating WHERE id = {ratedUserId}
+            D->>B: Confirm update
+            B->>F: Return RatingResponse (success)
+            F->>User: Display success message
+            F->>User: Show updated rating on profile
         end
     end
 ```
