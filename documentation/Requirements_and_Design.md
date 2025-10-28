@@ -4,7 +4,10 @@
 
 | **Change Date**   | **Modified Sections** | **Rationale** |
 | ----------------- | --------------------- | ------------- |
-| September 26, 2025 | Initial Plan | First milestone submission |
+| September 26, 2025 | Initial Plan | First milestone submission (M2) |
+| October 28, 2025 | Section 4.1 - Main Components and Interfaces | Added detailed REST API endpoint specifications and internal component interface signatures with parameters, return types, and descriptions as required for M3. This provides clear contract definitions between front-end and back-end components. |
+| October 28, 2025 | Section 4.6 - Sequence Diagrams for Major Use Cases | Added five sequence diagrams (Login, Create Group, Send Message, Add Task, Rate Roommate) using Mermaid notation to illustrate component interactions and message flows for the most critical use cases as required for M3. |
+| October 28, 2025 | Section 4.7 - Non-Functional Requirements Implementation | Added detailed implementation descriptions for all three non-functional requirements (Performance, Reliability, Security), explaining the specific technologies, algorithms, and architectural decisions used to achieve each requirement as required for M3. |
 
 ---
 
@@ -287,34 +290,199 @@ The application targets university students, young professionals, and anyone see
 ---
 
 ## 4. Designs Specification
-### **4.1. Main Components**
+### **4.1. Main Components and Interfaces**
 1. **Front-End Mobile Application (Android/Kotlin)**
     - **Purpose**: Provides the user interface and handles all user interactions. It enables authentication, profile management, group management, messaging, task management, and roommate rating.
-    - **Interfaces**:
+    - **Interfaces**: The front-end communicates with the back-end via HTTP/REST endpoints.
+        
         1. **Authentication Interface**
-            - **Purpose**: Connects with Google Authentication to sign up or log in users securely.
+            - `POST /api/auth/signup(token: String): AuthResponse`
+                - Purpose: Creates a new user account using Google OAuth token
+                - Parameters: Google ID token from OAuth
+                - Returns: Success status, user data, and JWT authentication token
+            
+            - `POST /api/auth/login(token: String): AuthResponse`
+                - Purpose: Authenticates existing user with Google OAuth token
+                - Parameters: Google ID token from OAuth
+                - Returns: Success status, user data, and JWT authentication token
+        
         2. **Profile Management Interface**
-            - **Purpose**: Allows users to fill out required profile information (non-editable fields) and optional details (editable fields such as nickname, picture, preferences).
+            - `PUT /api/users/profile(name: String, dob: Date, gender: String): UserResponse`
+                - Purpose: Sets mandatory user profile fields (non-editable after creation)
+                - Parameters: Legal name, date of birth, gender
+                - Returns: Updated user profile
+            
+            - `PUT /api/users/optionalProfile(bio?: String, profilePicture?: String, livingPreferences?: LivingPreferences): UserResponse`
+                - Purpose: Updates optional profile fields (editable anytime)
+                - Parameters: Optional bio, profile picture URL, living preferences
+                - Returns: Updated user profile
+            
+            - `DELETE /api/users/me(): SuccessResponse`
+                - Purpose: Deletes the current user's account
+                - Returns: Success confirmation
+        
         3. **Group Management Interface**
-            - **Purpose**: Enables users to create new groups or join existing groups using a unique group code. Provides the ability to view group members and leave a group.
+            - `POST /api/group(name: String): GroupResponse`
+                - Purpose: Creates a new roommate group with unique invitation code
+                - Parameters: Group name (max 100 characters)
+                - Returns: Group data including generated group code
+            
+            - `POST /api/group/join(groupCode: String): GroupResponse`
+                - Purpose: Joins an existing group using invitation code
+                - Parameters: 4-character alphanumeric group code
+                - Returns: Updated group data with all members
+            
+            - `GET /api/group(): GroupResponse`
+                - Purpose: Retrieves current user's group information
+                - Returns: Group data with member details and ratings
+            
+            - `DELETE /api/group/member/:memberId(): GroupResponse`
+                - Purpose: Removes a member from group (owner only)
+                - Parameters: User ID of member to remove
+                - Returns: Updated group data
+            
+            - `DELETE /api/group/leave(): SuccessResponse`
+                - Purpose: Allows non-owner member to leave the group
+                - Returns: Success confirmation
+        
         4. **Messaging & Polling Interface**
-            - **Purpose**: Provides real-time chat among group members and polling functionality for group decisions.
+            - `GET /api/chat/:groupId/messages(page?: Number, limit?: Number): MessageListResponse`
+                - Purpose: Retrieves paginated message history for a group
+                - Parameters: Group ID, optional page and limit
+                - Returns: Array of messages with pagination info
+            
+            - `POST /api/chat/:groupId/message(content: String): MessageResponse`
+                - Purpose: Sends a text message to group chat
+                - Parameters: Message content (max 1000 characters)
+                - Returns: Created message with sender info
+            
+            - `POST /api/chat/:groupId/poll(question: String, options: String[], expiresInDays?: Number): MessageResponse`
+                - Purpose: Creates and sends a poll to group chat
+                - Parameters: Poll question, 2-10 answer options, optional expiration days
+                - Returns: Created poll message
+            
+            - `POST /api/chat/:groupId/poll/:messageId/vote(option: String): MessageResponse`
+                - Purpose: Casts or updates vote on a poll
+                - Parameters: Selected option from poll
+                - Returns: Updated poll with vote counts
+            
+            - `DELETE /api/chat/:groupId/message/:messageId(): SuccessResponse`
+                - Purpose: Deletes own message from chat
+                - Parameters: Message ID
+                - Returns: Success confirmation
+        
         5. **Task Management Interface**
-            - **Purpose**: Displays weekly task assignments, allows users to create and track tasks, and shows progress of all group members.
+            - `POST /api/task(name: String, difficulty: Number, recurrence: String, requiredPeople: Number, description?: String, deadline?: Date, assignedUserIds?: String[]): TaskResponse`
+                - Purpose: Creates a new household task
+                - Parameters: Task name, difficulty (1-5), recurrence pattern, number of people required, optional description, deadline, assigned users
+                - Returns: Created task with assignments
+            
+            - `GET /api/task(): TaskListResponse`
+                - Purpose: Retrieves all tasks for current user's group
+                - Returns: Array of tasks with assignment details
+            
+            - `GET /api/task/my-tasks(): TaskListResponse`
+                - Purpose: Retrieves tasks assigned to current user for current week
+                - Returns: Array of assigned tasks
+            
+            - `PUT /api/task/:id/status(status: String): TaskResponse`
+                - Purpose: Updates status of assigned task
+                - Parameters: Task status (incomplete, in-progress, completed)
+                - Returns: Updated task
+            
+            - `POST /api/task/:id/assign(userIds: String[]): TaskResponse`
+                - Purpose: Manually assigns task to specific users for current week
+                - Parameters: Array of user IDs
+                - Returns: Task with updated assignments
+            
+            - `POST /api/task/assign-weekly(): TaskAssignmentResponse`
+                - Purpose: Algorithmically assigns all tasks for the current week
+                - Returns: All tasks with new weekly assignments
+            
+            - `GET /api/task/week/:weekStart(): TaskListResponse`
+                - Purpose: Retrieves tasks for a specific week
+                - Parameters: Week start date
+                - Returns: Tasks with assignments for that week
+            
+            - `DELETE /api/task/:id(): SuccessResponse`
+                - Purpose: Deletes a task (creator or owner only)
+                - Parameters: Task ID
+                - Returns: Success confirmation
+        
         6. **Rating & Moderation Interface**
-            - **Purpose**: Allows users to rate roommates and integrates with the moderation system to filter or review inappropriate content.
+            - `POST /api/rating(ratedUserId: String, groupId: String, rating: Number, testimonial?: String): RatingResponse`
+                - Purpose: Submits or updates rating for a roommate (requires 30 days cohabitation)
+                - Parameters: User ID to rate, group ID, rating (1-5), optional testimonial (max 500 chars)
+                - Returns: Created/updated rating
+            
+            - `GET /api/rating/:userId(): RatingStatsResponse`
+                - Purpose: Retrieves all ratings for a user
+                - Parameters: User ID
+                - Returns: Array of ratings with average rating and total count
+            
+            - `GET /api/rating/user/:userId/group/:groupId(): RatingStatsResponse`
+                - Purpose: Retrieves ratings for a user in a specific group
+                - Parameters: User ID, group ID
+                - Returns: Group-specific ratings and average
+            
+            - `PUT /api/users/report(reportedUserId: String, reason: String, context?: String): ReportResponse`
+                - Purpose: Reports inappropriate user behavior for LLM review
+                - Parameters: Reported user ID, reason for report, optional context
+                - Returns: Report submission confirmation
 
 2. **Back-End Server (Node.js/TypeScript)**
     - **Purpose**: Manages business logic, authentication, database interactions, group algorithms, and communication between front-end and database.
-    - **Interfaces**:
-        1. **API Interface (REST)**
-            - **Purpose**: Provides endpoints for the mobile application to access authentication, profiles, groups, messages, tasks, and ratings.
-        2. **Database Access Layer**
-            - **Purpose**: Connects to MongoDB to query, store, and update persistent data. Ensures secure data access.
-        3. **Push Notification Service**
-            - **Purpose**: Integrates with Firebase Cloud Messaging to deliver real-time alerts to mobile clients.
-        4. **Moderation Module Interface**
-            - **Purpose**: Connects to the LLM-based moderation system to review flagged messages, profiles, and roommate reviews.
+    - **Internal Component Interfaces**:
+        
+        1. **Authentication Service (AuthService)**
+            - `signup(email: String, name: String, googleId: String): Promise<AuthResult>`
+                - Purpose: Creates new user account and generates JWT token
+                - Validates Google credentials and ensures unique user
+            
+            - `login(email: String): Promise<AuthResult>`
+                - Purpose: Authenticates existing user and generates JWT token
+                - Verifies user exists and returns user data with token
+            
+            - `protect(req: Request, res: Response, next: NextFunction): void`
+                - Purpose: Middleware to verify JWT token and authenticate requests
+                - Decodes token and attaches user data to request object
+        
+        2. **Database Access Layer (MongoDB/Mongoose Models)**
+            - `User.create(userData: UserData): Promise<User>`
+                - Purpose: Creates new user document in database
+            
+            - `User.findById(id: String): Promise<User>`
+                - Purpose: Retrieves user by ID
+            
+            - `Group.create(groupData: GroupData): Promise<Group>`
+                - Purpose: Creates new group with auto-generated unique code
+            
+            - `Group.findOne(query: Object): Promise<Group>`
+                - Purpose: Finds single group matching query criteria
+            
+            - `Task.find(query: Object): Promise<Task[]>`
+                - Purpose: Retrieves tasks matching query criteria
+            
+            - `Message.create(messageData: MessageData): Promise<Message>`
+                - Purpose: Creates new message document
+            
+            - `Rating.getAverageRating(userId: String): Promise<RatingStats>`
+                - Purpose: Calculates average rating for a user
+        
+        3. **WebSocket Service (Socket.IO)**
+            - `getIO(): Server`
+                - Purpose: Returns Socket.IO server instance for real-time communication
+            
+            - `joinRoom(socket: Socket, groupId: String): void`
+                - Purpose: Adds socket connection to group room for message broadcasting
+            
+            - `emit(event: String, data: Object): void`
+                - Purpose: Broadcasts real-time events to connected clients
+        
+        4. **Task Assignment Algorithm**
+            - `assignTasksWeekly(groupId: String): Promise<Task[]>`
+                - Purpose: Fairly distributes tasks among group members for current week
+                - Uses randomization and required people count for balanced allocation
 
 3. **LLM Moderation System**
     - **Purpose**: Provides automated review of roommate reviews and profiles, and handles reported chat messages in batches.
@@ -380,6 +548,256 @@ The application targets university students, young professionals, and anyone see
 7. **Firebase Cloud Messaging (Push Notifications)**
     - **Purpose**: Provides push notification support for the Android front-end, enabling the application to send real-time updates and alerts to users (e.g., new group messages or task reminders).
     - **Reason**: The assignment specifically allows Firebase for push notifications. It is the industry standard for Android apps, integrates smoothly with Kotlin and Jetpack Compose, and is supported by Google Cloud for simplified setup.
+
+### **4.6. Sequence Diagrams for Major Use Cases**
+
+The following sequence diagrams illustrate how the components and interfaces defined in the high-level design interact to realize the five most critical use cases of the RoomSync application.
+
+#### **4.6.1. Use Case 1: Login (User Authentication)**
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend as Android App
+    participant GoogleAuth as Google OAuth
+    participant Backend as Node.js Server
+    participant AuthService as Auth Service
+    participant Database as MongoDB
+
+    User->>Frontend: Click "Login" button
+    Frontend->>GoogleAuth: Request OAuth authentication
+    GoogleAuth->>User: Display Google account selection
+    User->>GoogleAuth: Select account and authorize
+    GoogleAuth->>Frontend: Return ID token
+    Frontend->>Backend: POST /api/auth/login(token)
+    Backend->>AuthService: verifyGoogleToken(token)
+    AuthService->>GoogleAuth: Verify token with Google
+    GoogleAuth->>AuthService: Return email and user info
+    AuthService->>Backend: Return verified credentials
+    Backend->>Database: Find user by email
+    Database->>Backend: Return user document
+    Backend->>AuthService: login(email)
+    AuthService->>AuthService: Generate JWT token
+    AuthService->>Backend: Return user data + JWT
+    Backend->>Frontend: Return AuthResponse (success, user, token)
+    Frontend->>Frontend: Store JWT in secure storage
+    Frontend->>User: Navigate to home screen
+```
+
+#### **4.6.2. Use Case 6: Create Roommate Group**
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend as Android App
+    participant Backend as Node.js Server
+    participant AuthMiddleware as Auth Middleware
+    participant Database as MongoDB
+    participant GroupModel as Group Model
+
+    User->>Frontend: Enter group name and click "Create Group"
+    Frontend->>Backend: POST /api/group(name, JWT token)
+    Backend->>AuthMiddleware: Verify JWT token
+    AuthMiddleware->>Backend: Attach authenticated user
+    Backend->>Backend: Validate group name
+    Backend->>Database: Check if user already in a group
+    Database->>Backend: Return existing group (or null)
+    alt User already in group
+        Backend->>Frontend: Return error: "Already in a group"
+        Frontend->>User: Display error message
+    else User not in group
+        Backend->>GroupModel: Create new group
+        GroupModel->>GroupModel: Generate unique 4-char code
+        GroupModel->>Database: Save group with owner and member
+        Database->>GroupModel: Return created group
+        GroupModel->>Backend: Return group
+        Backend->>Database: Update user's groupName
+        Database->>Backend: Confirm update
+        Backend->>Database: Populate owner and member details
+        Database->>Backend: Return populated group
+        Backend->>Frontend: Return GroupResponse (group + code)
+        Frontend->>User: Display group dashboard with code
+        User->>User: Share group code with roommates
+    end
+```
+
+#### **4.6.3. Use Case 14: Send Message (Group Chat)**
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend as Android App
+    participant Backend as Node.js Server
+    participant AuthMiddleware as Auth Middleware
+    participant Database as MongoDB
+    participant SocketIO as WebSocket Server
+    participant OtherClients as Other Group Members
+
+    User->>Frontend: Type message and click "Send"
+    Frontend->>Backend: POST /api/chat/:groupId/message(content, JWT)
+    Backend->>AuthMiddleware: Verify JWT token
+    AuthMiddleware->>Backend: Attach authenticated user
+    Backend->>Backend: Validate message content
+    Backend->>Database: Find group by ID
+    Database->>Backend: Return group
+    Backend->>Backend: Verify user is group member
+    alt User not member
+        Backend->>Frontend: Return 403 Forbidden
+        Frontend->>User: Display error
+    else User is member
+        Backend->>Database: Create message document
+        Database->>Backend: Return created message
+        Backend->>Database: Populate sender information
+        Database->>Backend: Return message with sender
+        Backend->>SocketIO: Broadcast new-message event to groupId room
+        SocketIO->>OtherClients: Emit new-message with data
+        OtherClients->>OtherClients: Display message in real-time
+        Backend->>Frontend: Return MessageResponse
+        Frontend->>User: Display sent message
+    end
+```
+
+#### **4.6.4. Use Case 15: Add Task**
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend as Android App
+    participant Backend as Node.js Server
+    participant AuthMiddleware as Auth Middleware
+    participant Database as MongoDB
+    participant TaskModel as Task Model
+
+    User->>Frontend: Fill task form (name, difficulty, recurrence)
+    User->>Frontend: Click "Create Task"
+    Frontend->>Backend: POST /api/task(name, difficulty, recurrence, requiredPeople, JWT)
+    Backend->>AuthMiddleware: Verify JWT token
+    AuthMiddleware->>Backend: Attach authenticated user
+    Backend->>Backend: Validate task parameters
+    Backend->>Database: Find user's group
+    Database->>Backend: Return group
+    alt User not in group
+        Backend->>Frontend: Return 404: Not in any group
+        Frontend->>User: Display error
+    else User in group
+        Backend->>TaskModel: Create task with group ID
+        TaskModel->>Database: Save task document
+        Database->>TaskModel: Return created task
+        alt Specific users assigned
+            TaskModel->>TaskModel: Calculate current week start
+            TaskModel->>TaskModel: Add assignments for specified users
+            TaskModel->>Database: Update task with assignments
+            Database->>TaskModel: Confirm update
+        end
+        TaskModel->>Backend: Return task
+        Backend->>Database: Populate createdBy and assignments
+        Database->>Backend: Return populated task
+        Backend->>Frontend: Return TaskResponse
+        Frontend->>User: Display task in task list
+        Frontend->>User: Show assigned members
+    end
+```
+
+#### **4.6.5. Use Case 18-19: Rate Roommate**
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Frontend as Android App
+    participant Backend as Node.js Server
+    participant AuthMiddleware as Auth Middleware
+    participant Database as MongoDB
+    participant RatingModel as Rating Model
+
+    User->>Frontend: Select roommate to rate
+    Frontend->>Backend: GET /api/group() to verify duration
+    Backend->>Database: Get group with member join dates
+    Database->>Backend: Return group data
+    Backend->>Frontend: Return group with join dates
+    Frontend->>Frontend: Calculate days in group together
+    alt Less than 30 days together
+        Frontend->>User: Display error: "Minimum 30 days required"
+    else 30+ days together
+        Frontend->>User: Display rating form
+        User->>Frontend: Enter rating (1-5) and testimonial
+        User->>Frontend: Click "Submit Rating"
+        Frontend->>Backend: POST /api/rating(ratedUserId, groupId, rating, testimonial, JWT)
+        Backend->>AuthMiddleware: Verify JWT token
+        AuthMiddleware->>Backend: Attach authenticated user
+        Backend->>Backend: Validate rating (1-5) and testimonial length
+        Backend->>Backend: Check not rating self
+        Backend->>Database: Find group by ID
+        Database->>Backend: Return group with members
+        Backend->>Backend: Calculate time both users in group
+        Backend->>Backend: Verify both users >= 30 days
+        alt Duration requirement not met
+            Backend->>Frontend: Return 400: Minimum duration not met
+            Frontend->>User: Display error with remaining days
+        else Duration requirement met
+            Backend->>Database: Upsert rating (create or update)
+            Database->>Backend: Return rating
+            Backend->>RatingModel: Calculate new average rating
+            RatingModel->>Database: Aggregate all ratings for user
+            Database->>RatingModel: Return rating statistics
+            RatingModel->>Backend: Return average rating
+            Backend->>Database: Update user's averageRating field
+            Database->>Backend: Confirm update
+            Backend->>Frontend: Return RatingResponse (success)
+            Frontend->>User: Display success message
+            Frontend->>User: Show updated rating on profile
+        end
+    end
+```
+
+### **4.7. Non-Functional Requirements Implementation**
+
+This section describes how each non-functional requirement from section 3.7 is implemented in the system.
+
+#### **4.7.1. Performance Requirement Implementation**
+**Requirement**: Real-time messaging must deliver messages within 2 seconds under normal network conditions.
+
+**Implementation**:
+- **WebSocket Technology (Socket.IO)**: The system uses Socket.IO to establish persistent WebSocket connections between the Android client and Node.js server. This eliminates HTTP request overhead and enables instant bidirectional communication.
+- **Event-Based Broadcasting**: When a user sends a message, the server immediately broadcasts it to all connected clients in the same group room using `io.to(groupId).emit('new-message', messageData)`, ensuring sub-second delivery.
+- **Message Queuing**: Messages are first saved to the database, then broadcasted via WebSocket. If the WebSocket delivery fails, clients can retrieve missed messages via the REST endpoint `GET /api/chat/:groupId/messages`.
+- **Efficient Database Indexing**: MongoDB indexes on `groupId` and `createdAt` fields ensure message retrieval queries execute in under 50ms even with thousands of messages.
+- **Pagination**: Message history uses pagination (default 50 messages per page) to prevent large data transfers that could slow down the application.
+
+#### **4.7.2. Reliability Requirement Implementation**
+**Requirement**: Task completion data must be persistent and accurate with 99.9% uptime.
+
+**Implementation**:
+- **Cloud Deployment on Google Cloud Platform**: The Node.js backend and MongoDB database are deployed on Google Compute Engine, which provides 99.95% uptime SLA and automatic instance health monitoring.
+- **Database Persistence**: All task data is stored in MongoDB with proper schema validation to ensure data integrity. Task assignments include `status`, `completedAt` timestamps, and `weekStart` fields for historical tracking.
+- **Atomic Operations**: Task status updates use Mongoose's atomic operations (`findOneAndUpdate`) to prevent race conditions when multiple users interact with the same task.
+- **Data Backup**: MongoDB is configured with regular automated backups on Google Cloud Storage to protect against data loss.
+- **Task Assignment Immutability**: Historical task assignments are preserved even when new assignments are created for subsequent weeks, ensuring accurate completion rate calculations over time.
+- **Aggregation for Rating Calculation**: The rating system uses MongoDB aggregation pipelines to calculate average ratings from all historical ratings, ensuring objective task completion metrics are always accurate.
+
+#### **4.7.3. Security Requirement Implementation**
+**Requirement**: User profile and group chat data must be encrypted in transit and at rest using AES-256 encryption.
+
+**Implementation**:
+- **Encryption in Transit**:
+  - All API endpoints use HTTPS with TLS 1.3 protocol, which employs AES-256-GCM encryption for data transmission between the Android client and the Node.js server.
+  - WebSocket connections (Socket.IO) are configured to use secure WebSocket protocol (WSS) over TLS, ensuring encrypted real-time messaging.
+  - Google OAuth tokens are transmitted securely and never stored on the client beyond the authentication flow.
+  
+- **Encryption at Rest**:
+  - MongoDB is configured with encryption at rest using Google Cloud's native encryption, which uses AES-256 encryption for all data stored on disk.
+  - Sensitive user fields (email, name, DOB, gender) are stored in encrypted MongoDB collections.
+  - Profile pictures are stored as URLs pointing to Google Cloud Storage, which also uses AES-256 encryption for stored objects.
+  
+- **Authentication and Authorization**:
+  - JWT tokens are signed using HS256 algorithm with a secure secret key (256-bit) stored as an environment variable.
+  - All protected routes use the `protect` middleware which verifies JWT signatures and expiration before granting access.
+  - Group chat access is validated by verifying the requesting user is a member of the group before returning messages or allowing message posting.
+  - Password-free authentication via Google OAuth eliminates risks associated with password storage.
+
+- **Data Access Control**:
+  - Users can only access data for groups they are members of, enforced at the API route level.
+  - Task and rating operations validate group membership and minimum cohabitation duration before allowing actions.
+  - Sensitive operations (group deletion, member removal) are restricted to group owners only.
 
 ### **4.5. Dependencies Diagram**
 images/HighLevelDesign.webp
