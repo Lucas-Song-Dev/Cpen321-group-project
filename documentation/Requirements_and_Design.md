@@ -304,17 +304,24 @@ The diagram should NOT include internal components like databases, as these are 
 ### **3.7. Non-Functional Requirements**
 
 <a name="nfr1"></a>
+Api Latency: 
+https://www.upcoretech.com/insights/top-mobile-app-performance-metrics/
+Slow response times are universally detrimental to sentiment, engagement, conversions, and churn. Leading apps deliver response times under 300 ms consistently, with 100 ms or less optimal for interactions. Degraded response times are symptoms of sluggish code and infrastructure.
+
 1. **API Response Time Requirement**
     - **Description**: API response times for login, signup (with all required data entered), message send (not downstream message delivery), and user profile fetch must be under 200ms on Wi-Fi 5+ connection on a 16GB Android phone running Android API 33.
     - **Justification**: According to UPCore Technologies' mobile app performance research, slow response times are universally detrimental to user sentiment, engagement, conversions, and churn. Leading mobile apps deliver response times under 300ms consistently, with 100ms or less optimal for interactions. Degraded response times are symptoms of sluggish code and infrastructure. To ensure end-to-end user experience remains under the 300ms threshold for perceived responsiveness, API latency must be kept under 200ms to account for network overhead, client-side rendering, and processing time. This 200ms target allows for a 100ms buffer for UI updates and animations while staying within the critical 300ms window that maintains user flow and prevents perceived lag.
     - **Testing Method**: Timing starts when sending a cURL request to the API with required parameters and ends when receiving a 200 OK response from the server. Error responses (400s, 500s) are excluded from measurements as optimization should target successful operations.
 
+Front End timing:
+https://appinstitute.com/improving-app-responsiveness-key-metrics-to-track/
 <a name="nfr2"></a>
 2. **Application Load Time Requirement**
     - **Description**: The application cold start (launching app when not in memory) must complete within 5 seconds on a 16GB Android phone running Android API 33 on Wi-Fi 5-7 connection.
     - **Justification**: According to App Institute's responsiveness research, app load time is a critical metric for user retention. Users expect immediate access to functionality, and delays during cold start create negative first impressions and increase abandonment rates. The 5-second threshold is based on industry benchmarks for productivity apps, balancing the need for quick startup with the complexity of initializing authentication, database connections, and UI components. This ensures users can access core features (group chat, tasks) quickly enough for time-sensitive household coordination scenarios (e.g., coordinating grocery runs, responding to locked-out roommates).
     - **Testing Method**: Time measurement begins when the app icon is tapped on the Android home screen (with app not in memory) and ends when the user can interact with the first screen (login screen for new users, home dashboard for authenticated users).
 
+Accessibility: https://uxmovement.com/mobile/optimal-size-and-spacing-for-mobile-buttons/
 <a name="nfr3"></a>
 3. **UI Accessibility Requirement**
     - **Description**: All interactive buttons and touch targets must have a minimum touch target size of 42x42 pixels to ensure accessibility and ease of use.
