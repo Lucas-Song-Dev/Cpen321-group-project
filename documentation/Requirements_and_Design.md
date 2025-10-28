@@ -623,6 +623,81 @@ Frameworks and libraries are software packages that provide reusable functionali
 
 ### **4.5. Dependencies Diagram**
 
+### **4.5. Dependencies Diagram**
+
+```mermaid
+graph TB
+    subgraph "Front-End"
+        FE[Android App<br/>Jetpack Compose]
+    end
+    
+    subgraph "Back-End"
+        A[Authentication Service<br/>auth.ts, authService.ts]
+        B[User Management Service<br/>user.ts, User.ts]
+        C[Group Management Service<br/>group.ts, Group.ts]
+        D[Chat Service<br/>chat.ts, Message.ts, socketHandler.ts]
+        E[Task Service<br/>task.ts, Task.ts]
+        F[Rating Service<br/>rating.ts, Rating.ts]
+        G[Moderation Service<br/>report.ts]
+    end
+    
+    subgraph "External Services & Databases"
+        GOOGLE[Google OAuth 2.0 API<br/>External APIs]
+        FCM[Firebase Cloud Messaging<br/>External APIs]
+        MONGO[(MongoDB<br/>NoSQL Database)]
+    end
+    
+    %% Frontend to Backend connections
+    FE -->|HTTP/REST| A
+    FE -->|WebSocket| D
+    FE -->|HTTP/REST| B
+    FE -->|HTTP/REST| C
+    FE -->|HTTP/REST| E
+    FE -->|HTTP/REST| F
+    
+    %% Frontend to External Services
+    FE -->|OAuth Flow| GOOGLE
+    
+    %% Backend service dependencies
+    A -->|User Creation| B
+    A -->|Token Verification| GOOGLE
+    A -->|User Data| MONGO
+    
+    B -->|User Queries| MONGO
+    B -->|Profile Updates| MONGO
+    
+    C -->|Group Operations| MONGO
+    C -->|Member Validation| B
+    
+    D -->|Message Storage| MONGO
+    D -->|Group Validation| C
+    D -->|User Validation| B
+    D -->|Push Notifications| FCM
+    
+    E -->|Task Storage| MONGO
+    E -->|Group Validation| C
+    E -->|User Validation| B
+    
+    F -->|Rating Storage| MONGO
+    F -->|Group Validation| C
+    F -->|User Validation| B
+    
+    G -->|Content Review| D
+    G -->|Report Storage| MONGO
+    
+    %% Styling
+    classDef frontend fill:#e1f5fe
+    classDef backend fill:#f3e5f5
+    classDef external fill:#fff3e0
+    classDef database fill:#e8f5e8
+    
+    class FE frontend
+    class A,B,C,D,E,F,G backend
+    class GOOGLE,FCM external
+    class MONGO database
+```
+
+
 ![RoomSync high level design](images/HighLevelDesign.webp)
 
 **System Architecture:**
