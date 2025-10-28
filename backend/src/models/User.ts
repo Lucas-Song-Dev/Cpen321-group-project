@@ -23,6 +23,8 @@ export interface User extends Document {
     noise?: 'Quiet' | 'Moderate' | 'Loud';
     profession?: 'Student' | 'Worker' | 'Unemployed';
   };
+
+  isOffensive?: boolean;
 }
 
 const userSchema = new Schema<User>({
@@ -91,6 +93,11 @@ const userSchema = new Schema<User>({
   groupName: { 
     type: String
   },
+  isOffensive: {
+    type: Boolean,
+    default: false
+  },
+
 });
 
 export const UserModel = model<User>("User", userSchema);
