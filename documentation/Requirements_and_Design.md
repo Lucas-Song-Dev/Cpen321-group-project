@@ -9,15 +9,13 @@
 | October 28, 2025 | Section 3.4 - Use Case Descriptions | Added missing use cases (Logout, Delete account, Set mandatory profile fields). Renumbered all use cases sequentially (1-24) and improved naming consistency to match use case diagram. Added references to Google OAuth 2.0 API interaction. Addresses M2 feedback about missing use cases and naming inconsistencies. |
 | October 28, 2025 | Section 3.5 - Formal Use Case Specifications | Updated use case titles to match renumbered sequence (Use Case 9: Create Group, Use Case 17: Create Poll, Use Case 18: Add Task, Use Case 21-22: Rate Roommate). Ensures consistency between formal specifications and use case list. |
 | October 28, 2025 | Section 3.7 - Non-Functional Requirements | Replaced previous NFRs with concrete, measurable requirements: API Response Time (<200ms), Application Load Time (<5s cold start), and UI Accessibility (42px minimum touch targets). Added detailed justifications citing industry research (UPCore Technologies, App Institute, UX Movement) and specific testing methodologies. Addresses M2 feedback requesting justification for NFR values. |
-| October 28, 2025 | Section 4.1 - Main Components and Interfaces | Added detailed REST API endpoint specifications and internal component interface signatures with parameters, return types, and descriptions as required for M3. This provides clear contract definitions between front-end and back-end components. |
-| October 28, 2025 | Section 4.3 - External APIs and Services | Clarified that external modules are third-party APIs accessed over the network. Made APIs concrete (Google OAuth 2.0 API, Firebase Cloud Messaging). Removed Express.js and Mongoose which are libraries, not external APIs. Addresses M2 feedback about specificity and proper categorization. |
-| October 28, 2025 | Section 4.4 - Frameworks and Libraries | Reorganized to clearly separate frameworks/libraries (Jetpack Compose, Retrofit, Express.js, Mongoose, Socket.IO) from external APIs. Moved Express.js and Mongoose from external modules to this section where they belong. |
-| October 28, 2025 | Section 4.5 - Programming Languages and Runtime | Created new section to separate programming languages (Kotlin, TypeScript) and runtime environments (ART, Node.js) from frameworks. Addresses M2 feedback that languages are not frameworks. |
-| October 28, 2025 | Section 4.6 - Database and Cloud Infrastructure | Separated database and infrastructure from frameworks for better organization. Clarifies MongoDB deployment strategy (self-hosted on GCP, not MongoDB Atlas). |
-| October 28, 2025 | Section 4.7 - High-Level Architecture and Component Dependencies | Added textual description of backend decomposition into domain-specific services (Authentication, User Management, Group Management, Chat, Task, Rating, Moderation) instead of presenting backend as monolithic. Lists specific file paths for each service and describes inter-service dependencies. Addresses M2 feedback about missing by-domain decomposition. |
-| October 28, 2025 | Section 4.8 - Sequence Diagrams for Major Use Cases | Added five sequence diagrams (Login, Create Group, Send Message, Add Task, Rate Roommate) using Mermaid notation with proper syntax. Fixed participant declarations to use 'participant ID as :DisplayName' format per GitHub Mermaid specification to display UML instance notation (colon prefixes). Includes database-like query notation (SELECT, INSERT, UPDATE), loop constructs, and alt blocks to show conditional flows. Diagrams illustrate component interactions and message flows for the most critical use cases as required for M3. |
-| October 28, 2025 | Section 4.9 - High-Level Design Diagram | Moved diagram to after sequence diagrams and added detailed description of components shown in diagram including decomposed backend services. Describes key dependency relationships based on actual implementation. |
-| October 28, 2025 | Section 4.10 - Non-Functional Requirements Implementation | Updated implementation details to align with new NFRs. Described concrete techniques for achieving API response time targets (database indexing, connection pooling, lean queries), cold start performance (lazy loading, AOT compilation, coroutines), and accessibility compliance (Jetpack Compose modifiers, Material Design 3 defaults, automated scanner integration). Includes verification commands for testing each requirement. |
+| October 28, 2025 | Section 4.1 - Main Components | Added detailed REST API endpoint specifications and internal component interface signatures with parameters, return types, and descriptions as required for M3. This provides clear contract definitions between front-end and back-end components. |
+| October 28, 2025 | Section 4.3 - External Modules | Clarified that external modules are third-party APIs accessed over the network. Made APIs concrete (Google OAuth 2.0 API, Firebase Cloud Messaging). Removed Express.js and Mongoose which are libraries, not external APIs. Addresses M2 feedback about specificity and proper categorization. |
+| October 28, 2025 | Section 4.4 - Frameworks and Libraries | Reorganized to clearly separate frameworks/libraries (Jetpack Compose, Retrofit, Express.js, Mongoose, Socket.IO) from external APIs. Moved Express.js and Mongoose from external modules to this section where they belong. Consolidated programming languages, runtime environments, database, and cloud infrastructure into this section to follow template format. |
+| October 28, 2025 | Section 4.5 - Dependencies Diagram | Added high-level design diagram with textual description of backend decomposition into domain-specific services (Authentication, User Management, Group Management, Chat, Task, Rating, Moderation) instead of presenting backend as monolithic. Lists specific file paths for each service and describes inter-service dependencies. Addresses M2 feedback about missing by-domain decomposition. |
+| October 28, 2025 | Section 4.6 - Use Case Sequence Diagram | Added five sequence diagrams (Login, Create Group, Send Message, Add Task, Rate Roommate) using Mermaid notation with proper syntax. Fixed participant declarations to use 'participant ID as :DisplayName' format per GitHub Mermaid specification to display UML instance notation (colon prefixes). Includes database-like query notation (SELECT, INSERT, UPDATE), loop constructs, and alt blocks to show conditional flows. Added anchor links to reference use cases from section 3.5. Diagrams illustrate component interactions and message flows for the most critical use cases as required for M3. |
+| October 28, 2025 | Section 4.7 - Design of Non-Functional Requirements | Updated implementation details to align with new NFRs. Described concrete techniques for achieving API response time targets (database indexing, connection pooling, lean queries), cold start performance (lazy loading, AOT compilation, coroutines), and accessibility compliance (Jetpack Compose modifiers, Material Design 3 defaults, automated scanner integration). Includes verification commands for testing each requirement. Added anchor links to reference NFRs from section 3.7. |
+| October 28, 2025 | Document Structure | Reorganized entire section 4 to match the official M3 template format exactly: 4.1 Main Components, 4.2 Databases, 4.3 External Modules, 4.4 Frameworks and Libraries, 4.5 Dependencies Diagram, 4.6 Use Case Sequence Diagram, 4.7 Design of Non-Functional Requirements. Consolidated duplicate sections and ensured proper anchor linking throughout. |
 
 ---
 
@@ -304,18 +302,20 @@ The diagram should NOT include internal components like databases, as these are 
 
 
 ### **3.7. Non-Functional Requirements**
-<a name="nfr1"></a>
 
+<a name="nfr1"></a>
 1. **API Response Time Requirement**
     - **Description**: API response times for login, signup (with all required data entered), message send (not downstream message delivery), and user profile fetch must be under 200ms on Wi-Fi 5+ connection on a 16GB Android phone running Android API 33.
     - **Justification**: According to UPCore Technologies' mobile app performance research, slow response times are universally detrimental to user sentiment, engagement, conversions, and churn. Leading mobile apps deliver response times under 300ms consistently, with 100ms or less optimal for interactions. Degraded response times are symptoms of sluggish code and infrastructure. To ensure end-to-end user experience remains under the 300ms threshold for perceived responsiveness, API latency must be kept under 200ms to account for network overhead, client-side rendering, and processing time. This 200ms target allows for a 100ms buffer for UI updates and animations while staying within the critical 300ms window that maintains user flow and prevents perceived lag.
     - **Testing Method**: Timing starts when sending a cURL request to the API with required parameters and ends when receiving a 200 OK response from the server. Error responses (400s, 500s) are excluded from measurements as optimization should target successful operations.
 
+<a name="nfr2"></a>
 2. **Application Load Time Requirement**
     - **Description**: The application cold start (launching app when not in memory) must complete within 5 seconds on a 16GB Android phone running Android API 33 on Wi-Fi 5-7 connection.
     - **Justification**: According to App Institute's responsiveness research, app load time is a critical metric for user retention. Users expect immediate access to functionality, and delays during cold start create negative first impressions and increase abandonment rates. The 5-second threshold is based on industry benchmarks for productivity apps, balancing the need for quick startup with the complexity of initializing authentication, database connections, and UI components. This ensures users can access core features (group chat, tasks) quickly enough for time-sensitive household coordination scenarios (e.g., coordinating grocery runs, responding to locked-out roommates).
     - **Testing Method**: Time measurement begins when the app icon is tapped on the Android home screen (with app not in memory) and ends when the user can interact with the first screen (login screen for new users, home dashboard for authenticated users).
 
+<a name="nfr3"></a>
 3. **UI Accessibility Requirement**
     - **Description**: All interactive buttons and touch targets must have a minimum touch target size of 42x42 pixels to ensure accessibility and ease of use.
     - **Justification**: According to UX Movement's mobile usability research on optimal button sizing and spacing, smaller buttons increase error rates and user frustration, particularly for users with motor impairments, larger fingers, or when using the app in motion (walking between rooms). The 42-pixel minimum is based on empirical studies showing this size provides adequate touch accuracy across diverse user populations without requiring excessive screen space. This is critical for RoomSync's core interactions (sending messages, marking tasks complete, creating polls) which users often perform quickly while multitasking in shared living spaces.
@@ -324,7 +324,7 @@ The diagram should NOT include internal components like databases, as these are 
 ---
 
 ## 4. Designs Specification
-### **4.1. Main Components and Interfaces**
+### **4.1. Main Components**
 1. **Front-End Mobile Application (Android/Kotlin)**
     - **Purpose**: Provides the user interface and handles all user interactions. It enables authentication, profile management, group management, messaging, task management, and roommate rating.
     - **Interfaces**: The front-end communicates with the back-end via HTTP/REST endpoints.
@@ -538,8 +538,8 @@ The diagram should NOT include internal components like databases, as these are 
         - **Ratings**: Objective and subjective roommate ratings.
         - **Reports**: Flagged messages and reviews for LLM moderation.
 
-### **4.3. External APIs and Services**
-External APIs are third-party services accessed over the internet that provide functionality not implemented within the RoomSync application.
+### **4.3. External Modules**
+External modules are third-party services accessed over the internet that provide functionality not implemented within the RoomSync application.
 
 1. **Google OAuth 2.0 API**
     - **Provider**: Google Identity Platform
@@ -600,8 +600,6 @@ Frameworks and libraries are software packages that provide reusable functionali
     - **Purpose**: Verifies Google OAuth ID tokens received from the Android client. Validates token signatures against Google's public keys.
     - **Usage**: `verifyIdToken()` method extracts user email, name, and Google ID from tokens.
 
-### **4.5. Programming Languages and Runtime Environments**
-
 **Programming Languages:**
 - **Kotlin**: Statically-typed JVM language for Android development. Required by course assignment. Provides null safety, coroutines, and modern functional programming features.
 - **TypeScript**: Strongly-typed superset of JavaScript for backend development. Required by course assignment. Provides compile-time type checking and enhanced IDE support.
@@ -610,23 +608,15 @@ Frameworks and libraries are software packages that provide reusable functionali
 - **Android Runtime (ART)**: Executes Kotlin bytecode on Android devices (API 33 minimum).
 - **Node.js v18+**: JavaScript runtime for executing TypeScript (compiled to JavaScript) on the server.
 
-### **4.6. Database and Cloud Infrastructure**
+**Database:**
+- **MongoDB**: NoSQL document database storing all persistent application data in JSON-like BSON format. Collections include Users, Groups, Messages, Tasks, and Ratings. Self-hosted on Google Cloud Compute Engine VM.
 
-1. **MongoDB**
-    - **Type**: NoSQL Document Database
-    - **Purpose**: Stores all persistent application data in JSON-like BSON format. Collections include Users, Groups, Messages, Tasks, and Ratings.
-    - **Reason**: Chosen over MySQL for schema flexibility, native JSON support, and strong integration with Node.js via Mongoose. Handles nested documents (e.g., group members, task assignments) more naturally than relational tables.
-    - **Deployment**: Self-hosted on Google Cloud Compute Engine VM (not using prohibited MongoDB Atlas managed service).
+**Cloud Infrastructure:**
+- **Google Cloud Platform (GCP)**: Cloud infrastructure provider hosting the Node.js backend and MongoDB database on Compute Engine VMs. Provides scalable, reliable infrastructure with 99.95% uptime SLA. Required by course assignment.
 
-2. **Google Cloud Platform (GCP)**
-    - **Type**: Cloud Infrastructure Provider
-    - **Purpose**: Hosts the Node.js backend and MongoDB database on Compute Engine VMs. Provides scalable, reliable infrastructure with 99.95% uptime SLA.
-    - **Services Used**: 
-        - **Compute Engine**: Virtual machines running Ubuntu with Node.js and MongoDB
-        - **Cloud Storage**: (Future) for user-uploaded profile pictures
-    - **Reason**: Required by course assignment. Offers student credits and integrates well with Google OAuth.
+### **4.5. Dependencies Diagram**
 
-### **4.7. High-Level Architecture and Component Dependencies**
+![RoomSync high level design](images/HighLevelDesign.webp)
 
 **System Architecture:**
 The RoomSync system follows a client-server architecture with three main tiers:
@@ -665,13 +655,11 @@ Rather than a monolithic backend, the server is organized into domain-specific m
 - **Backend Server** → Google Cloud Compute Engine (deployment)
 - **MongoDB** → Google Cloud Compute Engine (hosted on same or separate VM)
 
-See section 4.9 for the visual high-level design diagram.
-
-### **4.8. Sequence Diagrams for Major Use Cases**
+### **4.6. Use Case Sequence Diagram (5 Most Major Use Cases)**
 
 The following sequence diagrams illustrate how the components and interfaces defined in the high-level design interact to realize the five most critical use cases of the RoomSync application.
 
-#### **4.8.1. Use Case 1: Login (User Authentication)**
+1. [**Use Case 1: Login (User Authentication)**](#uc1)
 
 ```mermaid
 sequenceDiagram
@@ -702,7 +690,7 @@ sequenceDiagram
     F->>User: Navigate to home screen
 ```
 
-#### **4.8.2. Use Case 9: Create Group**
+2. [**Use Case 9: Create Group**](#uc2)
 
 ```mermaid
 sequenceDiagram
@@ -734,7 +722,7 @@ sequenceDiagram
     end
 ```
 
-#### **4.8.3. Use Case 16: Send Message**
+3. [**Use Case 16: Send Message**](#uc3)
 
 ```mermaid
 sequenceDiagram
@@ -770,7 +758,7 @@ sequenceDiagram
     end
 ```
 
-#### **4.8.4. Use Case 18: Add Task**
+4. [**Use Case 18: Add Task**](#uc4)
 
 ```mermaid
 sequenceDiagram
@@ -809,7 +797,7 @@ sequenceDiagram
     end
 ```
 
-#### **4.8.5. Use Case 21-22: Rate Roommate and Write Testimonial**
+5. [**Use Case 21-22: Rate Roommate and Write Testimonial**](#uc5)
 
 ```mermaid
 sequenceDiagram
@@ -859,11 +847,12 @@ sequenceDiagram
     end
 ```
 
-### **4.10. Non-Functional Requirements Implementation**
+### **4.7. Design of Non-Functional Requirements**
 
 This section describes how each non-functional requirement from section 3.7 is implemented in the system.
 
-#### **4.10.1. API Response Time Implementation**
+1. [**API Response Time Requirement**](#nfr1)
+
 **Requirement**: API response times for login, signup, message send, and user profile fetch must be under 200ms on Wi-Fi 5+ on Android API 33.
 
 **Implementation**:
@@ -883,7 +872,8 @@ curl -w "@curl-format.txt" -o /dev/null -s -X POST https://api.roomsync.com/api/
   -H "Content-Type: application/json" -d '{"token":"<GOOGLE_ID_TOKEN>"}'
 ```
 
-#### **4.10.2. Application Load Time Implementation**
+2. [**Application Load Time Requirement**](#nfr2)
+
 **Requirement**: Cold start must complete within 5 seconds on Android API 33 with Wi-Fi 5-7.
 
 **Implementation**:
@@ -904,7 +894,8 @@ adb shell am start -W com.roomsync.app/.MainActivity
 # Output: TotalTime: 3542 (milliseconds)
 ```
 
-#### **4.10.3. UI Accessibility Implementation**
+3. [**UI Accessibility Requirement**](#nfr3)
+
 **Requirement**: All interactive buttons must have minimum 42x42 pixel touch targets.
 
 **Implementation**:
@@ -935,31 +926,3 @@ adb shell am start -W com.roomsync.app/.MainActivity
 ./gradlew :app:lintDebug
 # Scans for accessibility issues including touch target sizes
 ```
-
-### **4.9. High-Level Design Diagram**
-images/HighLevelDesign.webp
-![RoomSync high level design](images/HighLevelDesign.webp)
-
-**Diagram Description:**
-The high-level design diagram shows the major components and their relationships in the RoomSync system. The architecture includes:
-
-- **Android Frontend (Kotlin/Jetpack Compose)**: Mobile client application
-- **Google OAuth 2.0 API**: External authentication service
-- **Backend Services** (decomposed by domain):
-  - Authentication Service
-  - User Management Service
-  - Group Management Service
-  - Chat Service (with WebSocket support)
-  - Task Management Service
-  - Rating Service
-- **MongoDB Database**: Persistent data storage
-- **Google Cloud Platform**: Infrastructure and deployment
-
-**Key Dependency Relationships:** 
-- Frontend calls Authentication Service, API Gateway
-- API Gateway routes to Group Management, Chat Service, Task Management Service
-- Authentication Service integrates with Google Auth API and User Database
-- Group Management Service accesses Group Database and User Database
-- Chat Service utilizes Chat Database and Firebase FCM for notifications
-- Task Management Service manages Task Database, integrates with Google Maps API for location-based features
-- All services can access Firebase FCM for push notifications
