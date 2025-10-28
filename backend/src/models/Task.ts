@@ -51,11 +51,11 @@ const TaskSchema = new Schema<ITask>({
   },
   deadline: {
     type: Date,
-    required: function() {
+    required: function(this: any) {
       return this.recurrence === 'one-time';
     },
     validate: {
-      validator: function(value: Date) {
+      validator: function(this: any, value: Date) {
         if (this.recurrence === 'one-time' && value) {
           return value > new Date();
         }
@@ -90,7 +90,7 @@ const TaskSchema = new Schema<ITask>({
 });
 
 // Virtual for completion rate
-TaskSchema.virtual('completionRate').get(function() {
+TaskSchema.virtual('completionRate').get(function(this: any) {
   if (this.assignments.length === 0) return 0;
   const completed = this.assignments.filter((assignment: any) => 
     assignment.status === 'completed'
@@ -99,7 +99,7 @@ TaskSchema.virtual('completionRate').get(function() {
 });
 
 // Virtual for current week assignment
-TaskSchema.virtual('currentWeekAssignment').get(function() {
+TaskSchema.virtual('currentWeekAssignment').get(function(this: any) {
   const now = new Date();
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());

@@ -26,6 +26,17 @@ export const config = {
   JWT_SECRET: process.env.JWT_SECRET || defaultConfig.JWT_SECRET
 };
 
+// Validate required environment variables in production
+if (process.env.NODE_ENV === 'production') {
+  const requiredVars = ['MONGODB_URI', 'GOOGLE_CLIENT_ID', 'JWT_SECRET'];
+  const missingVars = requiredVars.filter(varName => !process.env[varName]);
+  
+  if (missingVars.length > 0) {
+    console.error('❌ Missing required environment variables:', missingVars);
+    process.exit(1);
+  }
+}
+
 // Log the final configuration (excluding sensitive values)
 console.log('Final configuration:', {
   PORT: config.PORT,

@@ -53,6 +53,19 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health check endpoint (no auth required)
+app.get("/api/health", (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  
+  res.status(200).json({ 
+    message: 'RoomSync Backend is running!', 
+    timestamp: new Date().toISOString(),
+    database: dbStatus,
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 app.use("/api/auth", authRouter);
 app.use("/api/user", authenticate, userRouter);  //protected with auth middleware
 app.use("/api/group", authenticate, groupRouter);  //protected with auth middleware
@@ -66,8 +79,15 @@ console.log("Attempting MongoDB connection...");
 mongoose.set('strictQuery', true);
 mongoose
   .connect(config.MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+    serverSelectionTimeoutMS: 30000, // Timeout after 30 seconds
     socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+    connectTimeoutMS: 30000, // Connection timeout
+    maxPoolSize: 10, // Maintain up to 10 socket connections
+    serverApi: {
+      version: '1',
+      strict: true,
+      deprecationErrors: true,
+    }
   })
   .then(() => {
     console.log("Connected to MongoDB successfully");
@@ -80,8 +100,35 @@ mongoose
     console.error("Error message:", err.message);
     console.error("Connection URI:", config.MONGODB_URI);
     if (err.code) console.error("Error code:", err.code);
-    process.exit(1);
+    
+    // Don't exit immediately, try to continue without DB for health checks
+    console.error("⚠️  Continuing without database connection for now...");
+    console.error("⚠️  Some features may not work until database is connected");
   });
+
+// Add connection retry mechanism
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected. Attempting to reconnect...');
+  setTimeout(() => {
+    mongoose.connect(config.MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
+      maxPoolSize: 10,
+      serverApi: {
+        version: '1',
+        strict: true,
+        deprecationErrors: true,
+      }
+    }).catch(err => {
+      console.error('Reconnection failed:', err.message);
+    });
+  }, 5000);
+});
+
+mongoose.connection.on('connected', () => {
+  console.log('✅ MongoDB reconnected successfully');
+});
 
 // Initialize Socket.IO
 const socketHandler = new SocketHandler(server);
