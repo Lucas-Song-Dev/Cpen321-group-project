@@ -559,7 +559,7 @@ Frameworks and libraries are software packages that provide reusable functionali
 
 ### **4.5. Dependencies Diagram**
 
-![RoomSync high level design](image_placeholder)
+<img width="987" height="718" alt="image" src="https://github.com/user-attachments/assets/8d1af013-31da-45cc-ab6a-ef04a53f3b09" />
 
 *RoomSync high level design*
 
