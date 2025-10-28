@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.util.*
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.format.DateTimeParseException
 
 data class ChatMessage(
     val id: String,
@@ -151,18 +154,29 @@ class ChatViewModel(
                         return@launch
                     }
                     
+                    // Prefer server timestamps; support both numeric and ISO fields
+                    val socketTimestampMs = if (messageData.has("timestamp")) {
+                        messageData.optLong("timestamp", System.currentTimeMillis())
+                    } else if (messageData.has("createdAt")) {
+                        parseServerDate(messageData.optString("createdAt", null)).time
+                    } else {
+                        System.currentTimeMillis()
+                    }
+
                     val newMessage = ChatMessage(
                         id = messageId,
                         content = messageData.optString("content", ""),
                         senderName = messageData.optString("senderName", "User"),
                         senderId = messageData.optString("senderId", ""),
-                        timestamp = Date(messageData.optLong("timestamp", System.currentTimeMillis())),
+                        timestamp = Date(socketTimestampMs),
                         isOwnMessage = messageData.optString("senderId", "") == currentUserId
                     )
                     
                     println("ChatViewModel: Adding message to state: ${newMessage.content}")
+                    val merged = _uiState.value.messages + newMessage
+                    val sorted = merged.sortedBy { it.timestamp }
                     _uiState.value = _uiState.value.copy(
-                        messages = _uiState.value.messages + newMessage
+                        messages = sorted
                     )
                     println("ChatViewModel: Total messages: ${_uiState.value.messages.size}")
                 } catch (e: Exception) {
@@ -215,7 +229,7 @@ class ChatViewModel(
                             content = message.content,
                             senderName = "User", // Simplified since we don't have user names yet
                             senderId = message.senderId._id,
-                            timestamp = Date(message.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
+                            timestamp = parseServerDate(message.createdAt),
                             isOwnMessage = message.senderId._id == currentUserId,
                             type = when (message.type) {
                                 "poll" -> MessageType.POLL
@@ -458,5 +472,30 @@ class ChatViewModel(
         // Leave group and disconnect from Socket.IO
         socketManager.leaveGroup(groupId)
         socketManager.disconnect()
+    }
+
+    private fun parseServerDate(raw: String?): Date {
+        if (raw.isNullOrBlank()) return Date()
+        // Try epoch millis
+        raw.toLongOrNull()?.let { return Date(it) }
+        // Try ISO-8601 via java.time
+        try {
+            return Date.from(Instant.parse(raw))
+        } catch (_: DateTimeParseException) { /* fall through */ }
+        // Try common Mongo/ISO formats
+        val formats = listOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+            "yyyy-MM-dd'T'HH:mm:ssXXX"
+        )
+        for (pattern in formats) {
+            try {
+                val sdf = SimpleDateFormat(pattern, Locale.US)
+                sdf.timeZone = TimeZone.getTimeZone("UTC")
+                return sdf.parse(raw) ?: Date()
+            } catch (_: Exception) { }
+        }
+        return Date()
     }
 }
