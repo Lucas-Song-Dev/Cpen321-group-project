@@ -49,11 +49,12 @@ class TaskRepository {
         difficulty: Int,
         recurrence: String,
         requiredPeople: Int,
+        deadline: String? = null,
         assignedUserIds: List<String>? = null
     ): TaskResponse {
         return try {
             val response = RetrofitInstance.api.createTask(
-                CreateTaskRequest(name, description, difficulty, recurrence, requiredPeople, assignedUserIds)
+                CreateTaskRequest(name, description, difficulty, recurrence, requiredPeople, deadline, assignedUserIds)
             )
             if (response.isSuccessful) {
                 response.body() ?: TaskResponse(false, "Empty response from server")
@@ -150,6 +151,24 @@ class TaskRepository {
             } else {
                 val errorBody = response.errorBody()?.string()
                 TasksResponse(false, errorBody ?: "Get tasks for week failed: ${response.code()}")
+            }
+        } catch (e: IOException) {
+            TasksResponse(false, "Network error: ${e.message}")
+        } catch (e: HttpException) {
+            TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
+        } catch (e: Exception) {
+            TasksResponse(false, "Unexpected error: ${e.message}")
+        }
+    }
+
+    suspend fun getTasksForDate(date: String): TasksResponse {
+        return try {
+            val response = RetrofitInstance.api.getTasksForDate(date)
+            if (response.isSuccessful) {
+                response.body() ?: TasksResponse(false, "Empty response from server")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                TasksResponse(false, errorBody ?: "Get tasks for date failed: ${response.code()}")
             }
         } catch (e: IOException) {
             TasksResponse(false, "Network error: ${e.message}")

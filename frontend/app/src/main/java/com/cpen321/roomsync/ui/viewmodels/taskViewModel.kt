@@ -18,6 +18,7 @@ data class TaskItem(
     val difficulty: Int,
     val recurrence: String,
     val requiredPeople: Int,
+    val deadline: Date? = null,
     val createdBy: String,
     val createdById: String,
     val status: TaskStatus,
@@ -33,6 +34,7 @@ enum class TaskStatus {
 data class TaskUiState(
     val tasks: List<TaskItem> = emptyList(),
     val myTasks: List<TaskItem> = emptyList(),
+    val dailyTasks: List<TaskItem> = emptyList(),
     val groupMembers: List<ViewModelGroupMember> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -41,7 +43,9 @@ data class TaskUiState(
     val selectedTask: TaskItem? = null,
     val currentWeekStart: Date = Date(),
     val weeklyTasks: List<TaskItem> = emptyList(),
-    val isAssigningWeekly: Boolean = false
+    val isAssigningWeekly: Boolean = false,
+    val allTasksGroupedByDay: Map<String, List<TaskItem>> = emptyMap(),
+    val myTasksGroupedByDay: Map<String, List<TaskItem>> = emptyMap()
 )
 
 // Helper function to get current week start (Monday)
@@ -59,6 +63,61 @@ fun getCurrentWeekStart(): Date {
 fun formatDateForApi(date: Date): String {
     val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     return formatter.format(date)
+}
+
+// Helper function to group tasks by day and sort chronologically
+fun groupTasksByDay(tasks: List<TaskItem>): Map<String, List<TaskItem>> {
+    val calendar = Calendar.getInstance()
+    val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val displayFormatter = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
+    
+    val groupedByDate = tasks.groupBy { task ->
+        // For one-time tasks, use the deadline date
+        // For recurring tasks, use the current week start
+        val taskDate = if (task.recurrence == "one-time" && task.deadline != null) {
+            task.deadline
+        } else {
+            // For recurring tasks, we'll use the current week start as a fallback
+            // In a real implementation, you might want to calculate the actual occurrence date
+            Date()
+        }
+        
+        calendar.time = taskDate
+        dateFormatter.format(calendar.time)
+    }.mapValues { (_, dayTasks) ->
+        // Sort tasks within each day by deadline (earliest first, most urgent at top)
+        dayTasks.sortedWith(compareBy<TaskItem>(
+            { it.deadline ?: Date(Long.MAX_VALUE) }
+        ).thenBy { it.createdAt })
+    }
+    
+    // Sort the days chronologically and convert to display format
+    return groupedByDate.toList().sortedBy { (dateString, _) ->
+        calendar.time = dateFormatter.parse(dateString) ?: Date()
+        calendar.time
+    }.toMap().mapKeys { (dateString, _) ->
+        calendar.time = dateFormatter.parse(dateString) ?: Date()
+        displayFormatter.format(calendar.time)
+    }
+}
+
+// Helper function to get tasks for the current week
+fun getTasksForCurrentWeek(allTasks: List<TaskItem>, weekStart: Date): List<TaskItem> {
+    val calendar = Calendar.getInstance()
+    val weekEnd = Calendar.getInstance().apply {
+        time = weekStart
+        add(Calendar.DAY_OF_WEEK, 6)
+    }.time
+    
+    return allTasks.filter { task ->
+        if (task.recurrence == "one-time" && task.deadline != null) {
+            // For one-time tasks, check if deadline is within the week
+            task.deadline >= weekStart && task.deadline <= weekEnd
+        } else {
+            // For recurring tasks, include them in the weekly view
+            true
+        }
+    }
 }
 
 data class ViewModelGroupMember(
@@ -103,7 +162,7 @@ class TaskViewModel(
         loadWeeklyTasks()
     }
     
-    private fun loadTasks() {
+    fun loadTasks() {
         viewModelScope.launch {
             try {
                 println("TaskViewModel: Loading all tasks...")
@@ -120,6 +179,9 @@ class TaskViewModel(
                             difficulty = task.difficulty,
                             recurrence = task.recurrence,
                             requiredPeople = task.requiredPeople,
+                            deadline = task.deadline?.let { 
+                                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
+                            },
                             createdBy = task.createdBy.name ?: "Unknown",
                             createdById = task.createdBy._id,
                             status = when (task.assignments.find { it.userId._id == currentUserId }?.status) {
@@ -152,7 +214,7 @@ class TaskViewModel(
         }
     }
     
-    private fun loadMyTasks() {
+    fun loadMyTasks() {
         viewModelScope.launch {
             try {
                 val response = taskRepository.getMyTasks()
@@ -165,6 +227,9 @@ class TaskViewModel(
                             difficulty = task.difficulty,
                             recurrence = task.recurrence,
                             requiredPeople = task.requiredPeople,
+                            deadline = task.deadline?.let { 
+                                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
+                            },
                             createdBy = task.createdBy.name ?: "Unknown",
                             createdById = task.createdBy._id,
                             status = when (task.assignments.find { it.userId._id == currentUserId }?.status) {
@@ -178,7 +243,14 @@ class TaskViewModel(
                             assignedTo = task.assignments.map { it.userId.name ?: "Unknown" }
                         )
                     }
-                    _uiState.value = _uiState.value.copy(myTasks = myTasks)
+                    
+                    // Group my tasks by day
+                    val myTasksGrouped = groupTasksByDay(myTasks)
+                    
+                    _uiState.value = _uiState.value.copy(
+                        myTasks = myTasks,
+                        myTasksGroupedByDay = myTasksGrouped
+                    )
                 } else {
                     _uiState.value = _uiState.value.copy(
                         error = response.message ?: "Failed to load your tasks"
@@ -192,11 +264,14 @@ class TaskViewModel(
         }
     }
     
-    fun createTask(name: String, description: String?, difficulty: Int, recurrence: String, requiredPeople: Int, assignedMemberIds: List<String> = emptyList()) {
+    fun createTask(name: String, description: String?, difficulty: Int, recurrence: String, requiredPeople: Int, deadline: Date? = null, assignedMemberIds: List<String> = emptyList()) {
         viewModelScope.launch {
             try {
                 println("TaskViewModel: Creating task - name: $name, difficulty: $difficulty, recurrence: $recurrence, requiredPeople: $requiredPeople")
-                val response = taskRepository.createTask(name, description, difficulty, recurrence, requiredPeople, assignedMemberIds)
+                val deadlineString = deadline?.let { 
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it) 
+                }
+                val response = taskRepository.createTask(name, description, difficulty, recurrence, requiredPeople, deadlineString, assignedMemberIds)
                 println("TaskViewModel: Create task response - success: ${response.success}, message: ${response.message}")
                 
                 if (response.success) {
@@ -389,13 +464,13 @@ class TaskViewModel(
         loadWeeklyTasks()
     }
     
-    private fun loadWeeklyTasks() {
+    fun loadWeeklyTasks() {
         viewModelScope.launch {
             try {
-                val weekStart = formatDateForApi(_uiState.value.currentWeekStart)
-                val response = taskRepository.getTasksForWeek(weekStart)
+                // Load all tasks instead of just weekly tasks
+                val response = taskRepository.getTasks()
                 if (response.success && response.data != null) {
-                    val tasks = response.data.map { task ->
+                    val allTasks = response.data.map { task ->
                         TaskItem(
                             id = task._id,
                             name = task.name,
@@ -403,6 +478,9 @@ class TaskViewModel(
                             difficulty = task.difficulty,
                             recurrence = task.recurrence,
                             requiredPeople = task.requiredPeople,
+                            deadline = task.deadline?.let { 
+                                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
+                            },
                             createdBy = task.createdBy.name ?: "Unknown",
                             createdById = task.createdBy._id,
                             status = when (task.assignments.find { it.userId._id == currentUserId }?.status) {
@@ -416,15 +494,26 @@ class TaskViewModel(
                             assignedTo = task.assignments.map { it.userId.name ?: "Unknown" }
                         )
                     }
-                    _uiState.value = _uiState.value.copy(weeklyTasks = tasks)
+                    
+                    // Get tasks for current week
+                    val weeklyTasks = getTasksForCurrentWeek(allTasks, _uiState.value.currentWeekStart)
+                    
+                    // Group all tasks by day
+                    val allTasksGrouped = groupTasksByDay(allTasks)
+                    
+                    _uiState.value = _uiState.value.copy(
+                        tasks = allTasks,
+                        weeklyTasks = weeklyTasks,
+                        allTasksGroupedByDay = allTasksGrouped
+                    )
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        error = response.message ?: "Failed to load weekly tasks"
+                        error = response.message ?: "Failed to load tasks"
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Failed to load weekly tasks: ${e.message}"
+                    error = "Failed to load tasks: ${e.message}"
                 )
             }
         }
@@ -478,5 +567,59 @@ class TaskViewModel(
         calendar.add(Calendar.DAY_OF_WEEK, 6)
         val weekEnd = formatter.format(calendar.time)
         return "$weekStart - $weekEnd"
+    }
+    
+    fun loadTasksForDate(date: Date) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            
+            try {
+                val dateString = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
+                val response = taskRepository.getTasksForDate(dateString)
+                
+                if (response.success) {
+                    val tasks = response.data?.map { apiTask ->
+                        TaskItem(
+                            id = apiTask._id,
+                            name = apiTask.name,
+                            description = apiTask.description,
+                            difficulty = apiTask.difficulty,
+                            recurrence = apiTask.recurrence,
+                            requiredPeople = apiTask.requiredPeople,
+                            deadline = apiTask.deadline?.let { 
+                                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
+                            },
+                            createdBy = apiTask.createdBy.name,
+                            createdById = apiTask.createdBy._id,
+                            status = when (apiTask.assignments.firstOrNull()?.status) {
+                                "completed" -> TaskStatus.COMPLETED
+                                "in-progress" -> TaskStatus.IN_PROGRESS
+                                else -> TaskStatus.INCOMPLETE
+                            },
+                            createdAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(apiTask.createdAt) ?: Date(),
+                            completedAt = apiTask.assignments.firstOrNull()?.completedAt?.let {
+                                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
+                            },
+                            assignedTo = apiTask.assignments.map { it.userId.name }
+                        )
+                    } ?: emptyList()
+                    
+                    _uiState.value = _uiState.value.copy(
+                        dailyTasks = tasks,
+                        isLoading = false
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = response.message ?: "Failed to load tasks for date",
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Error loading tasks for date: ${e.message}",
+                    isLoading = false
+                )
+            }
+        }
     }
 }

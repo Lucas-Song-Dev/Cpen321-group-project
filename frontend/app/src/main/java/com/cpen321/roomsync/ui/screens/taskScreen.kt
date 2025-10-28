@@ -27,6 +27,12 @@ import com.cpen321.roomsync.ui.viewmodels.TaskViewModel
 import com.cpen321.roomsync.ui.viewmodels.TaskItem as ViewModelTaskItem
 import com.cpen321.roomsync.ui.viewmodels.TaskStatus as ViewModelTaskStatus
 import com.cpen321.roomsync.ui.viewmodels.ViewModelGroupMember
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.DatePickerDialog
 
 data class TaskItem(
     val id: String,
@@ -35,6 +41,7 @@ data class TaskItem(
     val difficulty: Int,
     val recurrence: String,
     val requiredPeople: Int,
+    val deadline: Date? = null,
     val createdBy: String,
     val createdById: String,
     val status: TaskStatus,
@@ -58,6 +65,7 @@ fun convertViewModelTask(viewModelTask: ViewModelTaskItem): TaskItem {
         createdBy = viewModelTask.createdBy,
         createdById = viewModelTask.createdById,
         requiredPeople = viewModelTask.requiredPeople,
+        deadline = viewModelTask.deadline,
         status = when (viewModelTask.status) {
             ViewModelTaskStatus.INCOMPLETE -> TaskStatus.INCOMPLETE
             ViewModelTaskStatus.IN_PROGRESS -> TaskStatus.IN_PROGRESS
@@ -67,6 +75,120 @@ fun convertViewModelTask(viewModelTask: ViewModelTaskItem): TaskItem {
         completedAt = viewModelTask.completedAt,
         assignedTo = viewModelTask.assignedTo
     )
+}
+
+@Composable
+fun CalendarView(
+    selectedDate: Date,
+    onDateSelected: (Date) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val calendar = Calendar.getInstance()
+    val currentMonth = calendar.get(Calendar.MONTH)
+    val currentYear = calendar.get(Calendar.YEAR)
+    
+    val monthNames = arrayOf(
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    )
+    
+    val dayNames = arrayOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+    
+    Column(modifier = modifier) {
+        // Month/Year header
+        Text(
+            text = "${monthNames[currentMonth]} $currentYear",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(16.dp)
+        )
+        
+        // Day names header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            dayNames.forEach { dayName ->
+                Text(
+                    text = dayName,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        }
+        
+        // Calendar grid
+        val firstDayOfMonth = Calendar.getInstance().apply {
+            set(currentYear, currentMonth, 1)
+        }.get(Calendar.DAY_OF_WEEK) - 1
+        
+        val daysInMonth = Calendar.getInstance().apply {
+            set(currentYear, currentMonth + 1, 0)
+        }.get(Calendar.DAY_OF_MONTH)
+        
+        val weeks = ((firstDayOfMonth + daysInMonth) + 6) / 7
+        
+        repeat(weeks) { week ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                repeat(7) { dayOfWeek ->
+                    val dayNumber = week * 7 + dayOfWeek - firstDayOfMonth + 1
+                    val isCurrentMonth = dayNumber in 1..daysInMonth
+                    val isToday = isCurrentMonth && dayNumber == Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+                    val isSelected = isCurrentMonth && selectedDate.let { selected ->
+                        val selectedCalendar = Calendar.getInstance().apply { time = selected }
+                        selectedCalendar.get(Calendar.YEAR) == currentYear &&
+                        selectedCalendar.get(Calendar.MONTH) == currentMonth &&
+                        selectedCalendar.get(Calendar.DAY_OF_MONTH) == dayNumber
+                    }
+                    
+                    val dayDate = if (isCurrentMonth) {
+                        Calendar.getInstance().apply {
+                            set(currentYear, currentMonth, dayNumber)
+                        }.time
+                    } else null
+                    
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .padding(2.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when {
+                                    isSelected -> MaterialTheme.colorScheme.primary
+                                    isToday -> MaterialTheme.colorScheme.primaryContainer
+                                    else -> Color.Transparent
+                                }
+                            )
+                            .clickable(enabled = isCurrentMonth) {
+                                dayDate?.let { onDateSelected(it) }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isCurrentMonth) {
+                            Text(
+                                text = dayNumber.toString(),
+                                color = when {
+                                    isSelected -> MaterialTheme.colorScheme.onPrimary
+                                    isToday -> MaterialTheme.colorScheme.onPrimaryContainer
+                                    else -> MaterialTheme.colorScheme.onSurface
+                                },
+                                fontSize = 14.sp,
+                                fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,7 +210,23 @@ fun TaskScreen(
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var selectedTask by remember { mutableStateOf<TaskItem?>(null) }
     var currentTab by remember { mutableStateOf(0) }
-    var showWeeklyView by remember { mutableStateOf(true) }
+    var selectedDate by remember { mutableStateOf(Date()) }
+    var showCalendar by remember { mutableStateOf(true) }
+
+    // Load tasks for selected date when calendar view is shown
+    LaunchedEffect(selectedDate, currentTab) {
+        if (currentTab == 0) {
+            viewModel.loadTasksForDate(selectedDate)
+        }
+    }
+
+    // Load initial data
+    LaunchedEffect(Unit) {
+        viewModel.loadTasks()
+        viewModel.loadMyTasks()
+        viewModel.loadWeeklyTasks()
+        viewModel.loadGroupMembers()
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -131,83 +269,105 @@ fun TaskScreen(
                 }
             }
 
-            // Weekly View Toggle and Controls
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+            // Calendar View
+            if (showCalendar) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    CalendarView(
+                        selectedDate = selectedDate,
+                        onDateSelected = { date ->
+                            selectedDate = date
+                            viewModel.loadTasksForDate(date)
+                        }
+                    )
+                }
+            }
+
+            // Weekly View Header
+            if (!showCalendar && currentTab == 1) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        Text(
-                            text = "Weekly Tasks",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(
-                                onClick = { viewModel.changeWeek(-1) },
-                                enabled = !uiState.isLoading
-                            ) {
-                                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous Week")
-                            }
-                            
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = viewModel.getWeekDisplayText(),
-                                fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp)
+                                text = "Weekly Tasks",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             
-                            IconButton(
-                                onClick = { viewModel.changeWeek(1) },
-                                enabled = !uiState.isLoading
-                            ) {
-                                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next Week")
-                            }
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Button(
-                            onClick = { viewModel.assignWeeklyTasks() },
-                            enabled = !uiState.isAssigningWeekly && !uiState.isLoading,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            if (uiState.isAssigningWeekly) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = { viewModel.changeWeek(-1) },
+                                    enabled = !uiState.isLoading
+                                ) {
+                                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous Week")
+                                }
+                                
+                                Text(
+                                    text = viewModel.getWeekDisplayText(),
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
                                 )
-                            } else {
-                                Icon(Icons.Default.Settings, contentDescription = null)
+                                
+                                IconButton(
+                                    onClick = { viewModel.changeWeek(1) },
+                                    enabled = !uiState.isLoading
+                                ) {
+                                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next Week")
+                                }
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Auto-Assign Week")
                         }
                         
-                        IconButton(
-                            onClick = { showAddTaskDialog = true }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Task")
+                            Button(
+                                onClick = { viewModel.assignWeeklyTasks() },
+                                enabled = !uiState.isAssigningWeekly && !uiState.isLoading,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                if (uiState.isAssigningWeekly) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    Icon(Icons.Default.Settings, contentDescription = null)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Auto-Assign Week")
+                            }
+                            
+                            IconButton(
+                                onClick = { showAddTaskDialog = true }
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = "Add Task")
+                            }
                         }
                     }
                 }
@@ -217,17 +377,26 @@ fun TaskScreen(
             TabRow(selectedTabIndex = currentTab) {
                 Tab(
                     selected = currentTab == 0,
-                    onClick = { currentTab = 0 },
-                    text = { Text("Weekly View") }
+                    onClick = { 
+                        currentTab = 0
+                        showCalendar = true
+                    },
+                    text = { Text("Calendar View") }
                 )
                 Tab(
                     selected = currentTab == 1,
-                    onClick = { currentTab = 1 },
-                    text = { Text("All Tasks") }
+                    onClick = { 
+                        currentTab = 1
+                        showCalendar = false
+                    },
+                    text = { Text("Weekly View") }
                 )
                 Tab(
                     selected = currentTab == 2,
-                    onClick = { currentTab = 2 },
+                    onClick = { 
+                        currentTab = 2
+                        showCalendar = false
+                    },
                     text = { Text("My Tasks") }
                 )
             }
@@ -240,73 +409,217 @@ fun TaskScreen(
                 contentPadding = PaddingValues(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val tasks = when (currentTab) {
-                    0 -> uiState.weeklyTasks.map { convertViewModelTask(it) }
-                    1 -> uiState.tasks.map { convertViewModelTask(it) }
-                    2 -> uiState.myTasks.map { convertViewModelTask(it) }
-                    else -> emptyList()
-                }
-                
-                if (tasks.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(64.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = when (currentTab) {
-                                        0 -> "No tasks assigned for this week"
-                                        1 -> "No tasks yet"
-                                        2 -> "No tasks assigned to you"
-                                        else -> "No tasks"
+                when (currentTab) {
+                    0 -> {
+                        // Calendar View - show daily tasks
+                        val tasks = uiState.dailyTasks.map { convertViewModelTask(it) }
+                        if (tasks.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Add,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(64.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = "No tasks for ${SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(selectedDate)}",
+                                            fontSize = 16.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Button(onClick = { viewModel.assignWeeklyTasks() }) {
+                                            Text("Auto-Assign Tasks")
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            items(tasks) { task ->
+                                TaskCard(
+                                    task = task,
+                                    currentUserId = currentUserId,
+                                    onStatusChange = { status -> 
+                                        val viewModelStatus = when (status) {
+                                            TaskStatus.INCOMPLETE -> ViewModelTaskStatus.INCOMPLETE
+                                            TaskStatus.IN_PROGRESS -> ViewModelTaskStatus.IN_PROGRESS
+                                            TaskStatus.COMPLETED -> ViewModelTaskStatus.COMPLETED
+                                        }
+                                        viewModel.updateTaskStatus(task.id, viewModelStatus)
                                     },
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    onAssignClick = { 
+                                        selectedTask = task
+                                        showAssignDialog = true 
+                                    },
+                                    onDeleteClick = {
+                                        selectedTask = task
+                                        showDeleteConfirmation = true
+                                    }
                                 )
-                                if (currentTab == 0) {
-                                    Button(onClick = { viewModel.assignWeeklyTasks() }) {
-                                        Text("Auto-Assign Tasks")
+                            }
+                        }
+                    }
+                    1 -> {
+                        // Weekly View - show all tasks grouped by day
+                        val groupedTasks = uiState.allTasksGroupedByDay
+                        if (groupedTasks.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Add,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(64.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = "No tasks assigned for this week",
+                                            fontSize = 16.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Button(onClick = { viewModel.assignWeeklyTasks() }) {
+                                            Text("Auto-Assign Week")
+                                        }
                                     }
-                                } else if (currentTab == 1) {
-                                    Button(onClick = { showAddTaskDialog = true }) {
-                                        Text("Create First Task")
+                                }
+                            }
+                        } else {
+                            groupedTasks.forEach { (dayName, dayTasks) ->
+                                item {
+                                    // Day header
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                                        )
+                                    ) {
+                                        Text(
+                                            text = dayName,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            modifier = Modifier.padding(12.dp)
+                                        )
                                     }
+                                }
+                                
+                                // Tasks for this day
+                                items(dayTasks.map { convertViewModelTask(it) }) { task ->
+                                    TaskCard(
+                                        task = task,
+                                        currentUserId = currentUserId,
+                                        onStatusChange = { status -> 
+                                            val viewModelStatus = when (status) {
+                                                TaskStatus.INCOMPLETE -> ViewModelTaskStatus.INCOMPLETE
+                                                TaskStatus.IN_PROGRESS -> ViewModelTaskStatus.IN_PROGRESS
+                                                TaskStatus.COMPLETED -> ViewModelTaskStatus.COMPLETED
+                                            }
+                                            viewModel.updateTaskStatus(task.id, viewModelStatus)
+                                        },
+                                        onAssignClick = { 
+                                            selectedTask = task
+                                            showAssignDialog = true 
+                                        },
+                                        onDeleteClick = {
+                                            selectedTask = task
+                                            showDeleteConfirmation = true
+                                        }
+                                    )
                                 }
                             }
                         }
                     }
-                } else {
-                    items(tasks) { task ->
-                        TaskCard(
-                            task = task,
-                            currentUserId = currentUserId,
-                            onStatusChange = { status -> 
-                                val viewModelStatus = when (status) {
-                                    TaskStatus.INCOMPLETE -> ViewModelTaskStatus.INCOMPLETE
-                                    TaskStatus.IN_PROGRESS -> ViewModelTaskStatus.IN_PROGRESS
-                                    TaskStatus.COMPLETED -> ViewModelTaskStatus.COMPLETED
+                    2 -> {
+                        // My Tasks - show my tasks grouped by day
+                        val groupedTasks = uiState.myTasksGroupedByDay
+                        if (groupedTasks.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Add,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(64.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = "No tasks assigned to you",
+                                            fontSize = 16.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Button(onClick = { showAddTaskDialog = true }) {
+                                            Text("Create First Task")
+                                        }
+                                    }
                                 }
-                                viewModel.updateTaskStatus(task.id, viewModelStatus)
-                            },
-                            onAssignClick = { 
-                                selectedTask = task
-                                showAssignDialog = true 
-                            },
-                            onDeleteClick = {
-                                selectedTask = task
-                                showDeleteConfirmation = true
                             }
-                        )
+                        } else {
+                            groupedTasks.forEach { (dayName, dayTasks) ->
+                                item {
+                                    // Day header
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                        )
+                                    ) {
+                                        Text(
+                                            text = dayName,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.padding(12.dp)
+                                        )
+                                    }
+                                }
+                                
+                                // Tasks for this day
+                                items(dayTasks.map { convertViewModelTask(it) }) { task ->
+                                    TaskCard(
+                                        task = task,
+                                        currentUserId = currentUserId,
+                                        onStatusChange = { status -> 
+                                            val viewModelStatus = when (status) {
+                                                TaskStatus.INCOMPLETE -> ViewModelTaskStatus.INCOMPLETE
+                                                TaskStatus.IN_PROGRESS -> ViewModelTaskStatus.IN_PROGRESS
+                                                TaskStatus.COMPLETED -> ViewModelTaskStatus.COMPLETED
+                                            }
+                                            viewModel.updateTaskStatus(task.id, viewModelStatus)
+                                        },
+                                        onAssignClick = { 
+                                            selectedTask = task
+                                            showAssignDialog = true 
+                                        },
+                                        onDeleteClick = {
+                                            selectedTask = task
+                                            showDeleteConfirmation = true
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -316,8 +629,8 @@ fun TaskScreen(
         if (showAddTaskDialog) {
             AddTaskDialog(
                 onDismiss = { showAddTaskDialog = false },
-                onCreateTask = { name, description, difficulty, recurrence, requiredPeople, assignedMembers ->
-                    viewModel.createTask(name, description, difficulty, recurrence, requiredPeople, assignedMembers)
+                onCreateTask = { name, description, difficulty, recurrence, requiredPeople, deadline, assignedMembers ->
+                    viewModel.createTask(name, description, difficulty, recurrence, requiredPeople, deadline, assignedMembers)
                     showAddTaskDialog = false
                 },
                 groupMembers = uiState.groupMembers
@@ -549,6 +862,27 @@ fun TaskCard(
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            
+            // Deadline info
+            if (task.deadline != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.DateRange,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Deadline: ${SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(task.deadline)}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
@@ -582,7 +916,7 @@ fun TaskStatusChip(
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
-    onCreateTask: (String, String?, Int, String, Int, List<String>) -> Unit,
+    onCreateTask: (String, String?, Int, String, Int, Date?, List<String>) -> Unit,
     groupMembers: List<ViewModelGroupMember>
 ) {
     var name by remember { mutableStateOf("") }
@@ -590,6 +924,7 @@ fun AddTaskDialog(
     var difficulty by remember { mutableStateOf(1) }
     var recurrence by remember { mutableStateOf("one-time") }
     var requiredPeople by remember { mutableStateOf(1) }
+    var deadline by remember { mutableStateOf<Date?>(null) }
     var selectedMembers by remember { mutableStateOf<List<String>>(emptyList()) }
 
     AlertDialog(
@@ -696,6 +1031,60 @@ fun AddTaskDialog(
                     }
                 }
                 
+                // Deadline field (only for one-time tasks)
+                if (recurrence == "one-time") {
+                    Text(
+                        text = "Deadline:",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    
+                    var showDatePicker by remember { mutableStateOf(false) }
+                    val datePickerState = rememberDatePickerState(
+                        initialSelectedDateMillis = deadline?.time
+                    )
+                    
+                    OutlinedTextField(
+                        value = deadline?.let { 
+                            SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(it) 
+                        } ?: "",
+                        onValueChange = { },
+                        label = { Text("Select Deadline") },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(Icons.Default.DateRange, contentDescription = "Select Date")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        datePickerState.selectedDateMillis?.let { millis ->
+                                            deadline = Date(millis)
+                                        }
+                                        showDatePicker = false
+                                    }
+                                ) {
+                                    Text("OK")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDatePicker = false }) {
+                                    Text("Cancel")
+                                }
+                            }
+                        ) {
+                            DatePicker(state = datePickerState)
+                        }
+                    }
+                }
+                
                 // Member assignment
                 Text(
                     text = "Assign to members (optional):",
@@ -734,11 +1123,12 @@ fun AddTaskDialog(
                             difficulty,
                             recurrence,
                             requiredPeople,
+                            deadline,
                             selectedMembers
                         )
                     }
                 },
-                enabled = name.trim().isNotEmpty()
+                enabled = name.trim().isNotEmpty() && (recurrence != "one-time" || deadline != null)
             ) {
                 Text("Create Task")
             }

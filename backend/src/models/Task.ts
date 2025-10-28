@@ -38,6 +38,32 @@ const TaskSchema = new Schema<ITask>({
     required: true,
     enum: ['daily', 'weekly', 'bi-weekly', 'monthly', 'one-time']
   },
+  requiredPeople: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 10,
+    default: 1,
+    validate: {
+      validator: Number.isInteger,
+      message: 'Required people must be an integer between 1 and 10'
+    }
+  },
+  deadline: {
+    type: Date,
+    required: function() {
+      return this.recurrence === 'one-time';
+    },
+    validate: {
+      validator: function(value: Date) {
+        if (this.recurrence === 'one-time' && value) {
+          return value > new Date();
+        }
+        return true;
+      },
+      message: 'Deadline must be in the future for one-time tasks'
+    }
+  },
   assignments: [{
     userId: {
       type: Schema.Types.ObjectId,

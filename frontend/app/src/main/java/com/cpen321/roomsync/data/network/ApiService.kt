@@ -76,6 +76,9 @@ interface ApiService {
     @GET("api/task/week/{weekStart}")
     suspend fun getTasksForWeek(@Path("weekStart") weekStart: String): Response<TasksResponse>
 
+    @GET("api/task/date/{date}")
+    suspend fun getTasksForDate(@Path("date") date: String): Response<TasksResponse>
+
     // Chat endpoints
     @GET("api/chat/{groupId}/messages")
     suspend fun getMessages(@Path("groupId") groupId: String): Response<MessagesResponse>
