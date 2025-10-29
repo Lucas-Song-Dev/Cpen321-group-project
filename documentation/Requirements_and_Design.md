@@ -638,6 +638,7 @@ sequenceDiagram
 ```
 
 3. [**Use Case 16: Send Message**](#uc17)
+```mermaid
 sequenceDiagram
     actor User
     participant F as :Frontend
@@ -678,7 +679,7 @@ sequenceDiagram
         F->>User: Display sent message
     end
 
-4. [**Use Case 18: Add Task**](#uc18)
+5. [**Use Case 18: Add Task**](#uc18)
 ```mermaid
 sequenceDiagram
     actor User
