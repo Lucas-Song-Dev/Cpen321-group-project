@@ -65,7 +65,7 @@ The application targets university students, young professionals, and anyone see
 
 ### **3.2. Use Case Diagram**
 
-![UseCaseDiagram](https://github.com/user-attachments/assets/bc9b95b7-51c6-4949-a861-3a33ad59d562)
+![UseCaseDiagram](https://github.com/Cpen321-group-project/documentation/images/UseCaseDiagram.jpg)
 
 *RoomSync use case diagram*
 
