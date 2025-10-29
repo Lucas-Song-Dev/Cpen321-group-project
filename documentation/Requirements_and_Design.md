@@ -83,43 +83,43 @@ The application targets university students, young professionals, and anyone see
 
 ### **3.4. Use Case Description**
 
-- **Use cases for User Authentication**:
-  1. **Create account**: Secure account creation using Google OAuth (interaction with Google OAuth 2.0 API)
-  2. **Login**: Secure account login using Google OAuth (interaction with Google OAuth 2.0 API)
-  3. **Logout**: User logs out of the application, clearing locally stored authentication tokens
+#### **Use cases for User Authentication**
+1. **Create account** – Secure account creation using Google OAuth (interaction with Google OAuth 2.0 API)  
+2. **Login** – Secure account login using Google OAuth (interaction with Google OAuth 2.0 API)  
+3. **Logout** – User logs out of the application, clearing locally stored authentication tokens  
 
-- **Use cases for User Profile Management**:
-  4. **Set mandatory profile fields**: Users must provide legal name, date of birth, and gender upon account creation (one-time, non-editable)
-  5. **Update nickname and bio**: Users can choose a nickname and update their bio text
-  6. **Update living preferences**: Users can indicate living preferences by selecting schedule, drinking, partying, noise, and profession descriptions
-  7. **Update profile picture**: Users can add, change, or remove their profile picture
-  8. **Delete account**: Users can permanently delete their account and all associated data
+#### **Use cases for User Profile Management**
+4. **Set mandatory profile fields** – Users must provide legal name, date of birth, and gender upon account creation (one-time, non-editable)  
+5. **Update nickname and bio** – Users can choose a nickname and update their bio text  
+6. **Update living preferences** – Users can indicate living preferences by selecting schedule, drinking, partying, noise, and profession descriptions  
+7. **Update profile picture** – Users can add, change, or remove their profile picture  
+8. **Delete account** – Users can permanently delete their account and all associated data  
 
-- **Use cases for Group Management**:
-  9. **Create group**: Establish a new living group and generate a unique invitation code for prospective roommates
-  10. **Join group**: Join an existing roommate group by entering unique invitation code
-  11. **View group**: View members of group, group name, and member join dates
-  12. **Leave group**: Group members can leave a group they are a part of
-  13. **Delete group**: Group owner can dissolve a group and the unique invitation code will no longer be valid
-  14. **Remove group member**: Group owner can remove group members
-  15. **Transfer ownership**: Group owner can pass admin position to a group member
+#### **Use cases for Group Management**
+9. **Create group** – Establish a new living group and generate a unique invitation code for prospective roommates  
+10. **Join group** – Join an existing roommate group by entering a unique invitation code  
+11. **View group** – View members of the group, group name, and member join dates  
+12. **Leave group** – Group members can leave a group they are a part of  
+13. **Delete group** – Group owner can dissolve a group; the unique invitation code will no longer be valid  
+14. **Remove group member** – Group owner can remove group members  
+15. **Transfer ownership** – Group owner can pass admin position to a group member  
 
-- **Use cases for Group Communication**:
-  16. **Send message**: Real-time messaging system for communication between all group members
-  17. **Create poll**: A voting mechanism for group decisions regarding household policies and activities
+#### **Use cases for Group Communication**
+16. **Send message** – Real-time messaging system for communication between all group members  
+17. **Create poll** – A voting mechanism for group decisions regarding household policies and activities  
 
-- **Use cases for Group Task Management**:
-  18. **Add task**: Create tasks to be shared among all roommates by setting task name, difficulty, and recurrence. Tasks are algorithmically distributed among roommates
-  19. **Delete task**: Delete tasks if task is no longer needed
-  20. **Set task status**: Update task status to in-progress or completed for assigned tasks
+#### **Use cases for Group Task Management**
+18. **Add task** – Create tasks to be shared among all roommates by setting task name, difficulty, and recurrence. Tasks are algorithmically distributed among roommates  
+19. **Delete task** – Delete tasks if a task is no longer needed  
+20. **Set task status** – Update task status to *in-progress* or *completed* for assigned tasks  
 
-- **Use cases for Roommate Rating System**:
-  21. **Rate roommate**: Rate roommate performance (1-5 stars) after living together for minimum 30 days
-  22. **Write testimonial**: Add optional written feedback about roommate experience
-  23. **View ratings**: View user profiles, average ratings, and testimonials from previous roommates
+#### **Use cases for Roommate Rating System**
+21. **Rate roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days  
+22. **Write testimonial** – Add optional written feedback about roommate experience  
+23. **View ratings** – View user profiles, average ratings, and testimonials from previous roommates  
 
-- **Use cases for User Moderation**:
-  24. **Report user**: Report inappropriate user behavior for review
+#### **Use cases for User Moderation**
+24. **Report user** – Report inappropriate user behavior for review  
 
 ### **3.5. Formal Use Case Specifications (5 Most Major Use Cases)**
 
@@ -603,39 +603,11 @@ The following sequence diagrams illustrate how the components and interfaces def
 
 
 1. [**Use Case 1: Login (User Authentication)**](#uc1)
-
-<img width="1285" height="905" alt="image" src="https://github.com/user-attachments/assets/7eca3408-7890-4715-9399-7fdd0fbdc6ee" />
+![Use Case Diagram](./images/sequence1.png)
 
 2. [**Use Case 9: Create Group**](#uc9)
-```mermaid
-sequenceDiagram
-    actor User
-    participant F as :Frontend
-    participant B as :Backend
-    participant M as :AuthMiddleware
-    participant D as :GroupDB
+![Use Case Diagram](./images/sequence2.png)
 
-    User->>F: Enter group name and click "Create Group"
-    F->>B: POST /api/group(name, JWT token)
-    B->>M: Verify JWT token
-    M->>B: Attach authenticated user
-    B->>B: Validate group name
-    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
-    D->>B: Return existing group (or null)
-    alt User already in group
-        B->>F: Return error: "Already in a group"
-        F->>User: Display error message
-    else User not in group
-        B->>B: Generate unique 4-char code
-        B->>D: INSERT group (name, code, owner, members)
-        D->>B: Return created group
-        B->>D: UPDATE users SET groupName WHERE id = {userId}
-        D->>B: Confirm update
-        B->>F: Return GroupResponse (group + code)
-        F->>User: Display group dashboard with code
-        User->>User: Share group code with roommates
-    end
-```
 
 3. [**Use Case 16: Send Message**](#uc17)
 ```mermaid
@@ -685,34 +657,44 @@ sequenceDiagram
 sequenceDiagram
     actor User
     participant F as :Frontend
-    participant B as :Backend
+    participant TR as :TaskRepository
+    participant AS as :ApiService
+    participant TH as :TaskHandler
     participant M as :AuthMiddleware
-    participant D as :TaskDB
+    participant D as :MongoDB
 
     User->>F: Fill task form (name, difficulty, recurrence)
     User->>F: Click "Create Task"
-    F->>B: POST /api/task(name, difficulty, recurrence, requiredPeople, JWT)
-    B->>M: Verify JWT token
-    M->>B: Attach authenticated user
-    B->>B: Validate task parameters
-    B->>D: Group.findById(groupId)
-    D->>B: Return group
+    F->>TR: createTask(taskData)
+    TR->>AS: POST /api/task
+    AS->>TH: HTTP Request with JWT
+    TH->>M: Verify JWT token
+    M->>TH: Attach authenticated user
+    TH->>TH: Validate task parameters (name, difficulty, recurrence, requiredPeople)
+    TH->>D: Group.findOne({'members.userId': userId})
+    D->>TH: Return group document
     alt User not in group
-        B->>F: Return 404: Not in any group
+        TH->>AS: Return 404: Not in any group
+        AS->>TR: HTTP 404 Response
+        TR->>F: TaskResponse(success: false)
         F->>User: Display error
     else User in group
-        B->>D: INSERT task (name, difficulty, recurrence, groupId)
-        D->>B: Return created task
+        TH->>D: Task.create({name, difficulty, recurrence, groupId, createdBy})
+        D->>TH: Return created task document
         alt Specific users assigned
-            B->>B: Calculate current week start
+            TH->>TH: Calculate current week start
             loop For each userId in assignedUserIds
-                B->>D: INSERT assignment (taskId, userId, weekStart, status)
+                TH->>D: task.assignments.push({userId, weekStart, status})
             end
-            D->>B: Confirm assignments created
+            TH->>D: task.save()
+            D->>TH: Confirm assignments created
         end
-        B->>D: SELECT user.name, user.email WHERE id IN (createdBy, assignments.userId)
-        D->>B: Return populated task
-        B->>F: Return TaskResponse
+        TH->>D: task.populate('createdBy', 'name email')
+        TH->>D: task.populate('assignments.userId', 'name email')
+        D->>TH: Return populated task document
+        TH->>AS: Return TaskResponse(success: true)
+        AS->>TR: HTTP 201 Response
+        TR->>F: TaskResponse(success: true)
         F->>User: Display task in task list
         F->>User: Show assigned members
     end
