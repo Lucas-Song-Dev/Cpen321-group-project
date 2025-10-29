@@ -607,35 +607,8 @@ The following sequence diagrams illustrate how the components and interfaces def
 <img width="1285" height="905" alt="image" src="https://github.com/user-attachments/assets/7eca3408-7890-4715-9399-7fdd0fbdc6ee" />
 
 2. [**Use Case 9: Create Group**](#uc9)
-```mermaid
-sequenceDiagram
-    actor User
-    participant F as :Frontend
-    participant B as :Backend
-    participant M as :AuthMiddleware
-    participant D as :GroupDB
+![Use Case Diagram](./images/sequence2.png)
 
-    User->>F: Enter group name and click "Create Group"
-    F->>B: POST /api/group(name, JWT token)
-    B->>M: Verify JWT token
-    M->>B: Attach authenticated user
-    B->>B: Validate group name
-    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
-    D->>B: Return existing group (or null)
-    alt User already in group
-        B->>F: Return error: "Already in a group"
-        F->>User: Display error message
-    else User not in group
-        B->>B: Generate unique 4-char code
-        B->>D: INSERT group (name, code, owner, members)
-        D->>B: Return created group
-        B->>D: UPDATE users SET groupName WHERE id = {userId}
-        D->>B: Confirm update
-        B->>F: Return GroupResponse (group + code)
-        F->>User: Display group dashboard with code
-        User->>User: Share group code with roommates
-    end
-```
 
 3. [**Use Case 16: Send Message**](#uc17)
 ```mermaid
