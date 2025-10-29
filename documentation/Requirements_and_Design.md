@@ -714,50 +714,55 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor User
-    participant F as :Frontend
-    participant B as :Backend
-    participant M as :AuthMiddleware
-    participant D as :RatingDB
+    participant F as :Frontend:
+    participant R as :Rating:
+    participant U as :UserDB:
+    participant G as :GroupDB:
 
     User->>F: Select roommate to rate
-    F->>B: GET /api/group() to verify duration
-    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
-    D->>B: Return group data with join dates
-    B->>F: Return group with join dates
-    F->>F: Calculate days in group together
-    alt Less than 30 days together
-        F->>User: Display error: "Minimum 30 days required"
-    else 30+ days together
-        F->>User: Display rating form
-        User->>F: Enter rating (1-5) and testimonial
-        User->>F: Click "Submit Rating"
-        F->>B: POST /api/rating(ratedUserId, groupId, rating, testimonial, JWT)
-        B->>M: Verify JWT token
-        M->>B: Attach authenticated user
-        B->>B: Validate rating (1-5) and testimonial length
-        B->>B: Check not rating self
-        B->>D: SELECT * FROM groups WHERE id = {groupId}
-        D->>B: Return group with members
-        B->>B: Calculate time both users in group
-        B->>B: Verify both users >= 30 days
-        alt Duration requirement not met
-            B->>F: Return 400: Minimum duration not met
-            F->>User: Display error with remaining days
-        else Duration requirement met
-            B->>D: UPSERT rating (ratedUserId, raterUserId, groupId, rating, testimonial)
-            D->>B: Return rating
-            loop Calculate average rating
-                B->>D: SELECT AVG(rating) FROM ratings WHERE ratedUserId = {ratedUserId}
-                D->>B: Return average rating
+    F->>R: POST /api/rating [requestedUser: r, ratedUser: u, groupId: g, rating: r, testimonial: t]
+
+    %% Backend validation
+    R->>U: isValid(u)?
+    alt isValid(u) == true
+        U-->>R: Valid
+
+        %% Check both users in group
+        R->>G: SELECT * FROM groups WHERE id = g
+        G-->>R: Return group with members and join dates
+
+        R->>R: Verify both users in group
+        R->>R: Calculate shared days in group
+        alt shared days > 30
+            R->>R: Validate rating (1–5) and testimonial length
+            alt 1 <= r <= 5 && t.length() <= 500
+                R->>R: r
+                alt r != u
+                    R->>R: UPSERT rating (ratedUser, raterUser, groupId, rating, testimonial)
+                    R->>R: Compute average rating for rated user
+                    R->>U: UPDATE user averageRating
+                    U-->>R: Confirm update
+                    R-->>F: Return success (rating saved)
+                    F-->>User: "Rating submitted successfully!"
+                else 
+                    R-->>F: Return 400 (Cannot rate self)
+                    F-->>User: "You cannot rate yourself"
+            else 
+                R-->>F: Return 400 (Validation failed)
+                F-->>User: "Rating must be an integer between 1 and 5 and Testimonial must be 500 characters or less"
+        else shared days <= 30
+            R-->>F: Return 400 (Minimum duration not met)
+            F-->>User: "Cannot rate user who has been in group for less than 30 days"
+    else isValid(u) == false
+        U-->>R: Invalid
+        R-->>F: Return 400 (Invalid user)
+        F-->>User: "Missing required fields: ratedUserId"
+                end
             end
-            B->>D: UPDATE users SET averageRating WHERE id = {ratedUserId}
-            D->>B: Confirm update
-            B->>F: Return RatingResponse (success)
-            F->>User: Display success message
-            F->>User: Show updated rating on profile
         end
     end
 ```
+
 
 ### **4.7. Design of Non-Functional Requirements**
 
