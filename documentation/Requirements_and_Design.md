@@ -42,26 +42,26 @@ The application targets university students, young professionals, and anyone see
 - **Join Group**: Users can enter a unique group code to join a group.
 - **Maximum 8 users in a group**: Additional users will be unable attempt to join group
 - **View Group**: See group members profiles, name of group and each member's move-in date/group join date.
-- **Leave Group**: Any user part of a group can leave the group.
+- **Leave Group**: Any user part of a group can leave the group. When the owner leaves, ownership automatically transfers to the oldest member (by join date). If the owner is the only member, the group is deleted.
 
 **Group Communication** - Real-time messaging system with all group members. Integrated polling functionality to block certain times on the calendar for group decisions with default options: yes or no. Polls will expire within a week.
 
 **Group Task Management** - Algorithmic task assignment and tracking system for household responsibilities
 
-- **View Tasks**: Users can view all tasks by each week and the status of the tasks.
-- **Set Task Status**: Upon task creation, the default will be set to 'incomplete'. Users select task status as 'in-progress' or 'completed'.
-- **Create Task**: Users must enter: task name, repeated duration (ex.weekly, bi-weekly), difficulty of task (weight of task). Tasks will be shared among all group members.
-- **Task Assignment**: When a task is created, they will be assigned at the start of the week through an algorithm for fair allocation based on weight on ease of task.
+- **View Tasks**: Three view options - Calendar View (tasks by selected date), Weekly View (all group tasks grouped by day), My Tasks (personal tasks grouped by day).
+- **Set Task Status**: Default status is 'incomplete'. Users can update to 'in-progress' or 'completed'.
+- **Create Task**: Enter task name, optional description, difficulty (1-5), recurrence (one-time/daily/weekly/bi-weekly/monthly), required people (1-10), deadline (for one-time tasks), and optional member assignment.
+- **Task Assignment**: Tasks assigned weekly via algorithm for fair distribution, or manually assigned at creation to specific members.
 
-**Roommate Rating System** - Users can rate roommate experience after living with them for a minimum of one month.
+**Roommate Rating System** - Users can rate roommate experience after living with them for a minimum of 30 days.
 
 - **Rating** - Reputation score: Users can give their roommates a score out of 5 and leave comments and testimonies to describe their personal living experience
 - While bad roomates might be able to delete account or not have one, it is still a good way for good roommates to build up a track record of cleanliness for future rooms. This has been proven to work like Ebay or Facebook marketplace.
 
-**User Moderation** - Moderation through a LLM that filters reviews on profiles
+**User Moderation** - Automated content moderation using LLM
 
-- Chats would be too expensive to moderate every chat message so users can report messages and an AI will review the batch of messages with context. If the user is deemed inappropriate, a warning will be issued and the user will be temporarily banned. This will affect the user's rating.
-- Reviews will be auto reviewed on creation through the LLM but users can report reviews for manual review
+- Users can report inappropriate behavior. The system analyzes the reported user's recent messages (up to 100) using OpenAI to determine if content violates community standards (harassment, hate speech, threats, etc.).
+- If deemed offensive, the user is flagged in the database (isOffensive field set to true).
 
 ### **3.2. Use Case Diagram**
 
@@ -73,9 +73,9 @@ The application targets university students, young professionals, and anyone see
 
 1. **Non-Group Member**: A registered user who is not currently part of any roommate group. Can create and edit their profile, create new groups, and join existing groups through invitation codes. Cannot access group-specific features like chat, task management, or rating systems since these require active group membership.
 
-2. **Group Member**: A registered user who belongs to a roommate group but is not the group owner. Has access to all group features including group chat, polling, task management (viewing and completing assigned tasks), viewing other group members' profiles, and rating roommates (must have lived together for minimum one month). Can leave the group voluntarily but cannot remove other members or delete the group.
+2. **Group Member**: A registered user who belongs to a roommate group but is not the group owner. Has access to all group features including group chat, polling, task management (viewing and completing assigned tasks), viewing other group members' profiles, and rating roommates (must have lived together for minimum 30 days). Can leave the group voluntarily but cannot remove other members or delete the group.
 
-3. **Group Owner**: A group member with additional administrative privileges. Can perform all group member functions plus remove other group members from the group, delete the entire group, and transfer ownership to another group member. Also has rating privileges for roommates they have lived with for the required minimum period.
+3. **Group Owner**: A group member with additional administrative privileges. Can perform all group member functions plus remove other group members from the group and delete the entire group. When leaving the group will transfer ownership to the oldest other group member. Also has rating privileges for roommates they have lived with for the required minimum period.
 
 **External System Actors:**
 
@@ -96,30 +96,29 @@ The application targets university students, young professionals, and anyone see
 8. **Delete account** – Users can permanently delete their account and all associated data  
 
 #### **Use cases for Group Management**
-9. **Create group** – Establish a new living group and generate a unique invitation code for prospective roommates  
-10. **Join group** – Join an existing roommate group by entering a unique invitation code  
-11. **View group** – View members of the group, group name, and member join dates  
-12. **Leave group** – Group members can leave a group they are a part of  
-13. **Delete group** – Group owner can dissolve a group; the unique invitation code will no longer be valid  
-14. **Remove group member** – Group owner can remove group members  
-15. **Transfer ownership** – Group owner can pass admin position to a group member  
+9. **Create group** – Establish a new living group and generate a unique invitation code for prospective roommates
+10. **Join group** – Join an existing roommate group by entering a unique 4 digit alphanumeric invitation code
+11. **View group** – View members of the group, group name, and member join dates
+12. **Leave group** – Group members can leave a group they are a part of (owner leaving should transfer to oldest member in the group if it is just them it will delete group instead)
+13. **Delete group** – Group owner can dissolve a group; the unique invitation code will no longer be valid
+14. **Remove group member** – Group owner can remove group members
 
 #### **Use cases for Group Communication**
-16. **Send message** – Real-time messaging system for communication between all group members  
-17. **Create poll** – A voting mechanism for group decisions regarding household policies and activities  
+15. **Send message** – Real-time messaging system for communication between all group members  
+16. **Create poll** – A voting mechanism for group decisions regarding household policies and activities  
 
 #### **Use cases for Group Task Management**
-18. **Add task** – Create tasks to be shared among all roommates by setting task name, difficulty, and recurrence. Tasks are algorithmically distributed among roommates  
-19. **Delete task** – Delete tasks if a task is no longer needed  
-20. **Set task status** – Update task status to *in-progress* or *completed* for assigned tasks  
+17. **Add task** – Create tasks with name, description, difficulty (1-5), recurrence, deadline (for one-time tasks), and optional member assignment. View tasks in Calendar, Weekly, or My Tasks views  
+18. **Delete task** – Delete tasks if a task is no longer needed  
+29. **Set task status** – Update task status to *in-progress* or *completed* for assigned tasks  
 
 #### **Use cases for Roommate Rating System**
-21. **Rate roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days  
-22. **Write testimonial** – Add optional written feedback about roommate experience  
-23. **View ratings** – View user profiles, average ratings, and testimonials from previous roommates  
+20. **Rate roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days  
+21. **Write testimonial** – Add optional written feedback about roommate experience  
+22. **View ratings** – View user profiles, average ratings, and testimonials from previous roommates  
 
 #### **Use cases for User Moderation**
-24. **Report user** – Report inappropriate user behavior for review  
+23. **Report user** – Report inappropriate user behavior for review  
 
 ### **3.5. Formal Use Case Specifications (5 Most Major Use Cases)**
 
@@ -128,7 +127,7 @@ The application targets university students, young professionals, and anyone see
 
 **Description**: Secure account creation process using Google OAuth. User profiles will also be created.
 
-**Primary actor(s)**: Non-Group Members/Users
+**Primary Actor**: Non-Group Member
 
 **Main success scenario**:
 1. A person with an existing google account clicks 'create account'
@@ -150,8 +149,6 @@ The application targets university students, young professionals, and anyone see
   - System displays an error message saying that the birthday is set to the future and is invalid.
 - 6a. User uploads profile picture file that is too large
   - System displays an error message saying that the file is too large
-- 6b. User uploads incorrect format of profile picture
-  - System displays an error message saying that profile pictures must be a PNG file
 - 7a. User clicks finished but one or more optional fields don't meet requirements
   - System displays an error message saying nickname must be below 100 characters
   - System displays an error message saying bio must be below 100 words
@@ -159,9 +156,9 @@ The application targets university students, young professionals, and anyone see
 <a name="uc9"></a>
 #### Use Case 9: Create Group
 
-**Description**: Non-group member establishes a new roommate group and receives invitation code to share with potential roommates.
+**Description**: Non-Group Member establishes a new roommate group and receives invitation code to share with potential roommates.
 
-**Primary Actor(s)**: Non-Group Member/User
+**Primary Actor**: Non-Group Member
 
 **Main Success Scenario**:
 1. User navigates to group creation page
@@ -176,11 +173,12 @@ The application targets university students, young professionals, and anyone see
 - 2a. Group name is left empty
   - System displays error saying that a group name must be entered
 - 2b. Group name is longer than 100 characters
-  - System displays error saying that a group name must be less than a 100 characters
+  - System displays error saying that a group name must be less than 100 characters
 - 3a. User already belongs to a group
   - System displays error that user must leave current group first to create a group
   - User is redirected to current group dashboard
 
+<a name="uc16"></a>
 <a name="uc17"></a>
 #### Use Case 17: Create Poll
 
@@ -219,28 +217,28 @@ The application targets university students, young professionals, and anyone see
 
 **Main Success Scenario**:
 1. User clicks 'Create Task'
-2. User enters the task name, repeated duration and weighting of task.
-3. User clicks 'save'
-4. System will equally distribute task among all roommates and assign each task to the roommates.
-5. Each user will be able to see their assigned tasks on their dashboard. They can also see other roommates' tasks below it.
+2. User enters task name and optional description
+3. User selects difficulty (1-5 scale), recurrence (one-time, daily, weekly, bi-weekly, monthly), and required people (1-10)
+4. If one-time task, user sets deadline date
+5. User optionally selects specific group members to assign the task to
+6. User clicks 'Create Task'
+7. System creates task and assigns to selected members for current week, or queues for weekly algorithmic assignment if no members specified
+8. Users can view tasks in three views: Calendar View (tasks by selected date), Weekly View (all group tasks grouped by day), or My Tasks (personal tasks grouped by day) 
 
 **Extensions/Failure Scenarios**:
-- 2a. Task name, repeated duration or weighting of task is left incomplete or invalid
-  - System displays error saying that all fields must be completed to create a task
-- 4a. Algorithm fails to distribute tasks fairly
+- 2a. Task name is empty
+  - System displays error and disables 'Create Task' button until name is provided
+- 4a. One-time task created without deadline
+  - System requires deadline before allowing task creation
+  - 'Create Task' button remains disabled until deadline is set
+- 7a. Algorithm fails to distribute tasks fairly
   - System falls back to round-robin assignment method
   - System notifies group owner of algorithm failure
-- 5a. User disputes assigned task as unfair
-  - System provides task assignment rationale based on algorithm
-  - Group owner can manually reassign task if needed
-- 5b. Task marked complete but disputed by other members
-  - System allows group members to flag incomplete tasks
-  - Group owner can reset task status for resolution
 
 <a name="uc21"></a>
 #### Use Case 21-22: Rate Roommate and Write Testimonial
 
-**Description**: Group members provide numerical rating and optional written feedback on roommate performance after living together for a one month minimum period.
+**Description**: Group members provide numerical rating and optional written feedback on roommate performance after living together for a minimum of 30 days.
 
 **Primary Actor**: Group Member, Group Owner
 
@@ -333,9 +331,9 @@ The application targets university students, young professionals, and anyone see
           - Parameters: Group name (max 100 characters)
           - Returns: Group data including generated group code
         - POST /api/group/join(groupCode: String): GroupResponse
-          - Purpose: Joins an existing group using invitation code
+          - Purpose: Joins an existing group using invitation code (validates maximum 8 members)
           - Parameters: 4-character alphanumeric group code
-          - Returns: Updated group data with all members
+          - Returns: Updated group data with all members, or 400 error if group is full
         - GET /api/group(): GroupResponse
           - Purpose: Retrieves current user's group information
           - Returns: Group data with member details and ratings
@@ -344,8 +342,8 @@ The application targets university students, young professionals, and anyone see
           - Parameters: User ID of member to remove
           - Returns: Updated group data
         - DELETE /api/group/leave(): SuccessResponse
-          - Purpose: Allows non-owner member to leave the group
-          - Returns: Success confirmation
+          - Purpose: Allows member to leave the group. If owner leaves with other members present, transfers ownership to oldest member (by join date). If owner is alone, deletes the group.
+          - Returns: Success confirmation with ownership transfer notification if applicable
      4. **Messaging & Polling Interface**
         - GET /api/chat/:groupId/messages(page?: Number, limit?: Number): MessageListResponse
           - Purpose: Retrieves paginated message history for a group
@@ -455,13 +453,15 @@ The application targets university students, young professionals, and anyone see
           - Purpose: Fairly distributes tasks among group members for current week
           - Uses randomization and required people count for balanced allocation
 
-3. **LLM Moderation System**
-   - **Purpose**: Provides automated review of roommate reviews and profiles, and handles reported chat messages in batches.
-   - **Interfaces**:
-     1. **Profile & Review Scanner**
-        - **Purpose**: Automatically checks newly created content for inappropriate or harmful material.
-     2. **Message Batch Reviewer**
-        - **Purpose**: Reviews reported chat logs in context when flagged by users.
+3. **LLM Moderation Integration (External Module - MVP)**
+   - **Purpose**: Provides automated content moderation for reported user behavior via OpenAI API.
+   - **Current Implementation**:
+     - Analyzes reported users' message history (up to 100 messages) to detect policy violations
+     - Returns isOffensive boolean flag via JSON response
+     - Triggers database update to mark offensive users
+   - **Future Enhancements**:
+     - Automatic testimonial review on creation
+     - Automated profile content scanning
 
 ### **4.2. Databases**
 
@@ -484,11 +484,12 @@ External modules are third-party services accessed over the internet that provid
    - **Integration**: Used via google-auth-library npm package. The Android client obtains an ID token from Google Sign-In, which is sent to the Node.js backend for verification against Google's servers.
    - **Data Exchanged**: Receives user's email, name, and unique Google ID upon successful authentication.
 
-2. **LLM System**
-   - **Provider**: OpenAI API
-   - **Purpose**: Provides quick analysis of whether an user has sent offensive messages or not by taking in messages between users in a group and a prompt.
-   - **Integration**: Used via openAI npm package. A prompt with the content of the messages is sent to OpenAI for review. OpenAI will analyze and reply whether the messages were offensive or not in a JSON format.
-   - **Data Exchanged**: Receives content of messages between users in a group
+2. **LLM Moderation System (MVP Feature)**
+   - **Provider**: OpenAI API (accessed via OpenRouter)
+   - **Purpose**: Analyzes reported user behavior by reviewing message history to detect harassment, hate speech, threats, sexual harassment, and other violations.
+   - **Integration**: Used via OpenAI npm package with OpenRouter proxy. When a user is reported, the system fetches up to 100 recent messages from the reported user and sends them to GPT-3.5-turbo with a moderation prompt. The LLM returns a JSON response indicating whether the content is offensive.
+   - **Data Exchanged**: Sends message content and reporter's reason; receives JSON response with isOffensive boolean.
+   - **Action**: If flagged as offensive, the user's isOffensive field is set to true in the database.
 
 ### **4.4. Frameworks and Libraries**
 
@@ -602,14 +603,14 @@ Frameworks and libraries are software packages that provide reusable functionali
 The following sequence diagrams illustrate how the components and interfaces defined in the high-level design interact to realize the five most critical use cases of the RoomSync application.
 
 
-1. [**Use Case 1: Login (User Authentication)**](#uc1)
+1. [**Use Case 1: Create Account**](#uc1)
 ![Use Case Diagram](./images/sequence1.png)
 
 2. [**Use Case 9: Create Group**](#uc9)
 ![Use Case Diagram](./images/sequence2.png)
 
 
-3. [**Use Case 16: Send Message**](#uc17)
+3. [**Use Case 16: Send Message**](#uc16)
 ```mermaid
 sequenceDiagram
     actor User
