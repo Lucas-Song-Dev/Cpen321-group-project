@@ -5,8 +5,8 @@
 | **Change Date** | **Modified Sections** | **Rationale** |
 | --------------- | --------------------- | ------------- |
 | September 26, 2025 | Initial Plan | First milestone submission (M2) |
-| October 10, 2025 | Section 3.2 Use case diagram | Fixed use case diagram according to feedback in M2 |
-| October 28, 2025 | Added section 4.4, 4.6, 4.7, Modified section 3.1, 4.5 | M3 Requirements, fixed document according to app implementation |
+| October 10, 2025 | Section 3.2 Use case diagram  | Fixed use case diagram according to feedback in M2 |
+| October 28, 2025 | Added section 4.4, 4.6, 4.7, Modified section 3.1, 4.1 4.5 | Implemented M3 Requirements, fixed document according to app implementation and made further M2 feedback changes |
 
 ---
 
