@@ -170,39 +170,152 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] GROUP GET: Getting group for user:`, req.user?._id);
   
-  const group = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
-  })
-    .populate('owner', 'name email bio averageRating')
-    .populate('members.userId', 'name email bio averageRating');
+  try {
+    const group = await Group.findOne({ 
+      'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+    });
 
-  if (!group) {
-    console.log(`[${timestamp}] GROUP GET: User is not a member of any group`);
-    return res.status(404).json({
+    if (!group) {
+      console.log(`[${timestamp}] GROUP GET: User is not a member of any group`);
+      return res.status(404).json({
+        success: false,
+        message: 'User is not a member of any group'
+      });
+    }
+
+    console.log(`[${timestamp}] GROUP GET: Group found:`, group._id);
+    
+    // Populate owner data with error handling
+    try {
+      await group.populate('owner', 'name email bio averageRating');
+      console.log(`[${timestamp}] GROUP GET: Owner populated successfully`);
+      
+      // Validate that owner still exists and has valid data
+      if (!group.owner || typeof group.owner === 'string' || !(group.owner as any).name) {
+        console.log(`[${timestamp}] GROUP GET: Owner data is invalid, attempting to fix ownership`);
+        
+        // If owner is invalid, transfer to oldest valid member
+        const validMembers = group.members.filter((member: any) => 
+          member.userId && typeof member.userId === 'object' && member.userId.name
+        );
+        
+        if (validMembers.length > 0) {
+          // Find the oldest member (earliest join date) to transfer ownership to
+          const oldestMember = validMembers.reduce((oldest: any, current: any) => {
+            const oldestDate = new Date(oldest.joinDate);
+            const currentDate = new Date(current.joinDate);
+            return currentDate < oldestDate ? current : oldest;
+          });
+          
+          group.owner = oldestMember.userId as any;
+          await group.save();
+          console.log(`[${timestamp}] GROUP GET: Ownership transferred to oldest member ${(oldestMember.userId as any).name} (joined: ${oldestMember.joinDate})`);
+          
+          // Re-populate the new owner
+          await group.populate('owner', 'name email bio averageRating');
+        } else {
+          console.log(`[${timestamp}] GROUP GET: No valid members found, creating placeholder owner`);
+          // Create a placeholder owner if no valid members exist
+          (group as any).owner = {
+            _id: 'deleted-owner',
+            name: 'Deleted User',
+            email: '',
+            bio: '',
+            averageRating: 0
+          };
+        }
+      }
+    } catch (populateError) {
+      console.error(`[${timestamp}] GROUP GET: Error populating owner:`, populateError);
+      
+      // Try to fix ownership by transferring to oldest valid member
+      const validMembers = group.members.filter((member: any) => 
+        member.userId && typeof member.userId === 'object' && member.userId.name
+      );
+      
+      if (validMembers.length > 0) {
+        // Find the oldest member (earliest join date) to transfer ownership to
+        const oldestMember = validMembers.reduce((oldest: any, current: any) => {
+          const oldestDate = new Date(oldest.joinDate);
+          const currentDate = new Date(current.joinDate);
+          return currentDate < oldestDate ? current : oldest;
+        });
+        
+        group.owner = oldestMember.userId as any;
+        await group.save();
+        console.log(`[${timestamp}] GROUP GET: Ownership transferred to oldest member ${(oldestMember.userId as any).name} (joined: ${oldestMember.joinDate}) due to populate error`);
+        
+        // Try to populate again
+        try {
+          await group.populate('owner', 'name email bio averageRating');
+        } catch (retryError) {
+          console.error(`[${timestamp}] GROUP GET: Retry populate also failed:`, retryError);
+          // Create placeholder owner
+          (group as any).owner = {
+            _id: 'deleted-owner',
+            name: 'Deleted User',
+            email: '',
+            bio: '',
+            averageRating: 0
+          };
+        }
+      } else {
+        // Create placeholder owner if no valid members exist
+        (group as any).owner = {
+          _id: 'deleted-owner',
+          name: 'Deleted User',
+          email: '',
+          bio: '',
+          averageRating: 0
+        };
+      }
+    }
+    
+    // Populate member data with error handling
+    try {
+      await group.populate('members.userId', 'name email bio averageRating');
+      console.log(`[${timestamp}] GROUP GET: Members populated successfully`);
+    } catch (populateError) {
+      console.error(`[${timestamp}] GROUP GET: Error populating members:`, populateError);
+      // Filter out any members that failed to populate
+      group.members = group.members.filter((member: any) => {
+        if (!member.userId || typeof member.userId === 'string') {
+          console.log(`[${timestamp}] GROUP GET: Filtering out invalid member:`, member);
+          return false;
+        }
+        return true;
+      });
+      console.log(`[${timestamp}] GROUP GET: Filtered members, remaining count: ${group.members.length}`);
+    }
+    
+    // Log how long each user has been in the group
+    console.log(`[${timestamp}] GROUP GET: Member join durations:`);
+    const now = new Date();
+    group.members.forEach((member: any) => {
+      if (member.userId && member.userId.name) {
+        const joinDate = new Date(member.joinDate);
+        const durationMs = now.getTime() - joinDate.getTime();
+        const durationMinutes = Math.floor(durationMs / (1000 * 60));
+        const durationHours = Math.floor(durationMinutes / 60);
+        const durationDays = Math.floor(durationHours / 24);
+        
+        console.log(`[${timestamp}]   - User ${member.userId.name} (${member.userId._id}): ${durationDays} days, ${durationHours % 24} hours, ${durationMinutes % 60} minutes (joined: ${joinDate.toISOString()})`);
+      } else {
+        console.log(`[${timestamp}]   - Invalid member data:`, member);
+      }
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: group
+    });
+  } catch (error) {
+    console.error(`[${timestamp}] GROUP GET: Unexpected error:`, error);
+    res.status(500).json({
       success: false,
-      message: 'User is not a member of any group'
+      message: 'Failed to load group data'
     });
   }
-
-  console.log(`[${timestamp}] GROUP GET: Group found:`, group._id);
-  
-  // Log how long each user has been in the group
-  console.log(`[${timestamp}] GROUP GET: Member join durations:`);
-  const now = new Date();
-  group.members.forEach((member: any) => {
-    const joinDate = new Date(member.joinDate);
-    const durationMs = now.getTime() - joinDate.getTime();
-    const durationMinutes = Math.floor(durationMs / (1000 * 60));
-    const durationHours = Math.floor(durationMinutes / 60);
-    const durationDays = Math.floor(durationHours / 24);
-    
-    console.log(`[${timestamp}]   - User ${member.userId.name} (${member.userId._id}): ${durationDays} days, ${durationHours % 24} hours, ${durationMinutes % 60} minutes (joined: ${joinDate.toISOString()})`);
-  });
-  
-  res.status(200).json({
-    success: true,
-    data: group
-  });
 }));
 
 // @desc    Remove a member from group (owner only)
@@ -289,25 +402,32 @@ router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  // Check if user is the owner
-  if (group.owner.toString() === req.user!._id.toString()) {
-    return res.status(400).json({
-      success: false,
-      message: 'Group owner cannot leave. Transfer ownership or delete group first.'
-    });
-  }
+  const isOwner = group.owner.toString() === req.user!._id.toString();
 
-  // Remove user from group
+  // Remove user from group members
   group.members = group.members.filter(member => 
     member.userId.toString() !== req.user!._id.toString()
   );
 
+  if (isOwner) {
+    if (group.members.length > 0) {
+      // Transfer ownership to the first remaining member
+      group.owner = group.members[0].userId as any;
+    } else {
+      // No members left; delete the group and clear user groupName
+      await group.deleteOne();
+      await UserModel.findByIdAndUpdate(req.user!._id, { groupName: "" });
+      return res.status(200).json({
+        success: true,
+        message: 'Successfully left the group and deleted empty group'
+      });
+    }
+  }
+
   await group.save();
 
   // Update user's groupName
-  await UserModel.findByIdAndUpdate(req.user!._id, { 
-    groupName: "" 
-  });
+  await UserModel.findByIdAndUpdate(req.user!._id, { groupName: "" });
 
   res.status(200).json({
     success: true,

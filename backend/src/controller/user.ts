@@ -187,9 +187,20 @@ export const UserController = {
         // If the user was the owner, transfer ownership or handle empty group
         if (group.owner && group.owner.toString() === userId.toString()) {
           if (group.members.length > 0) {
-            // Transfer ownership to the first remaining member
-            group.owner = group.members[0].userId as any;
-            console.log(`[${timestamp}] DELETE USER: Transferred ownership to ${group.owner}`);
+            // Find the oldest member (earliest join date) to transfer ownership to
+            const oldestMember = group.members.reduce((oldest: any, current: any) => {
+              const oldestDate = new Date(oldest.joinDate);
+              const currentDate = new Date(current.joinDate);
+              return currentDate < oldestDate ? current : oldest;
+            });
+            
+            const newOwner = oldestMember.userId;
+            group.owner = newOwner as any;
+            console.log(`[${timestamp}] DELETE USER: Transferred ownership to oldest member ${newOwner} (joined: ${oldestMember.joinDate})`);
+            
+            // Update the new owner's groupName to match the group
+            await UserModel.findByIdAndUpdate(newOwner, { groupName: group.name });
+            console.log(`[${timestamp}] DELETE USER: Updated new owner's groupName to ${group.name}`);
           } else {
             // No members left; delete the group
             await group.deleteOne();

@@ -80,23 +80,39 @@ class GroupViewModel(
                     val group = response.data
                     println("GroupViewModel: Group data received: ${group.name}, id: ${group._id}")
                     
-                    // Log member details for debugging
+                    // Log member details for debugging with error handling
                     group.members.forEachIndexed { index, member ->
-                        println("GroupViewModel: Processing member $index - Name: ${member.userId.name}, Join Date String: '${member.joinDate}'")
-                        val joinDate = parseIsoDate(member.joinDate)
-                        val now = Date()
-                        val durationMs = now.time - joinDate.time
-                        val days = (durationMs / (1000 * 60 * 60 * 24)).toInt()
-                        println("GroupViewModel: Member ${member.userId.name} - Join Date: $joinDate, Days ago: $days")
+                        try {
+                            if (member.userId?.name != null) {
+                                println("GroupViewModel: Processing member $index - Name: ${member.userId.name}, Join Date String: '${member.joinDate}'")
+                                val joinDate = parseIsoDate(member.joinDate)
+                                val now = Date()
+                                val durationMs = now.time - joinDate.time
+                                val days = (durationMs / (1000 * 60 * 60 * 24)).toInt()
+                                println("GroupViewModel: Member ${member.userId.name} - Join Date: $joinDate, Days ago: $days")
+                            } else {
+                                println("GroupViewModel: Skipping invalid member $index - missing user data")
+                            }
+                        } catch (e: Exception) {
+                            println("GroupViewModel: Error processing member $index: ${e.message}")
+                        }
                     }
                     
-                    val uiGroup = convertApiGroupToViewModel(group)
-                    
-                    println("GroupViewModel: Group loaded successfully")
-                    _uiState.value = _uiState.value.copy(
-                        group = uiGroup,
-                        isLoading = false
-                    )
+                    try {
+                        val uiGroup = convertApiGroupToViewModel(group)
+                        
+                        println("GroupViewModel: Group loaded successfully")
+                        _uiState.value = _uiState.value.copy(
+                            group = uiGroup,
+                            isLoading = false
+                        )
+                    } catch (e: Exception) {
+                        println("GroupViewModel: Error converting group to view model: ${e.message}")
+                        _uiState.value = _uiState.value.copy(
+                            error = "Failed to process group data: ${e.message}",
+                            isLoading = false
+                        )
+                    }
                 } else {
                     // User doesn't have a group yet - this is normal, not an error
                     println("GroupViewModel: User doesn't have a group yet (not an error)")
@@ -206,24 +222,69 @@ class GroupViewModel(
     }
     
     private fun convertApiGroupToViewModel(apiGroup: ApiGroup): Group {
-        val groupMembers = apiGroup.members.map { member ->
-            val joinDate = parseIsoDate(member.joinDate)
-            
-            ViewModelGroupMember(
-                id = member.userId._id,
-                name = member.userId.name ?: "Unknown",
-                email = member.userId.email,
-                joinDate = joinDate,
-                moveInDate = member.moveInDate?.let { parseIsoDate(it) }
-            )
+        val groupMembers = apiGroup.members.mapNotNull { member ->
+            try {
+                // Skip members with invalid user data
+                if (member.userId?._id == null) {
+                    println("GroupViewModel: Skipping member with invalid user ID")
+                    return@mapNotNull null
+                }
+                
+                val joinDate = parseIsoDate(member.joinDate)
+                
+                ViewModelGroupMember(
+                    id = member.userId._id,
+                    name = member.userId.name ?: "Unknown",
+                    email = member.userId.email ?: "",
+                    joinDate = joinDate,
+                    moveInDate = member.moveInDate?.let { parseIsoDate(it) }
+                )
+            } catch (e: Exception) {
+                println("GroupViewModel: Error converting member: ${e.message}")
+                null
+            }
         }
         
-        val owner = ViewModelGroupMember(
-            id = apiGroup.owner._id,
-            name = apiGroup.owner.name ?: "Unknown",
-            email = apiGroup.owner.email,
-            joinDate = Date(System.currentTimeMillis())
-        )
+        val owner = try {
+            // Handle case where owner might be deleted or invalid
+            val ownerId = apiGroup.owner?._id ?: "deleted-owner"
+            val ownerName = apiGroup.owner?.name ?: "Deleted User"
+            val ownerEmail = apiGroup.owner?.email ?: ""
+            
+            // If owner is deleted, try to find a valid member to show as owner
+            if (ownerId == "deleted-owner" || ownerName == "Deleted User") {
+                val validMember = groupMembers.firstOrNull { it.id != "unknown" }
+                if (validMember != null) {
+                    println("GroupViewModel: Using valid member as owner: ${validMember.name}")
+                    validMember.copy(isAdmin = true)
+                } else {
+                    ViewModelGroupMember(
+                        id = ownerId,
+                        name = ownerName,
+                        email = ownerEmail,
+                        joinDate = Date(System.currentTimeMillis()),
+                        isAdmin = true
+                    )
+                }
+            } else {
+                ViewModelGroupMember(
+                    id = ownerId,
+                    name = ownerName,
+                    email = ownerEmail,
+                    joinDate = Date(System.currentTimeMillis()),
+                    isAdmin = true
+                )
+            }
+        } catch (e: Exception) {
+            println("GroupViewModel: Error creating owner member: ${e.message}")
+            ViewModelGroupMember(
+                id = "deleted-owner",
+                name = "Deleted User",
+                email = "",
+                joinDate = Date(System.currentTimeMillis()),
+                isAdmin = true
+            )
+        }
         
         return Group(
             id = apiGroup._id,
