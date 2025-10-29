@@ -194,15 +194,22 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       if (!group.owner || typeof group.owner === 'string' || !(group.owner as any).name) {
         console.log(`[${timestamp}] GROUP GET: Owner data is invalid, attempting to fix ownership`);
         
-        // If owner is invalid, transfer to first valid member
+        // If owner is invalid, transfer to oldest valid member
         const validMembers = group.members.filter((member: any) => 
           member.userId && typeof member.userId === 'object' && member.userId.name
         );
         
         if (validMembers.length > 0) {
-          group.owner = validMembers[0].userId as any;
+          // Find the oldest member (earliest join date) to transfer ownership to
+          const oldestMember = validMembers.reduce((oldest: any, current: any) => {
+            const oldestDate = new Date(oldest.joinDate);
+            const currentDate = new Date(current.joinDate);
+            return currentDate < oldestDate ? current : oldest;
+          });
+          
+          group.owner = oldestMember.userId as any;
           await group.save();
-          console.log(`[${timestamp}] GROUP GET: Ownership transferred to ${(validMembers[0].userId as any).name}`);
+          console.log(`[${timestamp}] GROUP GET: Ownership transferred to oldest member ${(oldestMember.userId as any).name} (joined: ${oldestMember.joinDate})`);
           
           // Re-populate the new owner
           await group.populate('owner', 'name email bio averageRating');
@@ -221,15 +228,22 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     } catch (populateError) {
       console.error(`[${timestamp}] GROUP GET: Error populating owner:`, populateError);
       
-      // Try to fix ownership by transferring to first valid member
+      // Try to fix ownership by transferring to oldest valid member
       const validMembers = group.members.filter((member: any) => 
         member.userId && typeof member.userId === 'object' && member.userId.name
       );
       
       if (validMembers.length > 0) {
-        group.owner = validMembers[0].userId as any;
+        // Find the oldest member (earliest join date) to transfer ownership to
+        const oldestMember = validMembers.reduce((oldest: any, current: any) => {
+          const oldestDate = new Date(oldest.joinDate);
+          const currentDate = new Date(current.joinDate);
+          return currentDate < oldestDate ? current : oldest;
+        });
+        
+        group.owner = oldestMember.userId as any;
         await group.save();
-        console.log(`[${timestamp}] GROUP GET: Ownership transferred to ${(validMembers[0].userId as any).name} due to populate error`);
+        console.log(`[${timestamp}] GROUP GET: Ownership transferred to oldest member ${(oldestMember.userId as any).name} (joined: ${oldestMember.joinDate}) due to populate error`);
         
         // Try to populate again
         try {
