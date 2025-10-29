@@ -644,7 +644,7 @@ sequenceDiagram
     participant F as :Frontend
     participant B as :Backend
     participant M as :AuthMiddleware
-    participant D as :MessageDB
+    participant D as :MongoDB
     participant S as :SocketIO
     participant O as :OtherClients
 
@@ -652,18 +652,18 @@ sequenceDiagram
     F->>B: POST /api/chat/:groupId/message(content, JWT)
     B->>M: Verify JWT token
     M->>B: Attach authenticated user
-    B->>B: Validate message content
-    B->>D: SELECT * FROM groups WHERE id = {groupId}
-    D->>B: Return group
+    B->>B: Validate message content (empty, length, ObjectId)
+    B->>D: Group.findById(groupId)
+    D->>B: Return group document
     B->>B: Verify user is group member
     alt User not member
         B->>F: Return 403 Forbidden
         F->>User: Display error
     else User is member
-        B->>D: INSERT message (groupId, senderId, content, type)
-        D->>B: Return created message
-        B->>D: SELECT user.name WHERE id = {senderId}
-        D->>B: Return message with sender
+        B->>D: Message.create({groupId, senderId, content, type})
+        D->>B: Return created message document
+        B->>D: message.populate('senderId', 'name')
+        D->>B: Return message with populated sender
         B->>S: Broadcast new-message event to groupId room
         S->>O: Emit new-message with data
         O->>O: Display message in real-time
@@ -687,7 +687,7 @@ sequenceDiagram
     B->>M: Verify JWT token
     M->>B: Attach authenticated user
     B->>B: Validate task parameters
-    B->>D: SELECT * FROM groups WHERE members.userId = {userId}
+    B->>D: Group.findById(groupId)
     D->>B: Return group
     alt User not in group
         B->>F: Return 404: Not in any group
