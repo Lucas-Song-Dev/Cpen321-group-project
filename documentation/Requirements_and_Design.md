@@ -83,43 +83,43 @@ The application targets university students, young professionals, and anyone see
 
 ### **3.4. Use Case Description**
 
-- **Use cases for User Authentication**:
-  1. **Create account**: Secure account creation using Google OAuth (interaction with Google OAuth 2.0 API)
-  2. **Login**: Secure account login using Google OAuth (interaction with Google OAuth 2.0 API)
-  3. **Logout**: User logs out of the application, clearing locally stored authentication tokens
+#### **Use cases for User Authentication**
+1. **Create account** – Secure account creation using Google OAuth (interaction with Google OAuth 2.0 API)  
+2. **Login** – Secure account login using Google OAuth (interaction with Google OAuth 2.0 API)  
+3. **Logout** – User logs out of the application, clearing locally stored authentication tokens  
 
-- **Use cases for User Profile Management**:
-  4. **Set mandatory profile fields**: Users must provide legal name, date of birth, and gender upon account creation (one-time, non-editable)
-  5. **Update nickname and bio**: Users can choose a nickname and update their bio text
-  6. **Update living preferences**: Users can indicate living preferences by selecting schedule, drinking, partying, noise, and profession descriptions
-  7. **Update profile picture**: Users can add, change, or remove their profile picture
-  8. **Delete account**: Users can permanently delete their account and all associated data
+#### **Use cases for User Profile Management**
+4. **Set mandatory profile fields** – Users must provide legal name, date of birth, and gender upon account creation (one-time, non-editable)  
+5. **Update nickname and bio** – Users can choose a nickname and update their bio text  
+6. **Update living preferences** – Users can indicate living preferences by selecting schedule, drinking, partying, noise, and profession descriptions  
+7. **Update profile picture** – Users can add, change, or remove their profile picture  
+8. **Delete account** – Users can permanently delete their account and all associated data  
 
-- **Use cases for Group Management**:
-  9. **Create group**: Establish a new living group and generate a unique invitation code for prospective roommates
-  10. **Join group**: Join an existing roommate group by entering unique invitation code
-  11. **View group**: View members of group, group name, and member join dates
-  12. **Leave group**: Group members can leave a group they are a part of
-  13. **Delete group**: Group owner can dissolve a group and the unique invitation code will no longer be valid
-  14. **Remove group member**: Group owner can remove group members
-  15. **Transfer ownership**: Group owner can pass admin position to a group member
+#### **Use cases for Group Management**
+9. **Create group** – Establish a new living group and generate a unique invitation code for prospective roommates  
+10. **Join group** – Join an existing roommate group by entering a unique invitation code  
+11. **View group** – View members of the group, group name, and member join dates  
+12. **Leave group** – Group members can leave a group they are a part of  
+13. **Delete group** – Group owner can dissolve a group; the unique invitation code will no longer be valid  
+14. **Remove group member** – Group owner can remove group members  
+15. **Transfer ownership** – Group owner can pass admin position to a group member  
 
-- **Use cases for Group Communication**:
-  16. **Send message**: Real-time messaging system for communication between all group members
-  17. **Create poll**: A voting mechanism for group decisions regarding household policies and activities
+#### **Use cases for Group Communication**
+16. **Send message** – Real-time messaging system for communication between all group members  
+17. **Create poll** – A voting mechanism for group decisions regarding household policies and activities  
 
-- **Use cases for Group Task Management**:
-  18. **Add task**: Create tasks to be shared among all roommates by setting task name, difficulty, and recurrence. Tasks are algorithmically distributed among roommates
-  19. **Delete task**: Delete tasks if task is no longer needed
-  20. **Set task status**: Update task status to in-progress or completed for assigned tasks
+#### **Use cases for Group Task Management**
+18. **Add task** – Create tasks to be shared among all roommates by setting task name, difficulty, and recurrence. Tasks are algorithmically distributed among roommates  
+19. **Delete task** – Delete tasks if a task is no longer needed  
+20. **Set task status** – Update task status to *in-progress* or *completed* for assigned tasks  
 
-- **Use cases for Roommate Rating System**:
-  21. **Rate roommate**: Rate roommate performance (1-5 stars) after living together for minimum 30 days
-  22. **Write testimonial**: Add optional written feedback about roommate experience
-  23. **View ratings**: View user profiles, average ratings, and testimonials from previous roommates
+#### **Use cases for Roommate Rating System**
+21. **Rate roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days  
+22. **Write testimonial** – Add optional written feedback about roommate experience  
+23. **View ratings** – View user profiles, average ratings, and testimonials from previous roommates  
 
-- **Use cases for User Moderation**:
-  24. **Report user**: Report inappropriate user behavior for review
+#### **Use cases for User Moderation**
+24. **Report user** – Report inappropriate user behavior for review  
 
 ### **3.5. Formal Use Case Specifications (5 Most Major Use Cases)**
 
