@@ -638,39 +638,45 @@ sequenceDiagram
 ```
 
 3. [**Use Case 16: Send Message**](#uc17)
-```mermaid
 sequenceDiagram
     actor User
     participant F as :Frontend
-    participant B as :Backend
+    participant CR as :ChatRepository
+    participant AS as :ApiService
+    participant CH as :ChatHandler
     participant M as :AuthMiddleware
     participant D as :MongoDB
     participant S as :SocketIO
     participant O as :OtherClients
 
     User->>F: Type message and click "Send"
-    F->>B: POST /api/chat/:groupId/message(content, JWT)
-    B->>M: Verify JWT token
-    M->>B: Attach authenticated user
-    B->>B: Validate message content (empty, length, ObjectId)
-    B->>D: Group.findById(groupId)
-    D->>B: Return group document
-    B->>B: Verify user is group member
+    F->>CR: sendMessage(groupId, content)
+    CR->>AS: POST /api/chat/:groupId/message
+    AS->>CH: HTTP Request with JWT
+    CH->>M: Verify JWT token
+    M->>CH: Attach authenticated user
+    CH->>CH: Validate message content (empty, length, ObjectId)
+    CH->>D: Group.findById(groupId)
+    D->>CH: Return group document
+    CH->>CH: Verify user is group member
     alt User not member
-        B->>F: Return 403 Forbidden
+        CH->>AS: Return 403 Forbidden
+        AS->>CR: HTTP 403 Response
+        CR->>F: MessageResponse(success: false)
         F->>User: Display error
     else User is member
-        B->>D: Message.create({groupId, senderId, content, type})
-        D->>B: Return created message document
-        B->>D: message.populate('senderId', 'name')
-        D->>B: Return message with populated sender
-        B->>S: Broadcast new-message event to groupId room
+        CH->>D: Message.create({groupId, senderId, content, type})
+        D->>CH: Return created message document
+        CH->>D: message.populate('senderId', 'name')
+        D->>CH: Return message with populated sender
+        CH->>S: Broadcast new-message event to groupId room
         S->>O: Emit new-message with data
         O->>O: Display message in real-time
-        B->>F: Return MessageResponse
+        CH->>AS: Return MessageResponse(success: true)
+        AS->>CR: HTTP 201 Response
+        CR->>F: MessageResponse(success: true)
         F->>User: Display sent message
     end
-```
 
 4. [**Use Case 18: Add Task**](#uc18)
 ```mermaid
