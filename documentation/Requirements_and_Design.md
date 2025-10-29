@@ -66,7 +66,6 @@ The application targets university students, young professionals, and anyone see
 ### **3.2. Use Case Diagram**
 
 ![Use Case Diagram](./images/UseCaseDiagram.jpg)
-*RoomSync use case diagram*
 
 ### **3.3. Actors Description**
 
