@@ -723,9 +723,9 @@ sequenceDiagram
     F->>R: POST /api/rating [requestedUser: r, ratedUser: u, groupId: g, rating: r, testimonial: t]
 
     %% Backend validation
-    R->>U: isValid(u)?
+    R->>U: isValid(u)
     alt isValid(u) == true
-        U-->>R: Valid
+        U-->>R: 
 
         %% Check both users in group
         R->>G: SELECT * FROM groups WHERE id = g
