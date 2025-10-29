@@ -99,26 +99,25 @@ The application targets university students, young professionals, and anyone see
 9. **Create group** – Establish a new living group and generate a unique invitation code for prospective roommates
 10. **Join group** – Join an existing roommate group by entering a unique 4 digit alphanumeric invitation code
 11. **View group** – View members of the group, group name, and member join dates
-12. **Leave group** – Group members can leave a group they are a part of (owner leaving should transfer to oldest member in the group if it is just them it will delete group instead)
-13. **Delete group** – Group owner can dissolve a group; the unique invitation code will no longer be valid
-14. **Remove group member** – Group owner can remove group members
+12. **Leave group** – Group members can leave a group they are a part of (owner leaving transfers to oldest member; if alone, deletes group)
+13. **Remove group member** – Group owner can remove group members
 
 #### **Use cases for Group Communication**
-15. **Send message** – Real-time messaging system for communication between all group members  
-16. **Create poll** – A voting mechanism for group decisions regarding household policies and activities  
+14. **Send message** – Real-time messaging system for communication between all group members  
+15. **Create poll** – A voting mechanism for group decisions regarding household policies and activities  
 
 #### **Use cases for Group Task Management**
-17. **Add task** – Create tasks with name, description, difficulty (1-5), recurrence, deadline (for one-time tasks), and optional member assignment. View tasks in Calendar, Weekly, or My Tasks views  
-18. **Delete task** – Delete tasks if a task is no longer needed  
-29. **Set task status** – Update task status to *in-progress* or *completed* for assigned tasks  
+16. **Add task** – Create tasks with name, description, difficulty (1-5), recurrence, deadline (for one-time tasks), and optional member assignment. View tasks in Calendar, Weekly, or My Tasks views  
+17. **Delete task** – Delete tasks if a task is no longer needed  
+18. **Set task status** – Update task status to *in-progress* or *completed* for assigned tasks  
 
 #### **Use cases for Roommate Rating System**
-20. **Rate roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days  
-21. **Write testimonial** – Add optional written feedback about roommate experience  
-22. **View ratings** – View user profiles, average ratings, and testimonials from previous roommates  
+19. **Rate roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days  
+20. **Write testimonial** – Add optional written feedback about roommate experience  
+21. **View ratings** – View user profiles, average ratings, and testimonials from previous roommates  
 
 #### **Use cases for User Moderation**
-23. **Report user** – Report inappropriate user behavior for review  
+22. **Report user** – Report inappropriate user behavior for review  
 
 ### **3.5. Formal Use Case Specifications (5 Most Major Use Cases)**
 
@@ -130,28 +129,26 @@ The application targets university students, young professionals, and anyone see
 **Primary Actor**: Non-Group Member
 
 **Main success scenario**:
-1. A person with an existing google account clicks 'create account'
+1. A person with an existing google account clicks 'Sign Up'
 2. Selects the google account they want to use to create account in pop-up
-3. Checks account with that google account can be created
-4. User is asked to fill out a user profile. Must fill out mandatory fields, including full legal name, date of birth, and gender.
-5. User clicks 'next'
-6. Users can fill out optional fields: nickname, bio, select living preferences and upload a profile picture. Message informs users that these fields are optional.
-7. User clicks 'finish'
-8. Message that confirms account creation will be displayed
+3. System checks if account with that google account can be created
+4. User is shown Personal Profile screen. Name and email are pre-filled from Google (read-only). User must fill out date of birth and select gender (Male/Female/Prefer-not-to-say).
+5. User clicks 'Continue'
+6. User is shown Optional Profile screen. Can fill out bio, select living preferences (schedule, drinking, partying, noise, profession), and upload a profile picture.
+7. User clicks 'Continue' or skips
+8. User is navigated to home screen
 
 **Failure scenario(s)**:
 - 3a. A user who has an existing account tries to create an account
   - System displays an error message saying that an account associated with that google account already exists and suggests logging in instead
-- 5a. User clicks finished but one or more mandatory fields are left empty
-  - System displays an error message saying that all mandatory fields must be completed
-- 5b. User clicks finished but one or more mandatory fields don't meet requirements
-  - System displays an error message saying name must be below 100 characters
-  - System displays an error message saying that the birthday is set to the future and is invalid.
+- 5a. User clicks Continue but date of birth or gender is not filled
+  - Continue button is disabled until both fields are completed
+- 5b. User enters invalid date of birth
+  - System displays an error message during profile update
 - 6a. User uploads profile picture file that is too large
   - System displays an error message saying that the file is too large
-- 7a. User clicks finished but one or more optional fields don't meet requirements
-  - System displays an error message saying nickname must be below 100 characters
-  - System displays an error message saying bio must be below 100 words
+- 7a. Bio exceeds character limit
+  - System displays an error message or truncates input
 
 <a name="uc9"></a>
 #### Use Case 9: Create Group
@@ -162,25 +159,26 @@ The application targets university students, young professionals, and anyone see
 
 **Main Success Scenario**:
 1. User navigates to group creation page
-2. User enters group name
-3. User clicks 'confirm' to create group
-4. System generates and displays an unique invitation code
-5. System creates a group with the user as group owner, along with saving the group name and the unique invitation code to identify the group.
-6. System displays group dashboard displaying the group name and invitation code
-7. The group owner can share the invitation code with potential roommates who can join the group.
+2. User enters group name in text field
+3. User clicks 'Create Group' button
+4. System creates group with user as owner and generates unique 4-character alphanumeric invitation code
+5. System displays success message "Group created successfully!"
+6. System displays group code in a card with instructions to "Share this code with your roommates"
+7. User is automatically navigated to group dashboard after a moment
 
 **Failure Scenarios**:
 - 2a. Group name is left empty
-  - System displays error saying that a group name must be entered
-- 2b. Group name is longer than 100 characters
-  - System displays error saying that a group name must be less than 100 characters
+  - 'Create Group' button is disabled until group name is entered
 - 3a. User already belongs to a group
   - System displays error that user must leave current group first to create a group
   - User is redirected to current group dashboard
+- 3b. Network error during group creation
+  - System displays error message
+  - User can retry creating the group
 
-<a name="uc16"></a>
-<a name="uc17"></a>
-#### Use Case 17: Create Poll
+<a name="uc14"></a>
+<a name="uc15"></a>
+#### Use Case 15: Create Poll
 
 **Description**: Group members can create and send polls for household decisions in group chat.
 
@@ -188,28 +186,31 @@ The application targets university students, young professionals, and anyone see
 
 **Main Success Scenario**:
 1. User opens group chat interface
-2. User clicks "Create Poll" button
-3. User enters poll question and answer options. Default options of yes or no will be automatically provided
-4. User sends the poll to chat.
-5. System broadcasts the poll to all group members in real-time
-6. Other group members receive message notifications
-7. Group members can vote on poll options by clicking on the options
-8. System displays results when poll closes automatically after 1 week or when all members have voted
+2. User clicks poll icon button to open "Create Poll" dialog
+3. User enters poll question in text field
+4. User enters options (minimum 2, maximum 10). Can add additional options with "Add Option" button
+5. User selects poll type: Single Choice or Multiple Choice (default: Single Choice)
+6. User selects duration: 1, 3, or 7 days (default: 7 days)
+7. User clicks "Create Poll" button
+8. System validates poll has question and at least 2 options, then creates and broadcasts poll to all group members
+9. Other group members see poll in chat and can vote
+10. System displays live results as votes come in
+11. Poll closes automatically after selected duration or when all members have voted
 
 **Failure Scenarios**:
-- 3a. Poll creation with invalid parameters
-  - System displays error message saying that a question and at least two options must be present
-- 3b. Poll creation with invalid length
-  - System displays an error message saying that option names should be less than 100 characters and questions should be less than 50 words.
-- 4a. Message fails to send due to network issues
-  - System shows "message failed" indicator. Suggests sending poll at a later time.
-  - User can retry sending message
-- 5a. Real-time connection lost
+- 7a. Poll created with empty question or less than 2 options
+  - 'Create Poll' button may be disabled, or system displays validation error
+- 7b. Poll question or options exceed character limits
+  - System may truncate or display error message
+- 8a. Network error when creating poll
+  - System displays error message
+  - User can retry creating the poll
+- 9a. Real-time connection lost while voting
   - System attempts to reconnect automatically
   - User sees "reconnecting" status until connection restored
 
-<a name="uc18"></a>
-#### Use Case 18: Add Task
+<a name="uc16"></a>
+#### Use Case 16: Add Task
 
 **Description**: A household task that will be equally distributed among all roommates is created. The system assigns tasks to group members using a fair allocation algorithm.
 
@@ -235,43 +236,45 @@ The application targets university students, young professionals, and anyone see
   - System falls back to round-robin assignment method
   - System notifies group owner of algorithm failure
 
-<a name="uc21"></a>
-#### Use Case 21-22: Rate Roommate and Write Testimonial
+<a name="uc19"></a>
+<a name="uc20"></a>
+#### Use Case 19-20: Rate Roommate and Write Testimonial
 
 **Description**: Group members provide numerical rating and optional written feedback on roommate performance after living together for a minimum of 30 days.
 
 **Primary Actor**: Group Member, Group Owner
 
 **Main Success Scenario**:
-1. System verifies user has lived with target roommate for a minimum of 30 days by comparing the move-in date and current date.
-2. User selects a specific roommate within the same group to rate
-3. User enters subjective numerical rating (1-5 scale)
-4. User writes optional testimonial/comments
-5. User presses 'submit'
-6. System sends testimonials to LLM to validate rating content for appropriate language.
-7. Once verified, rating is added to roommate's profile
-8. System updates roommate's overall rating score
+1. User navigates to Group Details screen
+2. User clicks on a group member to view member details
+3. Member details dialog shows ratings and reviews from previous roommates
+4. User clicks "Rate User" button
+5. Rating dialog opens showing member's name and rating interface
+6. User selects rating (1-5 stars) by clicking on star icons
+7. User optionally writes testimonial/review in text field (max 500 characters with live character count)
+8. Dialog displays note about 30-day requirement: "Both you and the user must have been in the group for at least 30 days to submit a rating"
+9. User clicks "Submit" button (disabled until rating is selected)
+10. System validates that both users have been in group for 30+ days
+11. System submits rating and updates member's average rating
+12. Rating dialog closes and member details refresh to show new rating
 
 **Extensions/Failure Scenarios**:
-- 1a. Minimum cohabitation period not met
-  - System displays error message with remaining days needed to rate user
-  - User cannot proceed with rating until requirement met
-  - User is redirected back to rating selection page
-- 2a. User attempts to rate same roommate multiple times
+- 10a. Minimum cohabitation period not met (less than 30 days)
+  - System displays error message indicating insufficient time in group
+  - Rating is not submitted
+- 10b. User attempts to rate same roommate multiple times
   - System detects existing rating from user
   - System offers option to update existing rating instead
-- 2b. User tries to rate themselves
+- 10c. User tries to rate themselves
   - System prevents self-rating with error message
-  - User is redirected back to rating selection page
-- 4a. User doesn't enter any numerical rating from a scale of 1-5
-  - System displays error saying that the user must select a rating between 1-5
-- 5a. Testimonial/Feedback is too long
-  - System displays an error saying testimonial must be under 300 words.
-- 7a. Inappropriate content detected in testimonial
-  - System flags content for manual review
-  - Rating is held pending moderation approval
-- 7b. LLM is not functioning
-  - System displays error saying that review is submitted but will be reviewed and verified at a later time
+- 9a. User clicks Submit without selecting a rating
+  - Submit button is disabled until rating (1-5 stars) is selected
+- 7a. Testimonial exceeds 500 characters
+  - Input field prevents typing beyond 500 characters
+  - Character counter shows limit
+- 11a. Network error during rating submission
+  - System displays error message
+  - User can retry submitting the rating
 
 ### **3.6. Screen Mock-ups**
 
@@ -511,32 +514,57 @@ Frameworks and libraries are software packages that provide reusable functionali
    - **Type**: Concurrency Library
    - **Purpose**: Manages asynchronous operations (network calls, database queries) without blocking the UI thread. All Retrofit API calls use suspend functions for non-blocking execution.
 
+4. **Navigation Compose**
+   - **Type**: Navigation Framework
+   - **Purpose**: Handles screen navigation and routing in Jetpack Compose. Manages navigation graph and backstack.
+   - **Usage**: Defines routes (NavRoutes.AUTH, NavRoutes.HOME, etc.) and handles navigation between screens with type-safe arguments.
+
+5. **Socket.IO Client**
+   - **Type**: Real-Time Communication Library
+   - **Purpose**: Enables WebSocket connections from Android client to backend server for real-time chat message delivery.
+   - **Usage**: Connects to backend Socket.IO server, listens for "new-message" events, and updates UI in real-time.
+
+6. **Coil**
+   - **Type**: Image Loading Library
+   - **Purpose**: Asynchronously loads and caches images (profile pictures) in Compose UI. Kotlin-first library optimized for Jetpack Compose.
+   - **Usage**: AsyncImage composable to load profile pictures from URLs with placeholder and error handling.
+
+7. **Google Play Services Auth**
+   - **Type**: Authentication Library
+   - **Purpose**: Provides Google Sign-In functionality on Android. Generates Google ID tokens for OAuth authentication.
+   - **Usage**: Launches Google Sign-In intent, receives ID token, and sends to backend for verification.
+
 **Back-End (Node.js/TypeScript):**
 
-4. **Express.js**
+8. **Express.js**
    - **Type**: Web Application Framework
-- **Purpose**: Lightweight framework for building RESTful APIs in Node.js. Handles routing, middleware, request/response processing, and HTTP server management.
+   - **Purpose**: Lightweight framework for building RESTful APIs in Node.js. Handles routing, middleware, request/response processing, and HTTP server management.
    - **Usage**: All API routes (/api/auth, /api/group, /api/task, etc.) are defined using Express routers.
 
-5. **Mongoose**
+9. **Mongoose**
    - **Type**: Object Document Mapper (ODM) Library
    - **Purpose**: Provides schema-based modeling layer for MongoDB. Defines data structures, validation rules, and relationships between collections. Integrates TypeScript types with database operations.
    - **Usage**: Models for User, Group, Task, Message, and Rating define the database schema and provide query methods.
 
-6. **Socket.IO**
+10. **Socket.IO**
    - **Type**: Real-Time Communication Library
    - **Purpose**: Enables bidirectional WebSocket connections between server and Android clients for instant message delivery. Automatically falls back to HTTP long-polling if WebSockets are unavailable.
    - **Usage**: Broadcasts new messages to all clients in a group room using io.to(groupId).emit('new-message', data).
 
-7. **JSON Web Token (jsonwebtoken)**
+11. **JSON Web Token (jsonwebtoken)**
    - **Type**: Authentication Library
    - **Purpose**: Generates and verifies JWT tokens for stateless authentication. Tokens are signed with HS256 algorithm and include user ID payload.
    - **Usage**: After Google OAuth verification, server issues a JWT that clients include in the Authorization header for protected routes.
 
-8. **google-auth-library**
+12. **google-auth-library**
    - **Type**: Google Authentication Client Library
    - **Purpose**: Verifies Google OAuth ID tokens received from the Android client. Validates token signatures against Google's public keys.
    - **Usage**: verifyIdToken() method extracts user email, name, and Google ID from tokens.
+
+13. **OpenAI**
+   - **Type**: AI/LLM Integration Library
+   - **Purpose**: Provides access to OpenAI's GPT models for content moderation. Analyzes reported user messages to detect violations.
+   - **Usage**: Used via OpenRouter proxy to send message batches to GPT-3.5-turbo for automated moderation analysis, returns JSON with isOffensive boolean.
 
 **Programming Languages:**
 
@@ -610,7 +638,7 @@ The following sequence diagrams illustrate how the components and interfaces def
 ![Use Case Diagram](./images/sequence2.png)
 
 
-3. [**Use Case 16: Send Message**](#uc16)
+3. [**Use Case 14: Send Message**](#uc14)
 ```mermaid
 sequenceDiagram
     actor User
@@ -653,7 +681,7 @@ sequenceDiagram
     end
 ```
 
-4. [**Use Case 18: Add Task**](#uc18)
+4. [**Use Case 16: Add Task**](#uc16)
 ```mermaid
 sequenceDiagram
     actor User
@@ -701,7 +729,7 @@ sequenceDiagram
     end
 ```
 
-5. [**Use Case 21-22: Rate Roommate and Write Testimonial**](#uc21)
+5. [**Use Case 19-20: Rate Roommate and Write Testimonial**](#uc19)
 ```mermaid
 sequenceDiagram
     actor User
