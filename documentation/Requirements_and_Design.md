@@ -678,8 +678,9 @@ sequenceDiagram
         CR->>F: MessageResponse(success: true)
         F->>User: Display sent message
     end
+```
 
-5. [**Use Case 18: Add Task**](#uc18)
+4. [**Use Case 18: Add Task**](#uc18)
 ```mermaid
 sequenceDiagram
     actor User
