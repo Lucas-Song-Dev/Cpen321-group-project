@@ -603,8 +603,7 @@ The following sequence diagrams illustrate how the components and interfaces def
 
 
 1. [**Use Case 1: Login (User Authentication)**](#uc1)
-
-<img width="1285" height="905" alt="image" src="https://github.com/user-attachments/assets/7eca3408-7890-4715-9399-7fdd0fbdc6ee" />
+![Use Case Diagram](./images/sequence1.png)
 
 2. [**Use Case 9: Create Group**](#uc9)
 ![Use Case Diagram](./images/sequence2.png)
