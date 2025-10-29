@@ -685,34 +685,44 @@ sequenceDiagram
 sequenceDiagram
     actor User
     participant F as :Frontend
-    participant B as :Backend
+    participant TR as :TaskRepository
+    participant AS as :ApiService
+    participant TH as :TaskHandler
     participant M as :AuthMiddleware
-    participant D as :TaskDB
+    participant D as :MongoDB
 
     User->>F: Fill task form (name, difficulty, recurrence)
     User->>F: Click "Create Task"
-    F->>B: POST /api/task(name, difficulty, recurrence, requiredPeople, JWT)
-    B->>M: Verify JWT token
-    M->>B: Attach authenticated user
-    B->>B: Validate task parameters
-    B->>D: Group.findById(groupId)
-    D->>B: Return group
+    F->>TR: createTask(taskData)
+    TR->>AS: POST /api/task
+    AS->>TH: HTTP Request with JWT
+    TH->>M: Verify JWT token
+    M->>TH: Attach authenticated user
+    TH->>TH: Validate task parameters (name, difficulty, recurrence, requiredPeople)
+    TH->>D: Group.findOne({'members.userId': userId})
+    D->>TH: Return group document
     alt User not in group
-        B->>F: Return 404: Not in any group
+        TH->>AS: Return 404: Not in any group
+        AS->>TR: HTTP 404 Response
+        TR->>F: TaskResponse(success: false)
         F->>User: Display error
     else User in group
-        B->>D: INSERT task (name, difficulty, recurrence, groupId)
-        D->>B: Return created task
+        TH->>D: Task.create({name, difficulty, recurrence, groupId, createdBy})
+        D->>TH: Return created task document
         alt Specific users assigned
-            B->>B: Calculate current week start
+            TH->>TH: Calculate current week start
             loop For each userId in assignedUserIds
-                B->>D: INSERT assignment (taskId, userId, weekStart, status)
+                TH->>D: task.assignments.push({userId, weekStart, status})
             end
-            D->>B: Confirm assignments created
+            TH->>D: task.save()
+            D->>TH: Confirm assignments created
         end
-        B->>D: SELECT user.name, user.email WHERE id IN (createdBy, assignments.userId)
-        D->>B: Return populated task
-        B->>F: Return TaskResponse
+        TH->>D: task.populate('createdBy', 'name email')
+        TH->>D: task.populate('assignments.userId', 'name email')
+        D->>TH: Return populated task document
+        TH->>AS: Return TaskResponse(success: true)
+        AS->>TR: HTTP 201 Response
+        TR->>F: TaskResponse(success: true)
         F->>User: Display task in task list
         F->>User: Show assigned members
     end
