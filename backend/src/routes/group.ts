@@ -189,9 +189,72 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     try {
       await group.populate('owner', 'name email bio averageRating');
       console.log(`[${timestamp}] GROUP GET: Owner populated successfully`);
+      
+      // Validate that owner still exists and has valid data
+      if (!group.owner || typeof group.owner === 'string' || !(group.owner as any).name) {
+        console.log(`[${timestamp}] GROUP GET: Owner data is invalid, attempting to fix ownership`);
+        
+        // If owner is invalid, transfer to first valid member
+        const validMembers = group.members.filter((member: any) => 
+          member.userId && typeof member.userId === 'object' && member.userId.name
+        );
+        
+        if (validMembers.length > 0) {
+          group.owner = validMembers[0].userId as any;
+          await group.save();
+          console.log(`[${timestamp}] GROUP GET: Ownership transferred to ${(validMembers[0].userId as any).name}`);
+          
+          // Re-populate the new owner
+          await group.populate('owner', 'name email bio averageRating');
+        } else {
+          console.log(`[${timestamp}] GROUP GET: No valid members found, creating placeholder owner`);
+          // Create a placeholder owner if no valid members exist
+          (group as any).owner = {
+            _id: 'deleted-owner',
+            name: 'Deleted User',
+            email: '',
+            bio: '',
+            averageRating: 0
+          };
+        }
+      }
     } catch (populateError) {
       console.error(`[${timestamp}] GROUP GET: Error populating owner:`, populateError);
-      // Continue without populated owner data
+      
+      // Try to fix ownership by transferring to first valid member
+      const validMembers = group.members.filter((member: any) => 
+        member.userId && typeof member.userId === 'object' && member.userId.name
+      );
+      
+      if (validMembers.length > 0) {
+        group.owner = validMembers[0].userId as any;
+        await group.save();
+        console.log(`[${timestamp}] GROUP GET: Ownership transferred to ${(validMembers[0].userId as any).name} due to populate error`);
+        
+        // Try to populate again
+        try {
+          await group.populate('owner', 'name email bio averageRating');
+        } catch (retryError) {
+          console.error(`[${timestamp}] GROUP GET: Retry populate also failed:`, retryError);
+          // Create placeholder owner
+          (group as any).owner = {
+            _id: 'deleted-owner',
+            name: 'Deleted User',
+            email: '',
+            bio: '',
+            averageRating: 0
+          };
+        }
+      } else {
+        // Create placeholder owner if no valid members exist
+        (group as any).owner = {
+          _id: 'deleted-owner',
+          name: 'Deleted User',
+          email: '',
+          bio: '',
+          averageRating: 0
+        };
+      }
     }
     
     // Populate member data with error handling

@@ -246,19 +246,43 @@ class GroupViewModel(
         }
         
         val owner = try {
-            ViewModelGroupMember(
-                id = apiGroup.owner?._id ?: "unknown",
-                name = apiGroup.owner?.name ?: "Unknown",
-                email = apiGroup.owner?.email ?: "",
-                joinDate = Date(System.currentTimeMillis())
-            )
+            // Handle case where owner might be deleted or invalid
+            val ownerId = apiGroup.owner?._id ?: "deleted-owner"
+            val ownerName = apiGroup.owner?.name ?: "Deleted User"
+            val ownerEmail = apiGroup.owner?.email ?: ""
+            
+            // If owner is deleted, try to find a valid member to show as owner
+            if (ownerId == "deleted-owner" || ownerName == "Deleted User") {
+                val validMember = groupMembers.firstOrNull { it.id != "unknown" }
+                if (validMember != null) {
+                    println("GroupViewModel: Using valid member as owner: ${validMember.name}")
+                    validMember.copy(isAdmin = true)
+                } else {
+                    ViewModelGroupMember(
+                        id = ownerId,
+                        name = ownerName,
+                        email = ownerEmail,
+                        joinDate = Date(System.currentTimeMillis()),
+                        isAdmin = true
+                    )
+                }
+            } else {
+                ViewModelGroupMember(
+                    id = ownerId,
+                    name = ownerName,
+                    email = ownerEmail,
+                    joinDate = Date(System.currentTimeMillis()),
+                    isAdmin = true
+                )
+            }
         } catch (e: Exception) {
             println("GroupViewModel: Error creating owner member: ${e.message}")
             ViewModelGroupMember(
-                id = "unknown",
-                name = "Unknown",
+                id = "deleted-owner",
+                name = "Deleted User",
                 email = "",
-                joinDate = Date(System.currentTimeMillis())
+                joinDate = Date(System.currentTimeMillis()),
+                isAdmin = true
             )
         }
         

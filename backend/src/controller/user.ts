@@ -188,8 +188,13 @@ export const UserController = {
         if (group.owner && group.owner.toString() === userId.toString()) {
           if (group.members.length > 0) {
             // Transfer ownership to the first remaining member
-            group.owner = group.members[0].userId as any;
-            console.log(`[${timestamp}] DELETE USER: Transferred ownership to ${group.owner}`);
+            const newOwner = group.members[0].userId;
+            group.owner = newOwner as any;
+            console.log(`[${timestamp}] DELETE USER: Transferred ownership to ${newOwner}`);
+            
+            // Update the new owner's groupName to match the group
+            await UserModel.findByIdAndUpdate(newOwner, { groupName: group.name });
+            console.log(`[${timestamp}] DELETE USER: Updated new owner's groupName to ${group.name}`);
           } else {
             // No members left; delete the group
             await group.deleteOne();
