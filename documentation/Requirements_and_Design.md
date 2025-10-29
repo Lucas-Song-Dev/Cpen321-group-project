@@ -41,7 +41,7 @@ The application targets university students, young professionals, and anyone see
 - **Create Group**: Must enter group name (editable) and a unique group (not editable) code will be created. This group code can be shared.
 - **Join Group**: Users can enter a unique group code to join a group.
 - **Maximum 8 users in a group**: Additional users will be unable attempt to join group
-- **View Group**: See group members profiles, name of group and each member's move-in date/group join date.
+- **View Group**: See group members profiles, name of group and each member's group join date.
 - **Leave Group**: Any user part of a group can leave the group. When the owner leaves, ownership automatically transfers to the oldest member (by join date). If the owner is the only member, the group is deleted.
 
 **Group Communication** - Real-time messaging system with all group members. Integrated polling functionality to block certain times on the calendar for group decisions with default options: yes or no. Polls will expire within a week.
