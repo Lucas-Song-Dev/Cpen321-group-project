@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import OpenAI from 'openai';
+// import OpenAI from 'openai';
 import { UserModel } from '../models/User';
 import Message from '../models/Message';
 
@@ -46,57 +46,57 @@ export const UserReporter = {
         });
       }
 
-      const openai = new OpenAI({
-        baseURL: "https://openrouter.ai/api/v1",
-        apiKey: process.env.OPENROUTER_API_KEY,
-});
+      // const openai = new OpenAI({
+      //   baseURL: "https://openrouter.ai/api/v1",
+      //   apiKey: process.env.OPENROUTER_API_KEY,
+      // });
 
       // Prepare messages for OpenAI analysis
       const messageTexts = messages.map((msg: any) => msg.content).join('\n');
 
-      // Call OpenAI to analyze messages
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: `You are a content moderation assistant. Analyze the following messages from a user in a roommate group chat app. 
-                
-            Determine if the messages contain:
-            - Harassment or bullying
-            - Hate speech or discrimination
-            - Threats or violence
-            - Sexual harassment
-            - Persistent offensive language
-            - Spam or malicious content
+      // Call OpenAI to analyze messages (disabled for now)
+      // const completion = await openai.chat.completions.create({
+      //   model: "gpt-3.5-turbo",
+      //   messages: [
+      //     {
+      //       role: "system",
+      //       content: `You are a content moderation assistant. Analyze the following messages from a user in a roommate group chat app. 
+      //           
+      //       Determine if the messages contain:
+      //       - Harassment or bullying
+      //       - Hate speech or discrimination
+      //       - Threats or violence
+      //       - Sexual harassment
+      //       - Persistent offensive language
+      //       - Spam or malicious content
 
-            Respond with a JSON object containing only:
-            {
-            "isOffensive": boolean
-            }
+      //       Respond with a JSON object containing only:
+      //       {
+      //       "isOffensive": boolean
+      //       }
 
-            Be fair and consider context. Casual banter between friends should not be flagged. Focus on genuinely harmful, offensive, or inappropriate content.`
-           },
-          {
-            role: "user",
-            content: `Reporter's reason: ${reason || 'No reason provided'}\n\nMessages to analyze:\n${messageTexts}`
-          }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.3
-      });
+      //       Be fair and consider context. Casual banter between friends should not be flagged. Focus on genuinely harmful, offensive, or inappropriate content.`
+      //      },
+      //     {
+      //       role: "user",
+      //       content: `Reporter's reason: ${reason || 'No reason provided'}\n\nMessages to analyze:\n${messageTexts}`
+      //     }
+      //   ],
+      //   response_format: { type: "json_object" },
+      //   temperature: 0.3
+      // });
 
-      const analysisContent = completion.choices[0].message.content;
-      if (!analysisContent) {
-        throw new Error('No analysis content received from OpenAI');
-      }
+      // const analysisContent = completion.choices[0].message.content;
+      // if (!analysisContent) {
+      //   throw new Error('No analysis content received from OpenAI');
+      // }
 
-      const analysis = JSON.parse(analysisContent);
-      console.log('OpenAI Analysis:', analysis);
+      // const analysis = JSON.parse(analysisContent);
+      // console.log('OpenAI Analysis:', analysis);
 
-    // const analysis = {
-    //     isOffensive: true  // Change to false to test non-offensive case
-    // };
+      const analysis = {
+          isOffensive: false  // Temporary: always return non-offensive to avoid breaking the feature
+      };
 
       // If the message is offensive, mark the user as offensive
       let actionTaken: string | null = null;

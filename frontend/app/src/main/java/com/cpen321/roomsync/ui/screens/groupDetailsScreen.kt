@@ -910,6 +910,7 @@ fun MemberDetailDialog(
                             try {
                                 // Watch for loading state to complete
                                 var previousIsLoading = true
+                                println("MemberDetailDialog: Transferring ownership to member with ID: ${member.id}")
                                 groupViewModel.transferOwnership(member.id)
                                 
                                 // Poll until loading is complete

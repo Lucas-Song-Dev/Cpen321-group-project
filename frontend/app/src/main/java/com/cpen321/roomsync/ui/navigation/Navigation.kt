@@ -164,6 +164,13 @@ fun AppNavigation() {
                 }
 
                 composable(NavRoutes.JOIN_GROUP) {
+                    val groupViewModel: GroupViewModel = viewModel()
+                    
+                    // Clear group state when entering join group screen
+                    LaunchedEffect(Unit) {
+                        groupViewModel.clearGroupState()
+                    }
+                    
                     JoinGroupScreen(
                         onJoinGroup = {
                             // Navigate to home after successful group join
@@ -173,7 +180,8 @@ fun AppNavigation() {
                         },
                         onBack = {
                             navController.popBackStack()
-                        }
+                        },
+                        viewModel = groupViewModel
                     )
                 }
 
@@ -195,6 +203,7 @@ fun AppNavigation() {
                     LaunchedEffect(groupUiState.leftGroup) {
                         if (groupUiState.leftGroup) {
                             println("Navigation: leftGroup event -> navigating to GROUP_SELECTION")
+                            groupViewModel.clearGroupState()
                             navController.navigate(NavRoutes.GROUP_SELECTION) {
                                 popUpTo(0) { inclusive = true }
                             }
@@ -217,8 +226,9 @@ fun AppNavigation() {
                             navController.navigate(NavRoutes.POLLING)
                         },
                         onLeaveGroup = {
-                            println("Navigation: Leave group called")
+                            println("Navigation: Leave group called - about to call groupViewModel.leaveGroup()")
                             groupViewModel.leaveGroup()
+                            println("Navigation: groupViewModel.leaveGroup() called")
                         },
                         onLogout = {
                             println("Navigation: Logout called")
@@ -245,6 +255,16 @@ fun AppNavigation() {
                     
                     println("Navigation GROUP_DETAILS: groupId='$groupId', currentUserId='$currentUserId'")
                     
+                    // If no group data, navigate back to group selection
+                    LaunchedEffect(groupUiState.group) {
+                        if (groupUiState.group == null && !groupUiState.isLoading) {
+                            println("Navigation GROUP_DETAILS: No group data, navigating to GROUP_SELECTION")
+                            navController.navigate(NavRoutes.GROUP_SELECTION) {
+                                popUpTo(NavRoutes.HOME) { inclusive = false }
+                            }
+                        }
+                    }
+                    
                     if (groupId.isNotEmpty() && currentUserId.isNotEmpty()) {
                         val taskViewModel = androidx.lifecycle.viewmodel.compose.viewModel {
                             TaskViewModel(groupId, currentUserId)
@@ -258,6 +278,14 @@ fun AppNavigation() {
                                 navController.popBackStack()
                             }
                         )
+                    } else if (groupUiState.isLoading) {
+                        // Show loading while group data is being fetched
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     } else {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -345,6 +373,16 @@ fun AppNavigation() {
                     
                     println("Navigation TASKS: groupId='$groupId', currentUserId='$currentUserId'")
                     
+                    // If no group data, navigate back to group selection
+                    LaunchedEffect(groupUiState.group) {
+                        if (groupUiState.group == null && !groupUiState.isLoading) {
+                            println("Navigation TASKS: No group data, navigating to GROUP_SELECTION")
+                            navController.navigate(NavRoutes.GROUP_SELECTION) {
+                                popUpTo(NavRoutes.HOME) { inclusive = false }
+                            }
+                        }
+                    }
+                    
                     if (groupId.isNotEmpty() && currentUserId.isNotEmpty()) {
                         TaskScreen(
                             groupName = groupName,
@@ -354,6 +392,14 @@ fun AppNavigation() {
                                 navController.popBackStack()
                             }
                         )
+                    } else if (groupUiState.isLoading) {
+                        // Show loading while group data is being fetched
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     } else {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -375,6 +421,16 @@ fun AppNavigation() {
                     
                     println("Navigation POLLING: groupId='$groupId', currentUserId='$currentUserId'")
                     
+                    // If no group data, navigate back to group selection
+                    LaunchedEffect(groupUiState.group) {
+                        if (groupUiState.group == null && !groupUiState.isLoading) {
+                            println("Navigation POLLING: No group data, navigating to GROUP_SELECTION")
+                            navController.navigate(NavRoutes.GROUP_SELECTION) {
+                                popUpTo(NavRoutes.HOME) { inclusive = false }
+                            }
+                        }
+                    }
+                    
                     if (groupId.isNotEmpty() && currentUserId.isNotEmpty()) {
                         PollingScreen(
                             groupName = groupName,
@@ -384,6 +440,14 @@ fun AppNavigation() {
                                 navController.popBackStack()
                             }
                         )
+                    } else if (groupUiState.isLoading) {
+                        // Show loading while group data is being fetched
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     } else {
                         Box(
                             modifier = Modifier.fillMaxSize(),

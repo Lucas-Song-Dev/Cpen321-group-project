@@ -218,8 +218,13 @@ fun HomeScreen(
         // Dropdown menu
         DropdownMenu(
             expanded = showMenu,
-            onDismissRequest = { showMenu = false },
-            modifier = Modifier.width(250.dp)
+            onDismissRequest = { 
+                println("HomeScreen: Dropdown menu dismissed")
+                showMenu = false 
+            },
+            modifier = Modifier
+                .width(250.dp)
+                .zIndex(1f)
         ) {
             DropdownMenuItem(
                 text = { Text("View Group Details") },
@@ -252,14 +257,19 @@ fun HomeScreen(
             HorizontalDivider()
             DropdownMenuItem(
                 text = { 
+                    println("HomeScreen: Rendering Leave Group button text")
                     Text(
-                        "Leave Group",
+                        "Leave Group (TEST)",
                         color = MaterialTheme.colorScheme.error
                     ) 
                 },
                 onClick = {
+                    println("HomeScreen: Leave Group button clicked - showMenu: $showMenu, showLeaveGroupDialog: $showLeaveGroupDialog")
+                    // Test: Just show a simple alert first
+                    println("HomeScreen: TEST - Button click registered!")
                     showLeaveGroupDialog = true
                     showMenu = false
+                    println("HomeScreen: After setting states - showMenu: $showMenu, showLeaveGroupDialog: $showLeaveGroupDialog")
                 }
             )
             DropdownMenuItem(
@@ -290,13 +300,18 @@ fun HomeScreen(
         
         // Leave group confirmation dialog
         if (showLeaveGroupDialog) {
+            println("HomeScreen: Rendering Leave Group dialog")
             AlertDialog(
-                onDismissRequest = { showLeaveGroupDialog = false },
+                onDismissRequest = { 
+                    println("HomeScreen: Dialog dismissed")
+                    showLeaveGroupDialog = false 
+                },
                 title = { Text("Leave Group") },
                 text = { Text("Are you sure you want to leave this group? You can join another group later.") },
                 confirmButton = {
                     Button(
                         onClick = {
+                            println("HomeScreen: Leave Group dialog confirmed")
                             showLeaveGroupDialog = false
                             onLeaveGroup()
                         },

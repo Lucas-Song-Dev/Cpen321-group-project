@@ -214,7 +214,7 @@ fun TaskScreen(
     var showCalendar by remember { mutableStateOf(true) }
 
     // Load tasks for selected date when calendar view is shown
-    LaunchedEffect(selectedDate, currentTab) {
+    LaunchedEffect( selectedDate, currentTab) {
         if (currentTab == 0) {
             viewModel.loadTasksForDate(selectedDate)
         }

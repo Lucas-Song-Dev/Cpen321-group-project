@@ -190,9 +190,12 @@ class GroupViewModel(
     fun leaveGroup() {
         viewModelScope.launch {
             try {
+                println("GroupViewModel: Starting leave group process")
                 _uiState.value = _uiState.value.copy(isLoading = true)
                 
                 val response = groupRepository.leaveGroup()
+                println("GroupViewModel: Leave group response - success: ${response.success}, message: '${response.message}'")
+                
                 if (response.success || (response.message?.contains("not a member", ignoreCase = true) == true)) {
                     println("GroupViewModel: Leave group treated as success (success=${response.success}, message='${response.message}')")
                     _uiState.value = _uiState.value.copy(
@@ -201,12 +204,15 @@ class GroupViewModel(
                         leftGroup = true
                     )
                 } else {
+                    println("GroupViewModel: Leave group failed - ${response.message}")
                     _uiState.value = _uiState.value.copy(
                         error = response.message ?: "Failed to leave group",
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
+                println("GroupViewModel: Exception during leave group - ${e.message}")
+                e.printStackTrace()
                 _uiState.value = _uiState.value.copy(
                     error = "Failed to leave group: ${e.message}",
                     isLoading = false
@@ -219,6 +225,16 @@ class GroupViewModel(
         if (_uiState.value.leftGroup) {
             _uiState.value = _uiState.value.copy(leftGroup = false)
         }
+    }
+    
+    fun clearGroupState() {
+        println("GroupViewModel: Clearing group state")
+        _uiState.value = _uiState.value.copy(
+            group = null,
+            isLoading = false,
+            error = null,
+            leftGroup = false
+        )
     }
     
     private fun convertApiGroupToViewModel(apiGroup: ApiGroup): Group {
