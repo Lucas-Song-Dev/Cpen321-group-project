@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import Group from '../models/Group';
 import { UserModel } from '../models/User';
@@ -7,8 +6,7 @@ import mongoose from 'mongoose';
 
 const router = express.Router();
 
-// All routes below this middleware are protected
-router.use(protect);
+// Note: Authentication is handled at the app level in index.ts
 
 // @desc    Create a new group
 // @route   POST /api/group
@@ -318,6 +316,72 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   }
 }));
 
+// @desc    Transfer ownership to another member (owner only)
+// @route   PUT /api/group/transfer-ownership/:newOwnerId
+// @access  Private
+router.put('/transfer-ownership/:newOwnerId', asyncHandler(async (req: Request, res: Response) => {
+  console.log('TRANSFER OWNERSHIP ROUTE HIT - Method:', req.method, 'Path:', req.path, 'Params:', req.params);
+  const { newOwnerId } = req.params;
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] GROUP TRANSFER OWNERSHIP: Transferring ownership to ${newOwnerId}`);
+
+  // Get user's current group
+  const group = await Group.findOne({ 
+    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+  });
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'User is not a member of any group'
+    });
+  }
+
+  // Check if user is the owner
+  if (group.owner.toString() !== req.user!._id.toString()) {
+    return res.status(403).json({
+      success: false,
+      message: 'Only the group owner can transfer ownership'
+    });
+  }
+
+  // Check if trying to transfer to the same person
+  if (newOwnerId === group.owner.toString()) {
+    return res.status(400).json({
+      success: false,
+      message: 'You are already the owner of this group'
+    });
+  }
+
+  // Check if new owner is a member of the group
+  const newOwnerIsMember = group.members.some(member => 
+    member.userId.toString() === newOwnerId
+  );
+
+  if (!newOwnerIsMember) {
+    return res.status(400).json({
+      success: false,
+      message: 'The specified user is not a member of this group'
+    });
+  }
+
+  // Transfer ownership
+  group.owner = new mongoose.Types.ObjectId(newOwnerId);
+  await group.save();
+
+  console.log(`[${timestamp}] GROUP TRANSFER OWNERSHIP: Ownership transferred successfully`);
+
+  // Populate group with updated member information
+  await group.populate('owner', 'name email bio averageRating');
+  await group.populate('members.userId', 'name email bio averageRating');
+
+  res.status(200).json({
+    success: true,
+    message: 'Ownership transferred successfully',
+    data: group
+  });
+}));
+
 // @desc    Remove a member from group (owner only)
 // @route   DELETE /api/group/member/:memberId
 // @access  Private
@@ -383,71 +447,6 @@ router.delete('/member/:memberId', asyncHandler(async (req: Request, res: Respon
   res.status(200).json({
     success: true,
     message: 'Member removed successfully',
-    data: group
-  });
-}));
-
-// @desc    Transfer ownership to another member (owner only)
-// @route   PUT /api/group/transfer-ownership/:newOwnerId
-// @access  Private
-router.put('/transfer-ownership/:newOwnerId', asyncHandler(async (req: Request, res: Response) => {
-  const { newOwnerId } = req.params;
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] GROUP TRANSFER OWNERSHIP: Transferring ownership to ${newOwnerId}`);
-
-  // Get user's current group
-  const group = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
-  });
-
-  if (!group) {
-    return res.status(404).json({
-      success: false,
-      message: 'User is not a member of any group'
-    });
-  }
-
-  // Check if user is the owner
-  if (group.owner.toString() !== req.user!._id.toString()) {
-    return res.status(403).json({
-      success: false,
-      message: 'Only the group owner can transfer ownership'
-    });
-  }
-
-  // Check if trying to transfer to the same person
-  if (newOwnerId === group.owner.toString()) {
-    return res.status(400).json({
-      success: false,
-      message: 'You are already the owner of this group'
-    });
-  }
-
-  // Check if new owner is a member of the group
-  const newOwnerIsMember = group.members.some(member => 
-    member.userId.toString() === newOwnerId
-  );
-
-  if (!newOwnerIsMember) {
-    return res.status(400).json({
-      success: false,
-      message: 'The specified user is not a member of this group'
-    });
-  }
-
-  // Transfer ownership
-  group.owner = new mongoose.Types.ObjectId(newOwnerId);
-  await group.save();
-
-  console.log(`[${timestamp}] GROUP TRANSFER OWNERSHIP: Ownership transferred successfully`);
-
-  // Populate group with updated member information
-  await group.populate('owner', 'name email bio averageRating');
-  await group.populate('members.userId', 'name email bio averageRating');
-
-  res.status(200).json({
-    success: true,
-    message: 'Ownership transferred successfully',
     data: group
   });
 }));
