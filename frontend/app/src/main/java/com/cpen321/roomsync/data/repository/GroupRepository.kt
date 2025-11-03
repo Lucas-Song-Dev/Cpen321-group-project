@@ -118,4 +118,32 @@ class GroupRepository {
             GroupResponse(false, "Unexpected error: ${e.message}")
         }
     }
+
+    suspend fun transferOwnership(newOwnerId: String): GroupResponse {
+        return try {
+            println("GroupRepository: Transferring ownership to member with ID: $newOwnerId")
+            val response = RetrofitInstance.api.transferOwnership(newOwnerId)
+            println("GroupRepository: Transfer ownership response code: ${response.code()}")
+            
+            if (response.isSuccessful) {
+                val body = response.body()
+                println("GroupRepository: Transfer ownership response body: $body")
+                body ?: GroupResponse(false, "Empty response from server")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                println("GroupRepository: Transfer ownership error response: $errorBody")
+                GroupResponse(false, errorBody ?: "Transfer ownership failed: ${response.code()}")
+            }
+        } catch (e: IOException) {
+            println("GroupRepository: Transfer ownership IOException: ${e.message}")
+            GroupResponse(false, "Network error: ${e.message}")
+        } catch (e: HttpException) {
+            println("GroupRepository: Transfer ownership HttpException: ${e.code()} - ${e.message()}")
+            GroupResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
+        } catch (e: Exception) {
+            println("GroupRepository: Transfer ownership Exception: ${e.message}")
+            e.printStackTrace()
+            GroupResponse(false, "Unexpected error: ${e.message}")
+        }
+    }
 }

@@ -336,4 +336,40 @@ class GroupViewModel(
             }
         }
     }
+
+    fun transferOwnership(newOwnerId: String) {
+        viewModelScope.launch {
+            try {
+                println("GroupViewModel: Transferring ownership to member with ID: $newOwnerId")
+                _uiState.value = _uiState.value.copy(isLoading = true)
+                
+                val response = groupRepository.transferOwnership(newOwnerId)
+                
+                if (response.success && response.data != null) {
+                    println("GroupViewModel: Ownership transferred successfully")
+                    // Convert API group to ViewModel group
+                    val apiGroup = response.data
+                    val group = convertApiGroupToViewModel(apiGroup)
+                    _uiState.value = _uiState.value.copy(
+                        group = group,
+                        isLoading = false,
+                        error = null
+                    )
+                } else {
+                    println("GroupViewModel: Failed to transfer ownership: ${response.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = response.message ?: "Failed to transfer ownership"
+                    )
+                }
+            } catch (e: Exception) {
+                println("GroupViewModel: Exception during ownership transfer: ${e.message}")
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Failed to transfer ownership: ${e.message}"
+                )
+            }
+        }
+    }
 }

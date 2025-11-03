@@ -259,7 +259,12 @@ fun GroupDetailsScreen(
                 member = member,
                 groupId = groupId,
                 currentUserId = currentUserId,
-                onDismiss = { selectedMember = null }
+                groupViewModel = groupViewModel,
+                onDismiss = { selectedMember = null },
+                onTransferSuccess = {
+                    // Refresh group members in TaskViewModel after transfer
+                    viewModel.loadGroupMembers()
+                }
             )
         }
 
@@ -436,11 +441,16 @@ fun MemberDetailDialog(
     member: ViewModelGroupMember,
     groupId: String = "",
     currentUserId: String = "",
-    onDismiss: () -> Unit
+    groupViewModel: com.cpen321.roomsync.ui.viewmodels.GroupViewModel,
+    onDismiss: () -> Unit,
+    onTransferSuccess: () -> Unit = {}
 ) {
     var showRatingDialog by remember { mutableStateOf(false) }
+    var showTransferOwnershipConfirmation by remember { mutableStateOf(false) }
+    var transferError by remember { mutableStateOf<String?>(null) }
     val ratingViewModel: com.cpen321.roomsync.ui.viewmodels.RatingViewModel = viewModel()
     val ratingUiState by ratingViewModel.uiState.collectAsState()
+    val groupUiState by groupViewModel.uiState.collectAsState()
 
     // Get current user's join date to calculate roommate duration
     val taskViewModel: com.cpen321.roomsync.ui.viewmodels.TaskViewModel = viewModel()
@@ -740,6 +750,45 @@ fun MemberDetailDialog(
                     }
                 }
 
+                // Transfer Ownership button (only for owner, only on non-admin members)
+                val isCurrentUserOwner = groupUiState.group?.owner?.id == currentUserId
+                if (member.id != currentUserId && isCurrentUserOwner && !member.isAdmin) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    var isTransferring by remember { mutableStateOf(false) }
+
+                    Button(
+                        onClick = {
+                            showTransferOwnershipConfirmation = true
+                        },
+                        enabled = !isTransferring,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Transfer Ownership")
+                    }
+
+                    // Show error message if any
+                    if (transferError != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = transferError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
                 // Report button (only for other users)
                 if (member.id != currentUserId) {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -835,6 +884,84 @@ fun MemberDetailDialog(
             }
         }
     )
+
+    // Transfer Ownership Confirmation Dialog
+    if (showTransferOwnershipConfirmation) {
+        var isTransferring by remember { mutableStateOf(false) }
+        val coroutineScope = rememberCoroutineScope()
+        val groupUiState = groupViewModel.uiState.collectAsState().value
+        
+        AlertDialog(
+            onDismissRequest = {
+                if (!isTransferring) {
+                    showTransferOwnershipConfirmation = false
+                }
+            },
+            title = { Text("Transfer Ownership") },
+            text = {
+                Text("Are you sure you want to transfer ownership to ${member.name}? You will no longer be the admin.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            isTransferring = true
+                            transferError = null
+                            try {
+                                // Watch for loading state to complete
+                                var previousIsLoading = true
+                                groupViewModel.transferOwnership(member.id)
+                                
+                                // Poll until loading is complete
+                                while (previousIsLoading) {
+                                    kotlinx.coroutines.delay(50)
+                                    val currentState = groupViewModel.uiState.value
+                                    previousIsLoading = currentState.isLoading
+                                    
+                                    if (!previousIsLoading) {
+                                        // Loading completed, check for error
+                                        if (currentState.error == null) {
+                                            // Success - refresh task view model members
+                                            onTransferSuccess()
+                                            // Close both dialogs
+                                            showTransferOwnershipConfirmation = false
+                                            onDismiss()
+                                        } else {
+                                            transferError = currentState.error ?: "Failed to transfer ownership"
+                                            showTransferOwnershipConfirmation = false
+                                        }
+                                        break
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                transferError = "Failed to transfer ownership: ${e.message}"
+                            } finally {
+                                isTransferring = false
+                            }
+                        }
+                    },
+                    enabled = !isTransferring
+                ) {
+                    if (isTransferring) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text("Transfer", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showTransferOwnershipConfirmation = false },
+                    enabled = !isTransferring
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     // Rating Dialog
     if (showRatingDialog) {

@@ -51,6 +51,9 @@ interface ApiService {
     @DELETE("api/group/member/{memberId}")
     suspend fun removeMember(@Path("memberId") memberId: String): Response<GroupResponse>
 
+    @PUT("api/group/transfer-ownership/{newOwnerId}")
+    suspend fun transferOwnership(@Path("newOwnerId") newOwnerId: String): Response<GroupResponse>
+
     // Task endpoints
     @GET("api/task")
     suspend fun getTasks(): Response<TasksResponse>
