@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.sp
 import com.cpen321.roomsync.data.models.User
 import com.cpen321.roomsync.ui.viewmodels.PersonalProfileViewModel
 import com.cpen321.roomsync.ui.viewmodels.ProfileSetState
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun PersonalProfileScreen(
@@ -21,8 +23,28 @@ fun PersonalProfileScreen(
     viewModel: PersonalProfileViewModel,
     onProfileComplete: () -> Unit
 ) {
-    var dob by remember { mutableStateOf("") }
-    var gender by remember { mutableStateOf("") }
+    // Initialize with existing user data if available
+    val dateFormatter = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+    
+    // Format DOB from user object - use user._id as key to force recalculation when user changes
+    val formattedDob = remember(user._id, user.dob) {
+        user.dob?.let { date ->
+            dateFormatter.format(date)
+        } ?: ""
+    }
+    
+    val userGender = remember(user._id, user.gender) {
+        user.gender ?: ""
+    }
+    
+    var dob by remember(user._id) { mutableStateOf(formattedDob) }
+    var gender by remember(user._id) { mutableStateOf(userGender) }
+    
+    // Update local state when user data changes - this ensures persistence when coming back
+    LaunchedEffect(user._id, user.dob, user.gender) {
+        dob = user.dob?.let { dateFormatter.format(it) } ?: ""
+        gender = user.gender ?: ""
+    }
 
     val profileSetState by viewModel.profileSetState.collectAsState()
 

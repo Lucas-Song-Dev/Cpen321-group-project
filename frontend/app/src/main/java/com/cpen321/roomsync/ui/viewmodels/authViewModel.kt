@@ -50,6 +50,13 @@ class AuthViewModel(
         _authState.value = null
     }
 
+    fun updateUserData(updatedUser: User) {
+        val currentState = _authState.value
+        if (currentState != null) {
+            _authState.value = currentState.copy(user = updatedUser)
+        }
+    }
+
     fun deleteUser() {
         viewModelScope.launch {
             try {

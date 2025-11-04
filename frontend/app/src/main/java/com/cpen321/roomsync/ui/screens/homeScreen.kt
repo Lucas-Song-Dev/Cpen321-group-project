@@ -23,7 +23,8 @@ fun HomeScreen(
     onOpenPolls: () -> Unit = {},
     onLeaveGroup: () -> Unit = {},
     onLogout: () -> Unit = {},
-    onDeleteAccount: () -> Unit = {}
+    onDeleteAccount: () -> Unit = {},
+    onEditProfile: () -> Unit = {}
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -69,6 +70,15 @@ fun HomeScreen(
                     selected = false,
                     onClick = {
                         onOpenPolls()
+                        scope.launch { drawerState.close() }
+                    }
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                NavigationDrawerItem(
+                    label = { Text("Edit Profile") },
+                    selected = false,
+                    onClick = {
+                        onEditProfile()
                         scope.launch { drawerState.close() }
                     }
                 )

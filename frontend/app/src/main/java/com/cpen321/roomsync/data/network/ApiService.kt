@@ -52,7 +52,7 @@ interface ApiService {
     suspend fun removeMember(@Path("memberId") memberId: String): Response<GroupResponse>
 
     @PUT("api/group/transfer-ownership/{newOwnerId}")
-    suspend fun transferOwnership(@Path("newOwnerId") newOwnerId: String): Response<GroupResponse>
+    suspend fun transferOwnership(@Path("newOwnerId") newOwnerId: String, @Body emptyBody: Map<String, String> = emptyMap()): Response<GroupResponse>
 
     // Task endpoints
     @GET("api/task")

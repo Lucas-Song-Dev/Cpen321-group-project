@@ -36,6 +36,8 @@ class PersonalProfileViewModel(
 
                 if (response.isSuccessful && response.body() != null) {
                     val profileResponse = response.body()!!
+                    // Update the user data in auth state to persist changes
+                    // This will be handled by the navigation composable
                     _profileSetState.value = ProfileSetState.Success(profileResponse.user)
                 } else {
                     //_profileSetState.value = ProfileSetState.Error("Failed to update profile")

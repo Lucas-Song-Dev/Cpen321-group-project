@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import Group from '../models/Group';
 import { UserModel } from '../models/User';
@@ -6,7 +7,8 @@ import mongoose from 'mongoose';
 
 const router = express.Router();
 
-// Note: Authentication is handled at the app level in index.ts
+// All routes below this middleware are protected
+router.use(protect);
 
 // @desc    Create a new group
 // @route   POST /api/group
@@ -320,9 +322,10 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 // @route   PUT /api/group/transfer-ownership/:newOwnerId
 // @access  Private
 router.put('/transfer-ownership/:newOwnerId', asyncHandler(async (req: Request, res: Response) => {
-  console.log('TRANSFER OWNERSHIP ROUTE HIT - Method:', req.method, 'Path:', req.path, 'Params:', req.params);
-  const { newOwnerId } = req.params;
   const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ===== TRANSFER OWNERSHIP ROUTE HIT =====`);
+  console.log(`[${timestamp}] Method: ${req.method}, Original URL: ${req.originalUrl}, Path: ${req.path}, Params:`, req.params);
+  const { newOwnerId } = req.params;
   console.log(`[${timestamp}] GROUP TRANSFER OWNERSHIP: Transferring ownership to ${newOwnerId}`);
 
   // Get user's current group
