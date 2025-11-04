@@ -1,9 +1,11 @@
 package com.cpen321.roomsync.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -11,10 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +28,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cpen321.roomsync.ui.theme.GlassGradients
+import com.cpen321.roomsync.ui.theme.glassCard
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -416,30 +417,45 @@ fun CreatePollDialog(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    FilterChip(
-                        selected = duration == 1,
-                        onClick = { duration = 1 },
-                        label = { Text("1 day") }
-                    )
-                    FilterChip(
-                        selected = duration == 3,
-                        onClick = { duration = 3 },
-                        label = { Text("3 days") }
-                    )
-                    FilterChip(
-                        selected = duration == 7,
-                        onClick = { duration = 7 },
-                        label = { Text("1 week") }
-                    )
-                    FilterChip(
-                        selected = duration == 30,
-                        onClick = { duration = 30 },
-                        label = { Text("1 month") }
-                    )
+                    // First row - 2 options
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = duration == 1,
+                            onClick = { duration = 1 },
+                            label = { Text("1 day") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = duration == 3,
+                            onClick = { duration = 3 },
+                            label = { Text("3 days") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Second row - 2 options
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = duration == 7,
+                            onClick = { duration = 7 },
+                            label = { Text("1 week") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = duration == 30,
+                            onClick = { duration = 30 },
+                            label = { Text("1 month") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         },
@@ -519,7 +535,7 @@ fun ChatScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "4 members online",
+                                    text = "Group Chat",
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

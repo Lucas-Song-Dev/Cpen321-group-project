@@ -6,13 +6,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cpen321.roomsync.ui.screens.AuthScreen
+import com.cpen321.roomsync.ui.screens.AuthScreenGlass
+import com.cpen321.roomsync.ui.screens.AuthScreenModern
 import com.cpen321.roomsync.ui.screens.PersonalProfileScreen
 import com.cpen321.roomsync.ui.screens.OptionalProfileScreen
 import com.cpen321.roomsync.ui.screens.GroupSelectionScreen
 import com.cpen321.roomsync.ui.screens.CreateGroupScreen
 import com.cpen321.roomsync.ui.screens.JoinGroupScreen
 import com.cpen321.roomsync.ui.screens.HomeScreen
+import com.cpen321.roomsync.ui.screens.HomeScreenGlass
+import com.cpen321.roomsync.ui.screens.ProfileScreen
 import com.cpen321.roomsync.ui.screens.GroupDetailsScreen
+import com.cpen321.roomsync.ui.screens.GroupDetailsScreenModern
 import com.cpen321.roomsync.ui.screens.ChatScreen
 import com.cpen321.roomsync.ui.screens.TaskScreen
 import com.cpen321.roomsync.ui.screens.PollingScreen
@@ -52,6 +57,7 @@ object NavRoutes {
     const val CREATE_GROUP = "create_group"
     const val JOIN_GROUP = "join_group"
     const val HOME = "home"
+    const val PROFILE = "profile"
     const val GROUP_DETAILS = "group_details"
     const val CHAT = "chat"
     const val TASKS = "tasks"
@@ -68,7 +74,7 @@ fun AppNavigation() {
         startDestination = NavRoutes.AUTH
     ) {
         composable(NavRoutes.AUTH) {
-            AuthScreen(
+            AuthScreenModern(
                 viewModel = authViewModel, // Pass the shared instance
                 onSignUp = {
                     navController.navigate(NavRoutes.PERSONAL_PROFILE)
@@ -211,10 +217,13 @@ fun AppNavigation() {
                         }
                     }
                     
-                    HomeScreen(
+                    HomeScreenGlass(
                         groupName = groupName,
                         onViewGroupDetails = {
                             navController.navigate(NavRoutes.GROUP_DETAILS)
+                        },
+                        onViewProfile = {
+                            navController.navigate(NavRoutes.PROFILE)
                         },
                         onOpenChat = {
                             navController.navigate(NavRoutes.CHAT)
@@ -244,6 +253,30 @@ fun AppNavigation() {
                     )
                 }
 
+                composable(NavRoutes.PROFILE) {
+                    val authResponse by authViewModel.authState.collectAsState()
+                    val factory = OptionalProfileViewModelFactory(RetrofitInstance.api)
+                    val profileViewModel: OptionalProfileViewModel = viewModel(factory = factory)
+                    val user = authResponse?.user
+                    
+                    if (user != null) {
+                        ProfileScreen(
+                            user = user,
+                            viewModel = profileViewModel,
+                            onBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+
                 composable(NavRoutes.GROUP_DETAILS) {
                     val groupViewModel: GroupViewModel = viewModel()
                     val groupUiState by groupViewModel.uiState.collectAsState()
@@ -269,7 +302,7 @@ fun AppNavigation() {
                         val taskViewModel = androidx.lifecycle.viewmodel.compose.viewModel {
                             TaskViewModel(groupId, currentUserId)
                         }
-                        GroupDetailsScreen(
+                        GroupDetailsScreenModern(
                             groupName = groupName,
                             viewModel = taskViewModel,
                             groupId = groupId,
@@ -387,10 +420,10 @@ fun AppNavigation() {
                         TaskScreen(
                             groupName = groupName,
                             groupId = groupId,
-                            currentUserId = currentUserId,
                             onBack = {
                                 navController.popBackStack()
-                            }
+                            },
+                            currentUserId = currentUserId
                         )
                     } else if (groupUiState.isLoading) {
                         // Show loading while group data is being fetched

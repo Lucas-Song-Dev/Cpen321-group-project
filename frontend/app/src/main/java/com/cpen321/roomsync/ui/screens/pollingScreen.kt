@@ -544,30 +544,45 @@ fun CreatePollDialog(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    FilterChip(
-                        selected = duration == 1,
-                        onClick = { duration = 1 },
-                        label = { Text("1 day") }
-                    )
-                    FilterChip(
-                        selected = duration == 3,
-                        onClick = { duration = 3 },
-                        label = { Text("3 days") }
-                    )
-                    FilterChip(
-                        selected = duration == 7,
-                        onClick = { duration = 7 },
-                        label = { Text("1 week") }
-                    )
-                    FilterChip(
-                        selected = duration == 30,
-                        onClick = { duration = 30 },
-                        label = { Text("1 month") }
-                    )
+                    // First row - 2 options
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = duration == 1,
+                            onClick = { duration = 1 },
+                            label = { Text("1 day") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = duration == 3,
+                            onClick = { duration = 3 },
+                            label = { Text("3 days") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Second row - 2 options
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = duration == 7,
+                            onClick = { duration = 7 },
+                            label = { Text("1 week") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = duration == 30,
+                            onClick = { duration = 30 },
+                            label = { Text("1 month") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         },

@@ -987,15 +987,58 @@ fun AddTaskDialog(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listOf("one-time", "daily", "weekly", "bi-weekly", "monthly").forEach { rec ->
+                    // First row - 2 options
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         FilterChip(
-                            onClick = { recurrence = rec },
-                            label = { Text(rec.replace("-", " ").capitalize()) },
-                            selected = recurrence == rec
+                            onClick = { recurrence = "one-time" },
+                            label = { Text("One time") },
+                            selected = recurrence == "one-time",
+                            modifier = Modifier.weight(1f)
                         )
+                        FilterChip(
+                            onClick = { recurrence = "daily" },
+                            label = { Text("Daily") },
+                            selected = recurrence == "daily",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Second row - 2 options
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            onClick = { recurrence = "weekly" },
+                            label = { Text("Weekly") },
+                            selected = recurrence == "weekly",
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            onClick = { recurrence = "bi-weekly" },
+                            label = { Text("Bi weekly") },
+                            selected = recurrence == "bi-weekly",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Third row - 1 option
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            onClick = { recurrence = "monthly" },
+                            label = { Text("Monthly") },
+                            selected = recurrence == "monthly",
+                            modifier = Modifier.weight(1f)
+                        )
+                        // Empty spacer to balance the row
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
                 
