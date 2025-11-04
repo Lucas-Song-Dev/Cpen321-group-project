@@ -43,6 +43,7 @@ import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModelFactory
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.Column
+import com.cpen321.roomsync.ui.viewmodels.ProfileSetState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -99,14 +100,36 @@ fun AppNavigation() {
             val factory = PersonalProfileViewModelFactory(RetrofitInstance.api)
             val personalProfileViewModel: PersonalProfileViewModel = viewModel(factory = factory)
             val user = authResponse?.user
+            val profileSetState by personalProfileViewModel.profileSetState.collectAsState()
+
+            // Update auth state when profile is successfully updated
+            LaunchedEffect(profileSetState) {
+                val state = profileSetState
+                if (state is ProfileSetState.Success) {
+                    // Update the auth state with the new user data to persist changes
+                    val updatedUser = state.user
+                    authViewModel.updateUserData(updatedUser)
+                }
+            }
+
+            // Reset ViewModel state when navigating to this screen to ensure fresh state
+            LaunchedEffect(Unit) {
+                personalProfileViewModel.resetState()
+            }
 
             if (user != null) {
                 PersonalProfileScreen(
                     user = user,
                     viewModel = personalProfileViewModel,
                     onProfileComplete = {
-                        navController.navigate(NavRoutes.OPTIONAL_PROFILE) {
-                            popUpTo(NavRoutes.PERSONAL_PROFILE) { inclusive = true }
+                        // If user has a group, go back to previous screen (HOME), otherwise go to OPTIONAL_PROFILE
+                        val currentUser = authViewModel.authState.value?.user
+                        if (currentUser?.groupName != null && currentUser.groupName.isNotEmpty()) {
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate(NavRoutes.OPTIONAL_PROFILE) {
+                                popUpTo(NavRoutes.PERSONAL_PROFILE) { inclusive = true }
+                            }
                         }
                     }
                 )
@@ -131,7 +154,12 @@ fun AppNavigation() {
                     user = user,
                     viewModel = optionalProfileViewModel,
                     onComplete = {
-                        navController.navigate(NavRoutes.GROUP_SELECTION)
+                        // If user has a group, go back to previous screen (HOME), otherwise go to GROUP_SELECTION
+                        if (user.groupName != null && user.groupName.isNotEmpty()) {
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate(NavRoutes.GROUP_SELECTION)
+                        }
                     }
                 )
             } else {
@@ -249,6 +277,9 @@ fun AppNavigation() {
                         onDeleteAccount = {
                             println("Navigation: Delete account called")
                             authViewModel.deleteUser()
+                        },
+                        onEditProfile = {
+                            navController.navigate(NavRoutes.OPTIONAL_PROFILE)
                         }
                     )
                 }
