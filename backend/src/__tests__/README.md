@@ -63,3 +63,37 @@ The test setup (`setup.ts`) configures:
 - Tests use MongoDB Memory Server for isolated database testing
 - All tests are configured with a 30-second timeout
 - Tests use real database operations without mocking external dependencies
+
+## Troubleshooting
+
+### Tests Fail After Pulling from GitHub
+
+If tests work when you zip the project but fail after pulling from GitHub, try these steps:
+
+1. **Clean install dependencies:**
+   ```bash
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+2. **MongoDB Memory Server Binary Download:**
+   - On first run, `mongodb-memory-server` downloads MongoDB binaries automatically
+   - This requires internet connection and may take a few minutes
+   - If download fails, check your network/firewall settings
+   - Binaries are cached in `node_modules/.cache/mongodb-memory-server/` or system temp directory
+
+3. **Ensure all files are tracked:**
+   ```bash
+   git ls-files | grep -E "(jest.config|setup.ts|package.json)"
+   ```
+   These files MUST be tracked in git for tests to work.
+
+4. **Check Node.js version:**
+   - Ensure you're using Node.js version compatible with the project
+   - Check `package.json` for required Node version
+
+5. **Run tests with verbose output:**
+   ```bash
+   npm test -- --verbose
+   ```
+   This will show detailed error messages if MongoDB binary download fails.

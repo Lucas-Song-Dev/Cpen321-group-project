@@ -14,6 +14,7 @@ import Group from '../../models/Group';
 import Message from '../../models/Message';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
+import mongoose from 'mongoose';
 
 const app = express();
 app.use(express.json());
@@ -24,6 +25,11 @@ describe('User API - No Mocking', () => {
   let authToken: string;
 
   beforeEach(async () => {
+    // Ensure mongoose connection is ready before creating records
+    if (mongoose.connection.readyState !== 1) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
     // Create a test user for authentication
     testUser = await UserModel.create({
       email: 'testuser@example.com',

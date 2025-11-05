@@ -10,6 +10,7 @@ import { authenticate } from '../../middleware/auth';
 import { UserModel } from '../../models/User';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
+import mongoose from 'mongoose';
 
 const app = express();
 app.use(express.json());
@@ -24,6 +25,11 @@ describe('Authentication Middleware - No Mocking', () => {
   let testUser2: any;
 
   beforeEach(async () => {
+    // Ensure mongoose connection is ready before creating records
+    if (mongoose.connection.readyState !== 1) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
     testUser = await UserModel.create({
       email: 'test@example.com',
       name: 'Test User',

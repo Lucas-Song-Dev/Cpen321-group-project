@@ -26,6 +26,11 @@ describe('Rating API - No Mocking', () => {
   let authToken: string;
 
   beforeEach(async () => {
+    // Ensure mongoose connection is ready before creating records
+    if (mongoose.connection.readyState !== 1) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
     testUser = await UserModel.create({
       email: 'testuser@example.com',
       name: 'Test User',
