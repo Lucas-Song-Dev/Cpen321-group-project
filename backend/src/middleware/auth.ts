@@ -31,7 +31,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       }
       
       req.user = {
-        _id: (user._id as unknown).toString(),
+        _id: user._id.toString(),
         email: user.email,
         name: user.name,
         groupName: user.groupName
@@ -51,7 +51,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       }
       
       req.user = {
-        _id: (user._id as unknown).toString(),
+        _id: user._id.toString(),
         email: user.email,
         name: user.name,
         groupName: user.groupName
