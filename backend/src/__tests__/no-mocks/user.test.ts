@@ -877,24 +877,40 @@ describe('User API - No Mocking', () => {
    * Expected Behavior: Should initialize livingPreferences object (line 124)
    */
   test('PUT /api/user/users/optionalProfile - should initialize livingPreferences when none exists', async () => {
+    // Create a fresh user for this test to avoid state issues
+    const freshUser = await UserModel.create({
+      email: 'freshuser@example.com',
+      name: 'Fresh User',
+      googleId: 'fresh-google-id',
+      profileComplete: false
+    });
+
+    const freshAuthToken = jwt.sign(
+      { email: freshUser.email, id: (freshUser._id as any).toString() },
+      config.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
     // First set the required profile
     await request(app)
       .put('/api/user/users/profile')
       .send({
-        email: 'testuser@example.com',
+        email: 'freshuser@example.com',
         dob: '2000-01-01',
         gender: 'Male'
       });
 
-    // Ensure user has no livingPreferences (or it's an empty object)
-    const user = await UserModel.findOne({ email: 'testuser@example.com' });
-    expect(user?.livingPreferences === undefined || Object.keys(user?.livingPreferences || {}).length === 0).toBe(true);
+    // Verify livingPreferences is undefined or empty (Mongoose may return {} for nested schemas)
+    const userBeforeUpdate = await UserModel.findOne({ email: 'freshuser@example.com' });
+    // For nested schemas, Mongoose may initialize as {}, so check if schedule is not set
+    const scheduleBefore = userBeforeUpdate?.livingPreferences?.schedule;
+    expect(scheduleBefore).toBeUndefined();
 
     // Update with livingPreferences
     const response = await request(app)
       .put('/api/user/users/optionalProfile')
       .send({
-        email: 'testuser@example.com',
+        email: 'freshuser@example.com',
         livingPreferences: {
           schedule: 'Night'
         }

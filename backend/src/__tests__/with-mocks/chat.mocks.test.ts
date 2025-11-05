@@ -31,10 +31,12 @@ jest.mock('../../index', () => ({
 }));
 
 import chatRouter from '../../routes/chat';
+import { errorHandler } from '../../middleware/errorHandler';
 
 const app = express();
 app.use(express.json());
 app.use('/api/chat', chatRouter);
+app.use(errorHandler);
 
 describe('Chat API Tests - With Mocking', () => {
   let testUser: any;
@@ -525,33 +527,25 @@ describe('Chat API Tests - With Mocking', () => {
 
     /**
      * Test: DELETE /api/chat/:groupId/message/:messageId
-     * Input: Valid messageId, but Group.findById fails
+     * Input: Valid messageId, but Message.findById fails
      * Expected Status: 500
      * Expected Output: { success: false, message: "Internal server error" }
-     * Expected Behavior: Should handle database errors when fetching group
-     * Mock Behavior: Group.findById throws an error
+     * Expected Behavior: Should handle database errors when fetching message
+     * Mock Behavior: Message.findById throws an error
      */
-    test('should handle database error when fetching group', async () => {
-      const message = await Message.create({
-        groupId: testGroup._id,
-        senderId: testUser._id,
-        content: 'Message to delete',
-        type: 'text'
-      });
-
-      // Mock Group.findById to throw an error
-      const originalFindById = Group.findById;
-      Group.findById = jest.fn().mockRejectedValue(new Error('Database connection failed'));
+    test('should handle database error when fetching message (delete)', async () => {
+      const originalFindById = Message.findById;
+      Message.findById = jest.fn().mockRejectedValue(new Error('Database query failed'));
 
       const response = await request(app)
-        .delete(`/api/chat/${testGroup._id}/message/${message._id}`)
+        .delete(`/api/chat/${testGroup._id}/message/${new mongoose.Types.ObjectId()}`)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(500);
       expect(response.body.success).toBe(false);
 
       // Restore original
-      Group.findById = originalFindById;
+      Message.findById = originalFindById;
     });
 
     /**

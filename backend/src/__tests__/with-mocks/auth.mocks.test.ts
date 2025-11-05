@@ -11,26 +11,34 @@ import { authRouter } from '../../routes/auth';
 import { UserModel } from '../../models/User';
 import mongoose from 'mongoose';
 
-// Mock Google OAuth client
-const mockVerifyIdToken = jest.fn();
-const mockOAuth2Client = jest.fn().mockImplementation(() => ({
-  verifyIdToken: mockVerifyIdToken
-}));
+// Mock Google OAuth client (hoist-safe)
+var mockVerifyIdToken: jest.Mock;
+var mockOAuth2Client: jest.Mock;
 
-jest.mock('google-auth-library', () => ({
-  OAuth2Client: mockOAuth2Client
-}));
+jest.mock('google-auth-library', () => {
+  mockVerifyIdToken = jest.fn();
+  mockOAuth2Client = jest.fn().mockImplementation(() => ({
+    verifyIdToken: mockVerifyIdToken
+  }));
+  return {
+    OAuth2Client: mockOAuth2Client
+  };
+});
 
-// Mock AuthService
-const mockSignup = jest.fn();
-const mockLogin = jest.fn();
+// Mock AuthService (hoist-safe)
+var mockSignup: jest.Mock;
+var mockLogin: jest.Mock;
 
-jest.mock('../../services/auth', () => ({
-  AuthService: {
-    signup: mockSignup,
-    login: mockLogin
-  }
-}));
+jest.mock('../../services/auth', () => {
+  mockSignup = jest.fn();
+  mockLogin = jest.fn();
+  return {
+    AuthService: {
+      signup: mockSignup,
+      login: mockLogin
+    }
+  };
+});
 
 const app = express();
 app.use(express.json());
