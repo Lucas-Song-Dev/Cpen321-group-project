@@ -224,6 +224,37 @@ These test tags enable precise UI element selection in automated tests without r
 - ViewModel mocking not implemented
 - UC16 (Add Task) not tested - would require additional test tags for complex UI selectors
 
+### 4.7. Continuous Integration
+
+**GitHub Actions Workflow:** `.github/workflows/android-ui-tests.yml`
+
+The frontend tests run automatically on every pull request via GitHub Actions.
+
+**Trigger Conditions:**
+- All pull requests to `main` or `master` branch
+- Direct pushes to `main` or `master` branch
+- Only when files in `frontend/**` directory are modified
+
+**Test Environment:**
+- OS: Ubuntu Latest
+- JDK: 17 (Temurin)
+- Android API Level: 33
+- Target: google_apis
+- Architecture: x86_64
+
+**Workflow Features:**
+- ✅ Gradle caching for faster builds
+- ✅ AVD (Android emulator) caching
+- ✅ KVM hardware acceleration
+- ✅ Headless emulator execution
+- ✅ Automated test report publishing
+- ✅ Test results uploaded as artifacts (30-day retention)
+
+**Viewing CI Results:**
+- Test status appears automatically on pull requests
+- Click "Details" on the check to view full test output
+- Download detailed HTML reports from "Artifacts" section
+
 ---
 
 ## 5. Automated Code Review Results
