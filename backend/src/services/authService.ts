@@ -67,7 +67,7 @@ export const generateTokens = (user: IUser): AuthTokens => {
   //   expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   // });
 
-  const secret = process.env.JWT_SECRET || 'fallback-secret-key';
+  const secret = process.env.JWT_SECRET ?? 'fallback-secret-key';
   const accessToken = jwt.sign(payload, secret, { expiresIn: '1h' });
 
   return { accessToken };

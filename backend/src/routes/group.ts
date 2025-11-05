@@ -209,7 +209,6 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
           
           group.owner = oldestMember.userId as unknown;
           await group.save();
-          console.log('[' + timestamp + '] GROUP GET: Ownership transferred to oldest member', (oldestMember.userId as unknown).name, 'joined:', oldestMember.joinDate);
           
           // Re-populate the new owner
           await group.populate('owner', 'name email bio averageRating');
@@ -243,7 +242,6 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         
         group.owner = oldestMember.userId as unknown;
         await group.save();
-        console.log('[' + timestamp + '] GROUP GET: Ownership transferred to oldest member', (oldestMember.userId as unknown).name, 'joined:', oldestMember.joinDate, 'due to populate error');
         
         // Try to populate again
         try {
