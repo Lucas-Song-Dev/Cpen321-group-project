@@ -66,18 +66,18 @@ cd frontend
 ### Run Specific Test Class
 ```bash
 # Create Group tests
-./gradlew :app:connectedAndroidTest --tests "com.cpen321.roomsync.CreateGroupTest"
+./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.cpen321.roomsync.CreateGroupTest
 
 # Add Task tests
-./gradlew :app:connectedAndroidTest --tests "com.cpen321.roomsync.AddTaskTest"
+./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.cpen321.roomsync.AddTaskTest
 
 # Rate Roommate tests
-./gradlew :app:connectedAndroidTest --tests "com.cpen321.roomsync.RateRoommateTest"
+./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.cpen321.roomsync.RateRoommateTest
 ```
 
 ### Run Individual Test Method
 ```bash
-./gradlew :app:connectedAndroidTest --tests "com.cpen321.roomsync.CreateGroupTest.testCreateGroup_ValidGroupName_Success"
+./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.cpen321.roomsync.CreateGroupTest#testCreateGroup_ValidGroupName_Success
 ```
 
 ## Test Framework

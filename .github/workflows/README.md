@@ -148,7 +148,7 @@ For `android-ui-tests.yml`, add a new step:
   uses: reactivecircus/android-emulator-runner@v2
   with:
     # ... same config as other tests
-    script: ./gradlew :app:connectedAndroidTest --tests "com.cpen321.roomsync.NewTest" --stacktrace
+    script: ./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.cpen321.roomsync.NewTest --stacktrace
 ```
 
 For `android-ui-tests-all.yml`, no changes needed - it automatically runs all tests.

@@ -87,7 +87,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: frontend
-          script: ./gradlew :app:connectedAndroidTest --tests "com.cpen321.roomsync.CreateGroupTest" --stacktrace
+          script: ./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.cpen321.roomsync.CreateGroupTest --stacktrace
       
       - name: Run AddTaskTest
         uses: reactivecircus/android-emulator-runner@v2
@@ -99,7 +99,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: frontend
-          script: ./gradlew :app:connectedAndroidTest --tests "com.cpen321.roomsync.AddTaskTest" --stacktrace
+          script: ./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.cpen321.roomsync.AddTaskTest --stacktrace
       
       - name: Run RateRoommateTest
         uses: reactivecircus/android-emulator-runner@v2
@@ -111,7 +111,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           working-directory: frontend
-          script: ./gradlew :app:connectedAndroidTest --tests "com.cpen321.roomsync.RateRoommateTest" --stacktrace
+          script: ./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.cpen321.roomsync.RateRoommateTest --stacktrace
       
       - name: Upload test results
         if: always()
