@@ -32,7 +32,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   console.log(`[${timestamp}] GROUP CREATE: Checking if user is already in a group`);
   // Check if user is already in a group
   const existingGroup = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+    'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
   });
 
   if (existingGroup) {
@@ -47,9 +47,9 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   // Create new group
   const group = await Group.create({
     name: name.trim(),
-    owner: new mongoose.Types.ObjectId(req.user!._id),
+    owner: new mongoose.Types.ObjectId(req.user?._id),
     members: [{
-      userId: new mongoose.Types.ObjectId(req.user!._id),
+      userId: new mongoose.Types.ObjectId(req.user?._id),
       joinDate: new Date()
     }]
   });
@@ -57,7 +57,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   console.log(`[${timestamp}] GROUP CREATE: Group created successfully:`, group._id);
   console.log(`[${timestamp}] GROUP CREATE: Updating user's groupName to:`, group.name);
   // Update user's groupName
-  await UserModel.findByIdAndUpdate(req.user!._id, { 
+  await UserModel.findByIdAndUpdate(req.user?._id, { 
     groupName: group.name 
   });
 
@@ -98,7 +98,7 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
   console.log(`[${timestamp}] GROUP JOIN: Checking if user is already in a group`);
   // Check if user is already in a group
   const existingGroup = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+    'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
   });
 
   if (existingGroup) {
@@ -128,7 +128,7 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
 
   // Check if user is already a member
   const isAlreadyMember = group.members.some(member => 
-    member.userId.toString() === req.user!._id.toString()
+    member.userId.toString() === req.user?._id.toString()
   );
 
   if (isAlreadyMember) {
@@ -147,7 +147,7 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
   await group.save();
 
   // Update user's groupName
-  await UserModel.findByIdAndUpdate(req.user!._id, { 
+  await UserModel.findByIdAndUpdate(req.user?._id, { 
     groupName: group.name 
   });
 
@@ -172,7 +172,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   
   try {
     const group = await Group.findOne({ 
-      'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+      'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
     });
 
     if (!group) {
@@ -191,32 +191,32 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       console.log(`[${timestamp}] GROUP GET: Owner populated successfully`);
       
       // Validate that owner still exists and has valid data
-      if (!group.owner || typeof group.owner === 'string' || !(group.owner as any).name) {
+      if (!group.owner || typeof group.owner === 'string' || !(group.owner as unknown).name) {
         console.log(`[${timestamp}] GROUP GET: Owner data is invalid, attempting to fix ownership`);
         
         // If owner is invalid, transfer to oldest valid member
-        const validMembers = group.members.filter((member: any) => 
+        const validMembers = group.members.filter((member: unknown) => 
           member.userId && typeof member.userId === 'object' && member.userId.name
         );
         
         if (validMembers.length > 0) {
           // Find the oldest member (earliest join date) to transfer ownership to
-          const oldestMember = validMembers.reduce((oldest: any, current: any) => {
+          const oldestMember = validMembers.reduce((oldest: unknown, current: any) => {
             const oldestDate = new Date(oldest.joinDate);
             const currentDate = new Date(current.joinDate);
             return currentDate < oldestDate ? current : oldest;
           });
           
-          group.owner = oldestMember.userId as any;
+          group.owner = oldestMember.userId as unknown;
           await group.save();
-          console.log(`[${timestamp}] GROUP GET: Ownership transferred to oldest member ${(oldestMember.userId as any).name} (joined: ${oldestMember.joinDate})`);
+          console.log(`[${timestamp}] GROUP GET: Ownership transferred to oldest member ${(oldestMember.userId as unknown).name} (joined: ${oldestMember.joinDate})`);
           
           // Re-populate the new owner
           await group.populate('owner', 'name email bio averageRating');
         } else {
           console.log(`[${timestamp}] GROUP GET: No valid members found, creating placeholder owner`);
           // Create a placeholder owner if no valid members exist
-          (group as any).owner = {
+          (group as unknown).owner = {
             _id: 'deleted-owner',
             name: 'Deleted User',
             email: '',
@@ -229,21 +229,21 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       console.error(`[${timestamp}] GROUP GET: Error populating owner:`, populateError);
       
       // Try to fix ownership by transferring to oldest valid member
-      const validMembers = group.members.filter((member: any) => 
+      const validMembers = group.members.filter((member: unknown) => 
         member.userId && typeof member.userId === 'object' && member.userId.name
       );
       
       if (validMembers.length > 0) {
         // Find the oldest member (earliest join date) to transfer ownership to
-        const oldestMember = validMembers.reduce((oldest: any, current: any) => {
+        const oldestMember = validMembers.reduce((oldest: unknown, current: any) => {
           const oldestDate = new Date(oldest.joinDate);
           const currentDate = new Date(current.joinDate);
           return currentDate < oldestDate ? current : oldest;
         });
         
-        group.owner = oldestMember.userId as any;
+        group.owner = oldestMember.userId as unknown;
         await group.save();
-        console.log(`[${timestamp}] GROUP GET: Ownership transferred to oldest member ${(oldestMember.userId as any).name} (joined: ${oldestMember.joinDate}) due to populate error`);
+        console.log(`[${timestamp}] GROUP GET: Ownership transferred to oldest member ${(oldestMember.userId as unknown).name} (joined: ${oldestMember.joinDate}) due to populate error`);
         
         // Try to populate again
         try {
@@ -251,7 +251,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         } catch (retryError) {
           console.error(`[${timestamp}] GROUP GET: Retry populate also failed:`, retryError);
           // Create placeholder owner
-          (group as any).owner = {
+          (group as unknown).owner = {
             _id: 'deleted-owner',
             name: 'Deleted User',
             email: '',
@@ -278,7 +278,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     } catch (populateError) {
       console.error(`[${timestamp}] GROUP GET: Error populating members:`, populateError);
       // Filter out any members that failed to populate
-      group.members = group.members.filter((member: any) => {
+      group.members = group.members.filter((member: unknown) => {
         if (!member.userId || typeof member.userId === 'string') {
           console.log(`[${timestamp}] GROUP GET: Filtering out invalid member:`, member);
           return false;
@@ -291,7 +291,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     // Log how long each user has been in the group
     console.log(`[${timestamp}] GROUP GET: Member join durations:`);
     const now = new Date();
-    group.members.forEach((member: any) => {
+    group.members.forEach((member: unknown) => {
       if (member.userId && member.userId.name) {
         const joinDate = new Date(member.joinDate);
         const durationMs = now.getTime() - joinDate.getTime();
@@ -330,7 +330,7 @@ router.put('/transfer-ownership/:newOwnerId', asyncHandler(async (req: Request, 
 
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+    'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
   });
 
   if (!group) {
@@ -395,7 +395,7 @@ router.delete('/member/:memberId', asyncHandler(async (req: Request, res: Respon
 
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+    'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
   });
 
   if (!group) {
@@ -459,7 +459,7 @@ router.delete('/member/:memberId', asyncHandler(async (req: Request, res: Respon
 // @access  Private
 router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
   const group = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+    'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
   });
 
   if (!group) {
@@ -469,21 +469,21 @@ router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  const isOwner = group.owner.toString() === req.user!._id.toString();
+  const isOwner = group.owner.toString() === req.user?._id.toString();
 
   // Remove user from group members
   group.members = group.members.filter(member => 
-    member.userId.toString() !== req.user!._id.toString()
+    member.userId.toString() !== req.user?._id.toString()
   );
 
   if (isOwner) {
     if (group.members.length > 0) {
       // Transfer ownership to the first remaining member
-      group.owner = group.members[0].userId as any;
+      group.owner = group.members[0].userId as unknown;
     } else {
       // No members left; delete the group and clear user groupName
       await group.deleteOne();
-      await UserModel.findByIdAndUpdate(req.user!._id, { groupName: "" });
+      await UserModel.findByIdAndUpdate(req.user?._id, { groupName: "" });
       return res.status(200).json({
         success: true,
         message: 'Successfully left the group and deleted empty group'
@@ -494,7 +494,7 @@ router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
   await group.save();
 
   // Update user's groupName
-  await UserModel.findByIdAndUpdate(req.user!._id, { groupName: "" });
+  await UserModel.findByIdAndUpdate(req.user?._id, { groupName: "" });
 
   res.status(200).json({
     success: true,

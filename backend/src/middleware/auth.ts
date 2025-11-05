@@ -12,7 +12,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   const authHeader = req.headers.authorization;
   console.log(`[${timestamp}] AUTHENTICATE: Authorization header:`, authHeader ? "Present" : "Missing");
   
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith("Bearer ")) {
     console.log(`[${timestamp}] AUTHENTICATE: No valid token provided`);
     return res.status(401).json({ success: false, message: "No token provided" });
   }
@@ -31,7 +31,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       }
       
       req.user = {
-        _id: (user._id as any).toString(),
+        _id: (user._id as unknown).toString(),
         email: user.email,
         name: user.name,
         groupName: user.groupName
@@ -51,7 +51,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       }
       
       req.user = {
-        _id: (user._id as any).toString(),
+        _id: (user._id as unknown).toString(),
         email: user.email,
         name: user.name,
         groupName: user.groupName
@@ -64,7 +64,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     
     // Handle real JWT tokens
     console.log(`[${timestamp}] AUTHENTICATE: Verifying JWT token`);
-    const decoded = jwt.verify(token, config.JWT_SECRET) as any;
+    const decoded = jwt.verify(token, config.JWT_SECRET) as unknown;
     console.log(`[${timestamp}] AUTHENTICATE: Token decoded successfully:`, { id: decoded.id, email: decoded.email });
     
     // Fetch user from database to get complete user information

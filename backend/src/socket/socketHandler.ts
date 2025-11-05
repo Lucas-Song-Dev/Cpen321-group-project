@@ -10,8 +10,8 @@ interface AuthenticatedSocket extends Socket {
 
 export class SocketHandler {
   private io: SocketIOServer;
-  private connectedUsers: Map<string, string> = new Map(); // userId -> socketId
-  private groupMembers: Map<string, Set<string>> = new Map(); // groupId -> Set of userIds
+  private connectedUsers = new Map<string, string>(); // userId -> socketId
+  private groupMembers = new Map<string, Set<string>>(); // groupId -> Set of userIds
 
   constructor(server: HTTPServer) {
     this.io = new SocketIOServer(server, {
@@ -32,7 +32,7 @@ export class SocketHandler {
       socket.on('authenticate', (token: string) => {
         try {
           console.log('[SOCKET] Authenticating socket with token...');
-          const decoded = jwt.verify(token, config.JWT_SECRET) as any;
+          const decoded = jwt.verify(token, config.JWT_SECRET) as unknown;
           console.log('[SOCKET] Token decoded:', decoded);
           socket.userId = decoded.id || decoded.userId; // Support both 'id' and 'userId' in JWT payload
           if (socket.userId) {
@@ -66,16 +66,16 @@ export class SocketHandler {
         if (!this.groupMembers.has(groupId)) {
           this.groupMembers.set(groupId, new Set());
         }
-        this.groupMembers.get(groupId)!.add(socket.userId);
+        this.groupMembers.get(groupId)?.add(socket.userId);
 
         console.log(`[SOCKET] User ${socket.userId} joined group ${groupId}`);
-        console.log(`[SOCKET] Total members in group ${groupId}: ${this.groupMembers.get(groupId)!.size}`);
+        console.log(`[SOCKET] Total members in group ${groupId}: ${this.groupMembers.get(groupId)?.size}`);
         console.log(`[SOCKET] Socket rooms for this socket:`, Array.from(socket.rooms));
         
         // Notify other group members
         socket.to(groupId).emit('user-joined', {
           userId: socket.userId,
-          groupId: groupId,
+          groupId,
           timestamp: new Date().toISOString()
         });
       });
@@ -106,7 +106,7 @@ export class SocketHandler {
       });
 
       // Send message
-      socket.on('send-message', (data: any) => {
+      socket.on('send-message', (data: unknown) => {
         if (!socket.userId || !socket.groupId) {
           socket.emit('error', 'User not in a group');
           return;
@@ -128,7 +128,7 @@ export class SocketHandler {
       });
 
       // Create poll
-      socket.on('create-poll', (data: any) => {
+      socket.on('create-poll', (data: unknown) => {
         if (!socket.userId || !socket.groupId) {
           socket.emit('error', 'User not in a group');
           return;
@@ -153,7 +153,7 @@ export class SocketHandler {
       });
 
       // Vote on poll
-      socket.on('vote-poll', (data: any) => {
+      socket.on('vote-poll', (data: unknown) => {
         if (!socket.userId) {
           socket.emit('error', 'User not authenticated');
           return;
@@ -167,7 +167,7 @@ export class SocketHandler {
         };
 
         // Broadcast poll update to all group members
-        this.io.to(socket.groupId || '').emit('poll-update', voteData);
+        this.io.to(socket.groupId ?? '').emit('poll-update', voteData);
         console.log(`Vote cast on poll ${data.pollId}: ${data.option}`);
       });
 

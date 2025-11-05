@@ -29,7 +29,7 @@ export const UserReporter = {
 
       // Fetch all messages from the reported user in this group
       const messages = await Message.find({
-        groupId: groupId,
+        groupId,
         senderId: reportedUserId,
         type: 'text'
       })
@@ -52,7 +52,7 @@ export const UserReporter = {
       // });
 
       // Prepare messages for OpenAI analysis
-      const messageTexts = messages.map((msg: any) => msg.content).join('\n');
+      const messageTexts = messages.map((msg: unknown) => msg.content).join('\n');
 
       // Call OpenAI to analyze messages (disabled for now)
       // const completion = await openai.chat.completions.create({
@@ -115,11 +115,11 @@ export const UserReporter = {
         message: 'Report submitted successfully',
         data: {
           isOffensive: analysis.isOffensive,
-          actionTaken: actionTaken
+          actionTaken
         }
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error processing report:', error);
       return res.status(500).json({
         success: false,

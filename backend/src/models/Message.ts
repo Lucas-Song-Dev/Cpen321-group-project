@@ -68,7 +68,7 @@ const MessageSchema = new Schema<IMessage>({
 MessageSchema.virtual('pollResults').get(function() {
   if (this.type !== 'poll' || !this.pollData) return null;
   
-  const results: { [key: string]: number } = {};
+  const results: Record<string, number> = {};
   
   // Initialize all options with 0 votes
   this.pollData.options.forEach((option: string) => {
@@ -76,7 +76,7 @@ MessageSchema.virtual('pollResults').get(function() {
   });
   
   // Count votes
-  this.pollData.votes.forEach((vote: any) => {
+  this.pollData.votes.forEach((vote: unknown) => {
     results[vote.option] = (results[vote.option] || 0) + 1;
   });
   
@@ -112,7 +112,7 @@ MessageSchema.methods.addVote = function(userId: string, option: string) {
   }
   
   // Remove existing vote from this user
-  this.pollData.votes = this.pollData.votes.filter((vote: any) => 
+  this.pollData.votes = this.pollData.votes.filter((vote: unknown) => 
     vote.userId.toString() !== userId.toString()
   );
   
@@ -128,7 +128,7 @@ MessageSchema.methods.addVote = function(userId: string, option: string) {
 MessageSchema.methods.hasUserVoted = function(userId: string) {
   if (this.type !== 'poll' || !this.pollData) return false;
   
-  return this.pollData.votes.some((vote: any) => 
+  return this.pollData.votes.some((vote: unknown) => 
     vote.userId.toString() === userId.toString()
   );
 };

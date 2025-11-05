@@ -58,5 +58,5 @@ async function purgeDatabase() {
 }
 
 // Run the script
-purgeDatabase();
+void purgeDatabase();
 

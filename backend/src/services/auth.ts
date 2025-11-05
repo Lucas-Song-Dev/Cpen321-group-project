@@ -21,13 +21,13 @@ export const AuthService = {
           _id: String(user._id),
           email: user.email, 
           name: user.name,
-          dob: user.dob || null,
-          gender: user.gender || null,
+          dob: user.dob ?? null,
+          gender: user.gender ?? null,
           profileComplete: user.profileComplete,
-          bio: user.bio || null,
-          profilePicture: user.profilePicture || null,
-          livingPreferences: user.livingPreferences || null,
-          groupName: user.groupName || null
+          bio: user.bio ?? null,
+          profilePicture: user.profilePicture ?? null,
+          livingPreferences: user.livingPreferences ?? null,
+          groupName: user.groupName ?? null
         },
         token,
       };
@@ -53,13 +53,13 @@ export const AuthService = {
           _id: String(user._id),
           email: user.email, 
           name: user.name,
-          dob: user.dob || null,
-          gender: user.gender || null,
+          dob: user.dob ?? null,
+          gender: user.gender ?? null,
           profileComplete: user.profileComplete,
-          bio: user.bio || null,
-          profilePicture: user.profilePicture || null,
-          livingPreferences: user.livingPreferences || null,
-          groupName: user.groupName || null
+          bio: user.bio ?? null,
+          profilePicture: user.profilePicture ?? null,
+          livingPreferences: user.livingPreferences ?? null,
+          groupName: user.groupName ?? null
         },
         token,
       };

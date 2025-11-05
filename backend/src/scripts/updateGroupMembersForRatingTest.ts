@@ -90,7 +90,7 @@ async function updateGroupMembersForRatingTest() {
 
     if (!testUser1InGroup) {
       group.members.push({
-        userId: testUser1._id as any,
+        userId: testUser1._id as unknown,
         joinDate: oldDate
       });
       console.log(`Added Test User 1 to group with join date: ${oldDate.toISOString()}`);
@@ -98,7 +98,7 @@ async function updateGroupMembersForRatingTest() {
 
     if (!testUser2InGroup) {
       group.members.push({
-        userId: testUser2._id as any,
+        userId: testUser2._id as unknown,
         joinDate: oldDate
       });
       console.log(`Added Test User 2 to group with join date: ${oldDate.toISOString()}`);
@@ -106,7 +106,7 @@ async function updateGroupMembersForRatingTest() {
 
     // Update existing members to also have old join dates
     console.log('\nUpdating existing members join dates...');
-    group.members.forEach((member: any) => {
+    group.members.forEach((member: unknown) => {
       member.joinDate = oldDate;
     });
 
@@ -119,7 +119,7 @@ async function updateGroupMembersForRatingTest() {
     const updatedGroup = await Group.findById(group._id)
       .populate('members.userId', 'name email');
     
-    updatedGroup?.members.forEach((member: any) => {
+    updatedGroup?.members.forEach((member: unknown) => {
       const joinDate = new Date(member.joinDate);
       const daysAgo = Math.floor((Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24));
       console.log(`  - ${member.userId.name} (${member.userId.email}): ${daysAgo} days ago`);
@@ -135,5 +135,5 @@ async function updateGroupMembersForRatingTest() {
 }
 
 // Run the script
-updateGroupMembersForRatingTest();
+void updateGroupMembersForRatingTest();
 
