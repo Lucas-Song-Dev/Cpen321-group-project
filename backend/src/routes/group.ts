@@ -259,7 +259,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         }
     
     // Log how long each user has been in the group
-      const now = new Date();
+    const now = new Date();
     group.members.forEach((member: unknown) => {
       if (member.userId && member.userId.name) {
         const joinDate = new Date(member.joinDate);
@@ -267,9 +267,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         const durationMinutes = Math.floor(durationMs / (1000 * 60));
         const durationHours = Math.floor(durationMinutes / 60);
         const durationDays = Math.floor(durationHours / 24);
-        
-            } else {
-            }
+      }
     });
     
     res.status(200).json({

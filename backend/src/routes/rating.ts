@@ -104,10 +104,6 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     groupId: new mongoose.Types.ObjectId(groupId)
   });
   
-  if (existingRating) {
-    } else {
-    }
-  
   // Create or update rating (upsert ensures one rating per user pair per group)
   const newRating = await Rating.findOneAndUpdate(
     {

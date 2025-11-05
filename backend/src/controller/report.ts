@@ -103,9 +103,7 @@ export const UserReporter = {
         reportedUser.isOffensive = true;
         await reportedUser.save();
         actionTaken = 'User has been marked as offensive';
-        
-            } else {
-            }
+      }
 
       return res.status(200).json({
         success: true,
