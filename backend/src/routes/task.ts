@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import Task from '../models/Task';
@@ -84,14 +85,14 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     startOfWeek.setHours(0, 0, 0, 0);
 
     // Remove existing assignment for this week
-    task.assignments = task.assignments.filter((assignment: any) => 
+    task.assignments = task.assignments.filter((assignment: { weekStart: Date }) => 
       assignment.weekStart.getTime() !== startOfWeek.getTime()
     );
     
     // Assign to specified users
     assignedUserIds.forEach((userId: string) => {
       task.assignments.push({
-        userId: userId as any,
+        userId: new mongoose.Types.ObjectId(userId),
         weekStart: startOfWeek,
         status: 'incomplete'
       });
@@ -210,7 +211,7 @@ router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Update assignment status
-  const assignment = task.assignments.find((assignment: any) => 
+  const assignment = task.assignments.find((assignment: { userId: mongoose.Types.ObjectId; weekStart: Date }) => 
     assignment.userId.toString() === req.user?._id.toString() &&
     assignment.weekStart.getTime() === startOfWeek.getTime()
   );
@@ -295,14 +296,14 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
   startOfWeek.setHours(0, 0, 0, 0);
 
   // Remove existing assignment for this week
-  task.assignments = task.assignments.filter((assignment: any) => 
+  task.assignments = task.assignments.filter((assignment: { weekStart: Date }) => 
     assignment.weekStart.getTime() !== startOfWeek.getTime()
   );
   
   // Add new assignments
   userIds.forEach((userId: string) => {
     task.assignments.push({
-      userId: userId as any,
+      userId: new mongoose.Types.ObjectId(userId),
       weekStart: startOfWeek,
       status: 'incomplete'
     });
@@ -371,7 +372,7 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     }
 
     // Check if task already has assignments for this week
-    const hasAssignmentForThisWeek = task.assignments.some((assignment: any) => 
+    const hasAssignmentForThisWeek = task.assignments.some((assignment: { weekStart: Date }) => 
       assignment.weekStart.getTime() === startOfWeek.getTime()
     );
     

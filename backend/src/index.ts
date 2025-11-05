@@ -84,7 +84,7 @@ mongoose
   .then(() => {
     console.log("Connected to MongoDB successfully");
       })
-  .catch((err: any) => {
+  .catch((err: Error & { code?: number }) => {
     console.error("MongoDB connection error details:");
     console.error("Error name:", err.name);
     console.error("Error message:", err.message);
@@ -110,7 +110,7 @@ mongoose.connection.on('disconnected', () => {
         strict: true,
         deprecationErrors: true,
       }
-    }).catch((err: any) => {
+    }).catch((err: Error) => {
       console.error('Reconnection failed:', err.message);
     });
   }, 5000);

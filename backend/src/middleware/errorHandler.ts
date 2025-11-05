@@ -35,14 +35,14 @@ export const errorHandler = (
   }
 
   // Mongoose duplicate key
-  if (err.name === 'MongoError' && (err as any).code === 11000) {
+  if (err.name === 'MongoError' && (err as Error & { code?: number }).code === 11000) {
     const message = 'Duplicate field value entered';
     error = createError(message, 400);
   }
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
-    const message = Object.values((err as any).errors).map((val: any) => val.message).join(', ');
+    const message = Object.values((err as Error & { errors?: Record<string, { message: string }> }).errors ?? {}).map((val: { message: string }) => val.message).join(', ');
     error = createError(message, 400);
   }
 
@@ -71,7 +71,7 @@ const createError = (message: string, statusCode: number): AppError => {
   return error;
 };
 
-export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => 
+export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>) => 
   (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

@@ -4,7 +4,7 @@ import { UserModel } from '../models/User';
 import Message from '../models/Message';
 
 export const UserReporter = {
-  report: async (req: Request, res: Response): Promise<any> => {
+  report: async (req: Request, res: Response): Promise<void> => {
     try {
       const { reportedUserId, reporterId, groupId, reason } = req.body;
 
@@ -51,7 +51,7 @@ export const UserReporter = {
       // });
 
       // Prepare messages for OpenAI analysis
-      const messageTexts = messages.map((msg: unknown) => msg.content).join('\n');
+      const messageTexts = messages.map((msg: { content: string }) => msg.content).join('\n');
 
       // Call OpenAI to analyze messages (disabled for now)
       // const completion = await openai.chat.completions.create({
@@ -114,7 +114,7 @@ export const UserReporter = {
         }
       });
 
-    } catch (error: unknown) {
+    } catch (error: Error & { message?: string }) {
       console.error('Error processing report:', error);
       return res.status(500).json({
         success: false,

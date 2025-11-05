@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { UserModel } from '../models/User';
 import Group from '../models/Group';
 
 export const UserController = {
-  setProfile: async (req: Request, res: Response): Promise<any> => {
+  setProfile: async (req: Request, res: Response): Promise<void> => {
     const { email, dob, gender } = req.body;
 
     //validate inputs
@@ -60,7 +61,7 @@ export const UserController = {
   },
 
   //for optional profile settings/updates
-  updateProfile: async (req: Request, res: Response): Promise<any> => {
+  updateProfile: async (req: Request, res: Response): Promise<void> => {
     const { email, bio, profilePicture, livingPreferences } = req.body;
 
     console.log('calling updateOptionalProfile');
@@ -162,7 +163,7 @@ export const UserController = {
     }
   },
 
-  deleteUser: async (req: Request, res: Response): Promise<any> => {
+  deleteUser: async (req: Request, res: Response): Promise<void> => {
     const timestamp = new Date().toISOString();
       
     try {
@@ -177,20 +178,20 @@ export const UserController = {
       const group = await Group.findOne({ 'members.userId': userId });
       if (group) {
               // Filter out the user from members
-        group.members = group.members.filter((m: unknown) => m.userId.toString() !== userId.toString());
+        group.members = group.members.filter((m: { userId: mongoose.Types.ObjectId }) => m.userId.toString() !== userId.toString());
 
         // If the user was the owner, transfer ownership or handle empty group
         if (group.owner && group.owner.toString() === userId.toString()) {
           if (group.members.length > 0) {
             // Find the oldest member (earliest join date) to transfer ownership to
-            const oldestMember = group.members.reduce((oldest: unknown, current: any) => {
+            const oldestMember = group.members.reduce((oldest: { userId: mongoose.Types.ObjectId; joinDate: Date }, current: { userId: mongoose.Types.ObjectId; joinDate: Date }) => {
               const oldestDate = new Date(oldest.joinDate);
               const currentDate = new Date(current.joinDate);
               return currentDate < oldestDate ? current : oldest;
             });
             
             const newOwner = oldestMember.userId;
-            group.owner = newOwner as unknown;
+            group.owner = newOwner as mongoose.Types.ObjectId;
                       
             // Update the new owner's groupName to match the group
             await UserModel.findByIdAndUpdate(newOwner, { groupName: group.name });
