@@ -1,1 +1,5 @@
-backend/source/__test__
+---
+exclude_paths:
+  - 'backend/src/tests/**'
+  - 'backend/src/**/*.test.ts'
+  - 'backend/src/**/*.spec.ts'
