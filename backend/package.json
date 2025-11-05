@@ -7,11 +7,19 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "update-rating-test": "ts-node src/scripts/updateGroupMembersForRatingTest.ts",
     "purge:db": "ts-node src/scripts/purgeDatabase.ts"
   },
-  "keywords": ["roommate", "management", "nodejs", "typescript", "mongodb"],
+  "keywords": [
+    "roommate",
+    "management",
+    "nodejs",
+    "typescript",
+    "mongodb"
+  ],
   "author": "CPEN321 Group Project",
   "license": "MIT",
   "dependencies": {
@@ -26,12 +34,19 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "@jest/globals": "^30.2.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.7.1",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.3.0",
     "nodemon": "^3.1.10",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
