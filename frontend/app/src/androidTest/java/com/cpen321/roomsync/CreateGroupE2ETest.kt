@@ -206,7 +206,7 @@ class CreateGroupE2ETest {
         }
 
         // Input 100-character group name (max per spec)
-        val maxLengthName = "A".repeat(100)
+        val maxLengthName = "A".repeat(101)
         composeTestRule
             .onNodeWithTag("groupNameInput")
             .performTextInput(maxLengthName)
