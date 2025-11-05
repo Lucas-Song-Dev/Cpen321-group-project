@@ -31,11 +31,7 @@ class ButtonSizeTests {
         ViewModelGroupMember(id = "user1", name = "Alice", email = "alice@example.com")
     )
 
-    /**
-     * Helper function to verify button meets minimum touch target size
-     * Uses the density from the test rule's root node
-     */
-    private fun assertButtonMeetsMinimumSize(
+    private fun assertButtonTouchTargetMeetsMinimumSize(
         node: SemanticsNodeInteraction,
         buttonName: String
     ) {
@@ -72,7 +68,7 @@ class ButtonSizeTests {
         val button = composeTestRule.onNodeWithTag("createGroupButton")
         button.assertExists()
         
-        assertButtonMeetsMinimumSize(button, "Create Group Button")
+        assertButtonTouchTargetMeetsMinimumSize(button, "Create Group Button")
     }
 
     /**
@@ -110,7 +106,7 @@ class ButtonSizeTests {
         val button = composeTestRule.onNodeWithTag("createTaskButton")
         button.assertExists()
         
-        assertButtonMeetsMinimumSize(button, "Create Task Button")
+        assertButtonTouchTargetMeetsMinimumSize(button, "Create Task Button")
     }
 
     /**
@@ -142,7 +138,7 @@ class ButtonSizeTests {
         val button = composeTestRule.onNodeWithTag("submitRatingButton")
         button.assertExists()
         
-        assertButtonMeetsMinimumSize(button, "Submit Rating Button")
+        assertButtonTouchTargetMeetsMinimumSize(button, "Submit Rating Button")
     }
 
     /**
@@ -166,7 +162,7 @@ class ButtonSizeTests {
         val button = composeTestRule.onNodeWithText("Cancel")
         button.assertExists()
         
-        assertButtonMeetsMinimumSize(button, "Cancel Button")
+        assertButtonTouchTargetMeetsMinimumSize(button, "Cancel Button")
     }
 
     /**
@@ -190,7 +186,7 @@ class ButtonSizeTests {
         val button = composeTestRule.onNodeWithText("Cancel")
         button.assertExists()
         
-        assertButtonMeetsMinimumSize(button, "Add Task Dialog Cancel Button")
+        assertButtonTouchTargetMeetsMinimumSize(button, "Add Task Dialog Cancel Button")
     }
 
     /**
@@ -209,7 +205,7 @@ class ButtonSizeTests {
 
         // Check Create Group button
         val createButton = composeTestRule.onNodeWithTag("createGroupButton")
-        assertButtonMeetsMinimumSize(createButton, "Create Group Button")
+        assertButtonTouchTargetMeetsMinimumSize(createButton, "Create Group Button")
     }
 
     /**
@@ -236,7 +232,7 @@ class ButtonSizeTests {
         recurrenceOptions.forEach { option ->
             val chip = composeTestRule.onNodeWithText(option)
             chip.assertExists()
-            assertButtonMeetsMinimumSize(chip, "Recurrence Chip: $option")
+            assertButtonTouchTargetMeetsMinimumSize(chip, "Recurrence Chip: $option")
         }
     }
 
@@ -265,7 +261,7 @@ class ButtonSizeTests {
         
         if (difficultyButtons.fetchSemanticsNodes().isNotEmpty()) {
             val firstDifficultyButton = difficultyButtons.get(0)
-            assertButtonMeetsMinimumSize(firstDifficultyButton, "Difficulty Button 1")
+            assertButtonTouchTargetMeetsMinimumSize(firstDifficultyButton, "Difficulty Button 1")
         }
     }
 
@@ -294,7 +290,7 @@ class ButtonSizeTests {
         if (allButtons.fetchSemanticsNodes().size > 1) {
             // Second "1" button should be required people selector
             val requiredPeopleButton = allButtons.get(1)
-            assertButtonMeetsMinimumSize(requiredPeopleButton, "Required People Button 1")
+            assertButtonTouchTargetMeetsMinimumSize(requiredPeopleButton, "Required People Button 1")
         }
     }
 
@@ -325,7 +321,7 @@ class ButtonSizeTests {
 
         starButtons.fetchSemanticsNodes().forEachIndexed { index, _ ->
             val starButton = composeTestRule.onAllNodes(hasText("★") and hasClickAction()).get(index)
-            assertButtonMeetsMinimumSize(starButton, "Star Rating Button ${index + 1}")
+            assertButtonTouchTargetMeetsMinimumSize(starButton, "Star Rating Button ${index + 1}")
         }
     }
 }
