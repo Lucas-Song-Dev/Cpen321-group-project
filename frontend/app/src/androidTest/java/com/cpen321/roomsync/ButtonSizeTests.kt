@@ -40,8 +40,8 @@ class ButtonSizeTests {
 
         // Get the bounds of the button in pixels
         val bounds = node.getBoundsInRoot()
-        val widthPx = bounds.width
-        val heightPx = bounds.height
+        val widthPx = bounds.right - bounds.left
+        val heightPx = bounds.bottom - bounds.top
 
         // Verify both dimensions meet minimum
         assert(widthPx >= minSizePx) {
