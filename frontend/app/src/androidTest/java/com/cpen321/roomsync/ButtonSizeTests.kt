@@ -1,5 +1,6 @@
 package com.cpen321.roomsync
 
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -75,6 +76,7 @@ class ButtonSizeTests {
      * Test: Add Task Dialog - Create Task Button
      * Verifies the "Create Task" button in AddTaskDialog meets 42x42 pixel minimum
      */
+    @OptIn(ExperimentalMaterial3Api::class)
     @Test
     fun test_CreateTaskButton_MeetsMinimumSize() {
         composeTestRule.setContent {
@@ -169,6 +171,7 @@ class ButtonSizeTests {
      * Test: Add Task Dialog - Cancel Button
      * Verifies the "Cancel" button in AddTaskDialog meets 42x42 pixel minimum
      */
+    @OptIn(ExperimentalMaterial3Api::class)
     @Test
     fun test_AddTaskDialogCancelButton_MeetsMinimumSize() {
         composeTestRule.setContent {
@@ -212,6 +215,7 @@ class ButtonSizeTests {
      * Test: Filter Chips in Add Task Dialog
      * Verifies that FilterChips (recurrence options) meet minimum touch target
      */
+    @OptIn(ExperimentalMaterial3Api::class)
     @Test
     fun test_AddTaskDialog_RecurrenceChips_MeetMinimumSize() {
         composeTestRule.setContent {
@@ -240,6 +244,7 @@ class ButtonSizeTests {
      * Test: Difficulty Selector Buttons
      * Verifies that difficulty selector buttons (1-5) meet minimum touch target
      */
+    @OptIn(ExperimentalMaterial3Api::class)
     @Test
     fun test_AddTaskDialog_DifficultyButtons_MeetMinimumSize() {
         composeTestRule.setContent {
@@ -269,6 +274,7 @@ class ButtonSizeTests {
      * Test: Required People Selector Buttons
      * Verifies that required people selector buttons meet minimum touch target
      */
+    @OptIn(ExperimentalMaterial3Api::class)
     @Test
     fun test_AddTaskDialog_RequiredPeopleButtons_MeetMinimumSize() {
         composeTestRule.setContent {
