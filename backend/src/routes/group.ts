@@ -102,7 +102,7 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
 
   // Check if user is already in a different group
   const existingGroup = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
   if (existingGroup) {
@@ -122,7 +122,7 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
 
   // Add user to group
   group.members.push({
-    userId: new mongoose.Types.ObjectId(req.user!._id),
+    userId: new mongoose.Types.ObjectId(req.user?._id),
     joinDate: new Date()
   });
 
@@ -303,7 +303,7 @@ router.put('/transfer-ownership/:newOwnerId', asyncHandler(async (req: Request, 
   }
 
   // Check if user is the owner
-  if (group.owner.toString() !== req.user!._id.toString()) {
+  if (group.owner.toString() !== req.user?._id.toString()) {
     return res.status(403).json({
       success: false,
       message: 'Only the group owner can transfer ownership'
@@ -366,7 +366,7 @@ router.delete('/member/:memberId', asyncHandler(async (req: Request, res: Respon
   }
 
   // Check if user is the owner
-  if (group.owner.toString() !== req.user!._id.toString()) {
+  if (group.owner.toString() !== req.user?._id.toString()) {
     return res.status(403).json({
       success: false,
       message: 'Only the group owner can remove members'

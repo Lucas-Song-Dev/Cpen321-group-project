@@ -262,7 +262,7 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
   }
 
   const voteGroupIsMember = voteGroup.members.some(member => 
-    member.userId.toString() === req.user!._id.toString()
+    member.userId.toString() === req.user?._id.toString()
   );
 
   if (!voteGroupIsMember) {

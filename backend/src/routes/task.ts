@@ -268,7 +268,7 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
 
   // Get user's group
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
   if (!group) {
@@ -328,7 +328,7 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
 router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) => {
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   }).populate('members.userId', 'name email');
 
   if (!group) {
@@ -478,7 +478,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 
   // Only task creator or group owner can delete
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
   if (!group) {
