@@ -244,6 +244,34 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
     });
   }
 
+  // Validate ObjectId format for groupId
+  if (!mongoose.Types.ObjectId.isValid(groupId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid group ID format'
+    });
+  }
+
+  // Verify group exists first before checking message
+  const voteGroup = await Group.findById(groupId);
+  if (!voteGroup) {
+    return res.status(404).json({
+      success: false,
+      message: 'Group not found'
+    });
+  }
+
+  const voteGroupIsMember = voteGroup.members.some(member => 
+    member.userId.toString() === req.user?._id.toString()
+  );
+
+  if (!voteGroupIsMember) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. You are not a member of this group.'
+    });
+  }
+
   // Find the message
   const message = await Message.findById(messageId);
   if (!message) {
@@ -264,26 +292,6 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
     return res.status(400).json({
       success: false,
       message: 'Message is not a poll'
-    });
-  }
-
-  // Verify user is member of the group
-  const group = await Group.findById(groupId);
-  if (!group) {
-    return res.status(404).json({
-      success: false,
-      message: 'Group not found'
-    });
-  }
-
-  const isMember = group.members.some(member => 
-    member.userId.toString() === req.user?._id.toString()
-  );
-
-  if (!isMember) {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied. You are not a member of this group.'
     });
   }
 

@@ -78,20 +78,8 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  // Check if user is already in a group
-  const existingGroup = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
-  });
-
-  if (existingGroup) {
-    return res.status(400).json({
-      success: false,
-      message: 'User is already a member of a group'
-    });
-  }
-
   // Find group by code
-  const group = await Group.findOne({ groupCode: groupCode.trim().toUpperCase() });
+  const group = await Group.findOne({ groupCode: groupCode.toUpperCase() });
 
   if (!group) {
     return res.status(404).json({
@@ -100,15 +88,7 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  // Check if group is full
-  if (group.members.length >= 8) {
-    return res.status(400).json({
-      success: false,
-      message: 'Group is full (maximum 8 members)'
-    });
-  }
-
-  // Check if user is already a member
+  // Check if user is already a member of this group
   const isAlreadyMember = group.members.some(member => 
     member.userId.toString() === req.user?._id.toString()
   );
@@ -120,9 +100,29 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
+  // Check if user is already in a different group
+  const existingGroup = await Group.findOne({ 
+    'members.userId': req.user?._id 
+  });
+
+  if (existingGroup) {
+    return res.status(400).json({
+      success: false,
+      message: 'User is already a member of a group'
+    });
+  }
+
+  // Check if group is full
+  if (group.members.length >= 8) {
+    return res.status(400).json({
+      success: false,
+      message: 'Group is full (maximum 8 members)'
+    });
+  }
+
   // Add user to group
   group.members.push({
-    userId: new mongoose.Types.ObjectId(req.user!._id),
+    userId: new mongoose.Types.ObjectId(req.user?._id),
     joinDate: new Date()
   });
 
@@ -303,7 +303,7 @@ router.put('/transfer-ownership/:newOwnerId', asyncHandler(async (req: Request, 
   }
 
   // Check if user is the owner
-  if (group.owner.toString() !== req.user!._id.toString()) {
+  if (group.owner.toString() !== req.user?._id.toString()) {
     return res.status(403).json({
       success: false,
       message: 'Only the group owner can transfer ownership'
@@ -366,7 +366,7 @@ router.delete('/member/:memberId', asyncHandler(async (req: Request, res: Respon
   }
 
   // Check if user is the owner
-  if (group.owner.toString() !== req.user!._id.toString()) {
+  if (group.owner.toString() !== req.user?._id.toString()) {
     return res.status(403).json({
       success: false,
       message: 'Only the group owner can remove members'
