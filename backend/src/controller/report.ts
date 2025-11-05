@@ -54,7 +54,7 @@ export const UserReporter = {
       // });
 
       // Prepare messages for OpenAI analysis
-      const messageTexts = messages.map((msg: { content: string }) => msg.content).join('\n');
+      // const messageTexts = messages.map((msg: { content: string }) => msg.content).join('\n');
 
       // Call OpenAI to analyze messages (disabled for now)
       // const completion = await openai.chat.completions.create({

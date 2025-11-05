@@ -206,7 +206,7 @@ export const UserController = {
             });
             
             const newOwner = oldestMember.userId;
-            group.owner = newOwner as mongoose.Types.ObjectId;
+            group.owner = newOwner;
                       
             // Update the new owner's groupName to match the group
             await UserModel.findByIdAndUpdate(newOwner, { groupName: group.name });

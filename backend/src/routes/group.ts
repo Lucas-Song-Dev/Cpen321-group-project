@@ -172,7 +172,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
               
         // If owner is invalid, transfer to oldest valid member
         const validMembers = group.members.filter(member => 
-          member.userId && typeof member.userId === 'object' && (member.userId as { name?: string }).name
+          typeof member.userId === 'object' && (member.userId as { name?: string }).name
         );
         
         if (validMembers.length > 0) {
@@ -183,7 +183,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
             return currentDate < oldestDate ? current : oldest;
           });
           
-          group.owner = oldestMember.userId as mongoose.Types.ObjectId;
+          group.owner = oldestMember.userId;
           await group.save();
           
           // Re-populate the new owner
@@ -204,7 +204,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       
       // Try to fix ownership by transferring to oldest valid member
       const validMembers = group.members.filter(member => 
-        member.userId && typeof member.userId === 'object' && (member.userId as { name?: string }).name
+        typeof member.userId === 'object' && (member.userId as { name?: string }).name
       );
       
       if (validMembers.length > 0) {
@@ -215,7 +215,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
           return currentDate < oldestDate ? current : oldest;
         });
         
-        group.owner = oldestMember.userId as mongoose.Types.ObjectId;
+        group.owner = oldestMember.userId;
         await group.save();
         
         // Try to populate again
@@ -261,7 +261,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     // Log how long each user has been in the group
     const now = new Date();
     group.members.forEach(member => {
-      if (member.userId && (member.userId as { name?: string }).name) {
+      if ((member.userId as { name?: string }).name) {
         const joinDate = new Date(member.joinDate);
         const durationMs = now.getTime() - joinDate.getTime();
         const durationMinutes = Math.floor(durationMs / (1000 * 60));
@@ -438,7 +438,7 @@ router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
   if (isOwner) {
     if (group.members.length > 0) {
       // Transfer ownership to the first remaining member
-      group.owner = group.members[0].userId as mongoose.Types.ObjectId;
+      group.owner = group.members[0].userId;
     } else {
       // No members left; delete the group and clear user groupName
       await group.deleteOne();

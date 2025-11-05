@@ -84,12 +84,13 @@ mongoose
   .then(() => {
     console.log("Connected to MongoDB successfully");
       })
-  .catch((err: Error & { code?: number }) => {
+  .catch((err: unknown) => {
+    const error = err as { name?: string; message?: string; code?: number };
     console.error("MongoDB connection error details:");
-    console.error("Error name:", err.name);
-    console.error("Error message:", err.message);
+    console.error("Error name:", error.name);
+    console.error("Error message:", error.message);
     console.error("Connection URI:", config.MONGODB_URI);
-    if (err.code) console.error("Error code:", err.code);
+    if (error.code) console.error("Error code:", error.code);
     
     // Don't exit immediately, try to continue without DB for health checks
     console.error("⚠️  Continuing without database connection for now...");
@@ -110,8 +111,8 @@ mongoose.connection.on('disconnected', () => {
         strict: true,
         deprecationErrors: true,
       }
-    }).catch((err: Error) => {
-      console.error('Reconnection failed:', err.message);
+    }).catch((err: unknown) => {
+      console.error('Reconnection failed:', (err as { message?: string }).message);
     });
   }, 5000);
 });

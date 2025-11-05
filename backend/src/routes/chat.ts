@@ -139,7 +139,7 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
       id: message._id.toString(),
       content: message.content,
       senderId: message.senderId._id.toString(),
-      senderName: (message.senderId as { name?: string }).name || 'User',
+      senderName: (message.senderId as { name?: string }).name ?? 'User',
       groupId,
       timestamp: message.createdAt.getTime(),
       type: message.type

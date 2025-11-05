@@ -71,7 +71,7 @@ const createError = (message: string, statusCode: number): AppError => {
   return error;
 };
 
-export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void | Response>) => 
+export const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<Response | undefined>) => 
   (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
