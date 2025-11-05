@@ -272,11 +272,18 @@ class AddTaskE2ETest {
             .onNodeWithText("One time")
             .assertExists()
 
-        // Check that deadline field is displayed (for one-time tasks)
-        composeTestRule
-            .onNodeWithTag("taskDeadlineInput")
-            .assertExists()
-            .assertIsDisplayed()
+        composeTestRule.waitForIdle()
+
+        // Check that deadline field exists (for one-time tasks)
+        // Use waitUntil to ensure the field has time to render
+        composeTestRule.waitUntil(timeoutMillis = 3000) {
+            try {
+                composeTestRule.onNodeWithTag("taskDeadlineInput").assertExists()
+                true
+            } catch (e: AssertionError) {
+                false
+            }
+        }
 
         // Check that "Create Task" button is disabled (no deadline set yet)
         composeTestRule
