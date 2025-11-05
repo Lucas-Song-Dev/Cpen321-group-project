@@ -5,7 +5,7 @@
 
 | **Change Date**   | **Modified Sections** | **Rationale** |
 | ----------------- | --------------------- | ------------- |
-| _Nothing to show_ |                       |               |
+| November 5, 2025  | Section 2.2 - GitHub Actions Configuration | Added GitHub Actions workflow for automated backend testing on pull requests and main branch pushes |
 
 ---
 
@@ -161,15 +161,24 @@
 
 ### 2.2. GitHub Actions Configuration Location
 
-**Status:** GitHub Actions workflow configuration is currently not set up.
+**Status:** GitHub Actions workflow is configured and active.
 
-**Expected Location:** `.github/workflows/backend-tests.yml`
+**Location:** `.github/workflows/backend-tests.yml`
 
-**Note:** Continuous integration automation needs to be implemented. The workflow should:
-- Run all backend tests on every push to main branch
-- Run tests on pull requests
-- Generate and upload coverage reports as artifacts
-- Use the same test commands as documented above (`npm test` and `npm run test:coverage`)
+**Workflow Details:**
+- **Triggers:**
+  - Pull requests to any branch (when backend files change)
+  - Pushes to main branch (when backend files change)
+- **Test Execution:**
+  - Runs `npm test` for all backend tests
+  - Runs `npm run test:coverage` to generate coverage reports
+- **Artifacts:**
+  - Uploads coverage reports as workflow artifacts
+  - Reports retained for 30 days
+- **Environment:**
+  - Uses Node.js v18
+  - Runs on Ubuntu latest
+  - Uses npm ci for faster, reproducible dependency installation
 
 ### 2.3. Jest Coverage Report Screenshots for Tests Without Mocking
 
