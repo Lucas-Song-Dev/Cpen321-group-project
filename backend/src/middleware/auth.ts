@@ -12,7 +12,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   const authHeader = req.headers.authorization;
   
   if (!authHeader?.startsWith("Bearer ")) {
-      return res.status(401).json({ success: false, message: "No token provided" });
+      res.status(401).json({ success: false, message: "No token provided" });
+      return;
   }
 
   const token = authHeader.split(" ")[1];
@@ -22,7 +23,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     if (token === "bypass-token") {
           const user = await UserModel.findOne({ email: "test@example.com" });
       if (!user) {
-              return res.status(401).json({ success: false, message: "Test user not found" });
+              res.status(401).json({ success: false, message: "Test user not found" });
+              return;
       }
       
       req.user = {
@@ -39,7 +41,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     if (token === "bypass-token-2") {
           const user = await UserModel.findOne({ email: "test2@example.com" });
       if (!user) {
-              return res.status(401).json({ success: false, message: "Test user not found" });
+              res.status(401).json({ success: false, message: "Test user not found" });
+              return;
       }
       
       req.user = {
@@ -60,7 +63,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       const user = await UserModel.findById(decoded.id);
     
     if (!user) {
-          return res.status(401).json({ success: false, message: "User not found" });
+          res.status(401).json({ success: false, message: "User not found" });
+          return;
     }
     
       
@@ -73,7 +77,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     
       next();
   } catch (err) {
-      return res.status(401).json({ success: false, message: "Invalid token" });
+      res.status(401).json({ success: false, message: "Invalid token" });
   }
 };
 

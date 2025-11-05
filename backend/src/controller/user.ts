@@ -9,30 +9,35 @@ export const UserController = {
 
     //validate inputs
     if (!email || !dob || !gender) {
-      return res.status(400).json({ success: false, message: 'Email, DOB, and gender are required' });
+      res.status(400).json({ success: false, message: 'Email, DOB, and gender are required' });
+      return;
     }
     
     if (!['Male', 'Female', 'Prefer-not-to-say'].includes(gender)) {
-      return res.status(400).json({ success: false, message: 'Invalid gender value' });
+      res.status(400).json({ success: false, message: 'Invalid gender value' });
+      return;
     }
 
     try {
       //find user by email (remove JWT check)
       const user = await UserModel.findOne({ email });
       if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
+        res.status(404).json({ success: false, message: 'User not found' });
+        return;
       }
 
       //enforce immutability
       if (user.dob ?? user.gender) {
-        return res.status(400).json({ success: false, message: 'DOB and gender cannot be changed once set' });
+        res.status(400).json({ success: false, message: 'DOB and gender cannot be changed once set' });
+        return;
       }
 
       //validate DOB format (expects 'YYYY-MM-DD')
       //NEED TO LATER ADD to handle other formats and error for invalid date inputs
       const dobDate = new Date(dob);
       if (isNaN(dobDate.getTime())) {
-        return res.status(400).json({ success: false, message: 'Invalid DOB format' });
+        res.status(400).json({ success: false, message: 'Invalid DOB format' });
+        return;
       }
     // console.log('Parsed DOB:', dobDate);
 
@@ -42,7 +47,7 @@ export const UserController = {
       user.profileComplete = true;
       await user.save();
 
-      return res.json({
+      res.json({
         success: true,
         message: 'Profile updated successfully',
         user: {
@@ -56,7 +61,7 @@ export const UserController = {
       });
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ success: false, message: 'Server error' });
+      res.status(500).json({ success: false, message: 'Server error' });
     }
   },
 
@@ -68,7 +73,8 @@ export const UserController = {
   
     //validate inputs
     if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+      res.status(400).json({ success: false, message: 'Email is required' });
+      return;
     }
 
     // Validate livingPreferences if provided
@@ -80,39 +86,47 @@ export const UserController = {
 
 
       if (livingPreferences.schedule && !validSchedules.includes(livingPreferences.schedule)) {
-        return res.status(400).json({ success: false, message: 'Invalid schedule value' });
+        res.status(400).json({ success: false, message: 'Invalid schedule value' });
+        return;
       }
       if (livingPreferences.drinking && !validFrequencies.includes(livingPreferences.drinking)) {
-        return res.status(400).json({ success: false, message: 'Invalid drinking value' });
+        res.status(400).json({ success: false, message: 'Invalid drinking value' });
+        return;
       }
       if (livingPreferences.partying && !validFrequencies.includes(livingPreferences.partying)) {
-        return res.status(400).json({ success: false, message: 'Invalid partying value' });
+        res.status(400).json({ success: false, message: 'Invalid partying value' });
+        return;
       }
       if (livingPreferences.noise && !validNoise.includes(livingPreferences.noise)) {
-        return res.status(400).json({ success: false, message: 'Invalid noise value' });
+        res.status(400).json({ success: false, message: 'Invalid noise value' });
+        return;
       }
       if (livingPreferences.profession && !validProfessions.includes(livingPreferences.profession)) {
-        return res.status(400).json({ success: false, message: 'Invalid profession value' });
+        res.status(400).json({ success: false, message: 'Invalid profession value' });
+        return;
       }
     }
 
     // Validate bio length
     if (bio && bio.length > 500) {
-      return res.status(400).json({ success: false, message: 'Bio must be 500 characters or less' });
+      res.status(400).json({ success: false, message: 'Bio must be 500 characters or less' });
+      return;
     }
 
     try {
       const user = await UserModel.findOne({ email });
       if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
+        res.status(404).json({ success: false, message: 'User not found' });
+        return;
       }
 
       // Check if mandatory profile is complete
       if (!user.profileComplete) {
-        return res.status(400).json({ 
+        res.status(400).json({ 
           success: false, 
           message: 'Please complete your basic profile first (DOB and gender)' 
         });
+        return;
       }
 
       // Update optional fields (only update fields that are provided)
@@ -142,7 +156,7 @@ export const UserController = {
 
       await user.save();
 
-      return res.json({
+      res.json({
         success: true,
         message: 'Optional profile updated successfully',
         user: {
@@ -159,7 +173,7 @@ export const UserController = {
       });
     } catch (err) {
       console.error(err);
-      return res.status(500).json({ success: false, message: 'Server error' });
+      res.status(500).json({ success: false, message: 'Server error' });
     }
   },
 
@@ -170,7 +184,8 @@ export const UserController = {
       const userId = req.user?._id;
       
       if (!userId) {
-              return res.status(401).json({ success: false, message: 'Unauthorized' });
+              res.status(401).json({ success: false, message: 'Unauthorized' });
+              return;
       }
 
     
@@ -211,17 +226,18 @@ export const UserController = {
       const deletedUser = await UserModel.findByIdAndDelete(userId);
       
       if (!deletedUser) {
-              return res.status(404).json({ success: false, message: 'User not found' });
+              res.status(404).json({ success: false, message: 'User not found' });
+              return;
       }
 
           
-      return res.json({
+      res.json({
         success: true,
         message: 'Account deleted successfully and group membership updated'
       });
     } catch (err) {
       console.error(`[${timestamp}] DELETE USER: Error:`, err);
-      return res.status(500).json({ success: false, message: 'Server error' });
+      res.status(500).json({ success: false, message: 'Server error' });
     }
   },
 };

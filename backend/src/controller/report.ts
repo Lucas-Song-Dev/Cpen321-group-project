@@ -10,10 +10,11 @@ export const UserReporter = {
 
       // Validate input
       if (!reportedUserId || !reporterId || !groupId) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Missing required fields'
         });
+        return;
       }
 
       // Check if users exist
@@ -21,10 +22,11 @@ export const UserReporter = {
       const reporter = await UserModel.findById(reporterId);
 
       if (!reportedUser || !reporter) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           message: 'User not found'
         });
+        return;
       }
 
       // Fetch all messages from the reported user in this group
@@ -39,10 +41,11 @@ export const UserReporter = {
 
     
       if (messages.length === 0) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'No messages found for this user'
         });
+        return;
       }
 
       // const openai = new OpenAI({
@@ -105,7 +108,7 @@ export const UserReporter = {
         actionTaken = 'User has been marked as offensive';
       }
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Report submitted successfully',
         data: {
@@ -114,12 +117,13 @@ export const UserReporter = {
         }
       });
 
-    } catch (error: Error & { message?: string }) {
+    } catch (error) {
       console.error('Error processing report:', error);
-      return res.status(500).json({
+      const err = error as { message?: string };
+      res.status(500).json({
         success: false,
         message: 'Failed to process report',
-        error: error.message
+        error: err.message
       });
     }
   }
