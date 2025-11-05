@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -940,14 +941,18 @@ fun AddTaskDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Task Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("taskNameInput")
                 )
 
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text("Description (Optional)") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("taskDescriptionInput"),
                     maxLines = 3
                 )
 
@@ -1095,11 +1100,16 @@ fun AddTaskDialog(
                         label = { Text("Select Deadline") },
                         readOnly = true,
                         trailingIcon = {
-                            IconButton(onClick = { showDatePicker = true }) {
+                            IconButton(
+                                onClick = { showDatePicker = true },
+                                modifier = Modifier.testTag("taskDeadlinePickerButton")
+                            ) {
                                 Icon(Icons.Default.DateRange, contentDescription = "Select Date")
                             }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("taskDeadlineInput")
                     )
                     
                     if (showDatePicker) {
@@ -1171,7 +1181,8 @@ fun AddTaskDialog(
                         )
                     }
                 },
-                enabled = name.trim().isNotEmpty() && (recurrence != "one-time" || deadline != null)
+                enabled = name.trim().isNotEmpty() && (recurrence != "one-time" || deadline != null),
+                modifier = Modifier.testTag("createTaskButton")
             ) {
                 Text("Create Task")
             }
