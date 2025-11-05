@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,7 +58,9 @@ fun CreateGroupScreen(
                 OutlinedTextField(
                     value = groupName,
                     onValueChange = { groupName = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("groupNameInput"),
                     singleLine = true,
                     placeholder = { Text("") },
                     colors = OutlinedTextFieldDefaults.colors(
@@ -80,7 +83,8 @@ fun CreateGroupScreen(
                 },
                 modifier = Modifier
                     .width(200.dp)
-                    .height(48.dp),
+                    .height(48.dp)
+                    .testTag("createGroupButton"),
                 shape = RoundedCornerShape(24.dp),
                 enabled = groupName.isNotBlank() && !uiState.isLoading,
                 colors = ButtonDefaults.buttonColors(
@@ -112,7 +116,9 @@ fun CreateGroupScreen(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .testTag("successMessage")
                 )
                 
                 // Group code display
@@ -141,7 +147,9 @@ fun CreateGroupScreen(
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier
+                                .padding(bottom = 8.dp)
+                                .testTag("groupCode")
                         )
                         
                         Text(
@@ -159,7 +167,8 @@ fun CreateGroupScreen(
                 Text(
                     text = error,
                     color = MaterialTheme.colorScheme.error,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    modifier = Modifier.testTag("errorMessage")
                 )
             }
         }

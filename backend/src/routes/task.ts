@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import Task from '../models/Task';
@@ -54,7 +55,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
   if (!group) {
@@ -69,7 +70,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     name: name.trim(),
     description: description?.trim(),
     groupId: group._id,
-    createdBy: req.user!._id,
+    createdBy: req.user?._id,
     difficulty,
     recurrence,
     requiredPeople,
@@ -84,14 +85,14 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     startOfWeek.setHours(0, 0, 0, 0);
 
     // Remove existing assignment for this week
-    task.assignments = task.assignments.filter((assignment: any) => 
+    task.assignments = task.assignments.filter((assignment: { weekStart: Date }) => 
       assignment.weekStart.getTime() !== startOfWeek.getTime()
     );
     
     // Assign to specified users
     assignedUserIds.forEach((userId: string) => {
       task.assignments.push({
-        userId: userId as any,
+        userId: new mongoose.Types.ObjectId(userId),
         weekStart: startOfWeek,
         status: 'incomplete'
       });
@@ -116,18 +117,15 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // @route   GET /api/task
 // @access  Private
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
-  console.log(`[${new Date().toISOString()}] GET /api/task - User:`, req.user?._id);
   
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
-  console.log(`[${new Date().toISOString()}] GET /api/task - Group found:`, group ? group._id : 'null');
 
   if (!group) {
-    console.log(`[${new Date().toISOString()}] GET /api/task - User not in any group`);
-    return res.status(404).json({
+      return res.status(404).json({
       success: false,
       message: 'User is not a member of any group'
     });
@@ -139,7 +137,6 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     .populate('assignments.userId', 'name email')
     .sort({ createdAt: -1 });
 
-  console.log(`[${new Date().toISOString()}] GET /api/task - Found ${tasks.length} tasks`);
 
   res.status(200).json({
     success: true,
@@ -153,7 +150,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 router.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
   if (!group) {
@@ -171,7 +168,7 @@ router.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
   // Get tasks assigned to current user for current week
   const tasks = await Task.find({ 
     groupId: group._id,
-    'assignments.userId': req.user!._id,
+    'assignments.userId': req.user?._id,
     'assignments.weekStart': startOfWeek
   })
     .populate('createdBy', 'name email')
@@ -214,8 +211,8 @@ router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Update assignment status
-  const assignment = task.assignments.find((assignment: any) => 
-    assignment.userId.toString() === req.user!._id.toString() &&
+  const assignment = task.assignments.find((assignment: { userId: mongoose.Types.ObjectId; weekStart: Date }) => 
+    assignment.userId.toString() === req.user?._id.toString() &&
     assignment.weekStart.getTime() === startOfWeek.getTime()
   );
 
@@ -272,7 +269,7 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
 
   // Get user's group
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
   if (!group) {
@@ -283,8 +280,8 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Check if user can assign tasks (task creator or group owner)
-  const canAssign = task.createdBy.toString() === req.user!._id.toString() || 
-                   group.owner.toString() === req.user!._id.toString();
+  const canAssign = task.createdBy.toString() === req.user?._id.toString() || 
+                   group.owner.toString() === req.user?._id.toString();
 
   if (!canAssign) {
     return res.status(403).json({
@@ -299,14 +296,14 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
   startOfWeek.setHours(0, 0, 0, 0);
 
   // Remove existing assignment for this week
-  task.assignments = task.assignments.filter((assignment: any) => 
+  task.assignments = task.assignments.filter((assignment: { weekStart: Date }) => 
     assignment.weekStart.getTime() !== startOfWeek.getTime()
   );
   
   // Add new assignments
   userIds.forEach((userId: string) => {
     task.assignments.push({
-      userId: userId as any,
+      userId: new mongoose.Types.ObjectId(userId),
       weekStart: startOfWeek,
       status: 'incomplete'
     });
@@ -332,7 +329,7 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
 router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) => {
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   }).populate('members.userId', 'name email');
 
   if (!group) {
@@ -375,14 +372,13 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     }
 
     // Check if task already has assignments for this week
-    const hasAssignmentForThisWeek = task.assignments.some((assignment: any) => 
+    const hasAssignmentForThisWeek = task.assignments.some((assignment: { weekStart: Date }) => 
       assignment.weekStart.getTime() === startOfWeek.getTime()
     );
     
     // Skip if already assigned for this week
     if (hasAssignmentForThisWeek) {
-      console.log(`[${new Date().toISOString()}] Skipping task "${task.name}" - already assigned for this week`);
-      continue;
+          continue;
     }
 
     // Use the requiredPeople field to determine how many people to assign
@@ -394,8 +390,7 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     const shuffledMembers = [...allMembers].sort(() => Math.random() - 0.5);
     const selectedMembers = shuffledMembers.slice(0, actualNumAssignees);
 
-    console.log(`[${new Date().toISOString()}] Auto-assigning task "${task.name}" (required: ${requiredPeople}) to ${selectedMembers.length} members`);
-
+  
     // Ensure requiredPeople is set (fallback for existing tasks)
     if (!task.requiredPeople) {
       task.requiredPeople = 1;
@@ -443,7 +438,7 @@ router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) 
 
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
   if (!group) {
@@ -484,7 +479,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 
   // Only task creator or group owner can delete
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
   if (!group) {
@@ -494,8 +489,8 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  const canDelete = task.createdBy.toString() === req.user!._id.toString() || 
-                   group.owner.toString() === req.user!._id.toString();
+  const canDelete = task.createdBy.toString() === req.user?._id.toString() || 
+                   group.owner.toString() === req.user?._id.toString();
 
   if (!canDelete) {
     return res.status(403).json({
@@ -528,7 +523,7 @@ router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
 
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
+    'members.userId': req.user?._id 
   });
 
   if (!group) {

@@ -6,11 +6,20 @@
 
 import { AuthService } from '../../services/auth';
 import { UserModel } from '../../models/User';
+import mongoose from 'mongoose';
 
 describe('AuthService - No Mocking', () => {
   beforeEach(async () => {
     // Clean up any existing users
-    await UserModel.deleteMany({});
+    // Check if connection is ready before attempting to delete
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await UserModel.deleteMany({});
+      } catch (error) {
+        // Ignore errors - collection might not exist yet or already cleaned
+        // The afterEach in setup.ts will handle cleanup
+      }
+    }
   });
 
   /**

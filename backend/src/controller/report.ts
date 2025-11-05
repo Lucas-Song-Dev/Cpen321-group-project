@@ -4,16 +4,17 @@ import { UserModel } from '../models/User';
 import Message from '../models/Message';
 
 export const UserReporter = {
-  report: async (req: Request, res: Response) => {
+  report: async (req: Request, res: Response): Promise<void> => {
     try {
       const { reportedUserId, reporterId, groupId, reason } = req.body;
 
       // Validate input
       if (!reportedUserId || !reporterId || !groupId) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'Missing required fields'
         });
+        return;
       }
 
       // Check if users exist
@@ -21,15 +22,16 @@ export const UserReporter = {
       const reporter = await UserModel.findById(reporterId);
 
       if (!reportedUser || !reporter) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           message: 'User not found'
         });
+        return;
       }
 
       // Fetch all messages from the reported user in this group
       const messages = await Message.find({
-        groupId: groupId,
+        groupId,
         senderId: reportedUserId,
         type: 'text'
       })
@@ -37,13 +39,13 @@ export const UserReporter = {
         .limit(100)
         .lean();
 
-      console.log(`Found ${messages.length} messages from user ${reportedUserId}`);
-
+    
       if (messages.length === 0) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: 'No messages found for this user'
         });
+        return;
       }
 
       // const openai = new OpenAI({
@@ -52,7 +54,7 @@ export const UserReporter = {
       // });
 
       // Prepare messages for OpenAI analysis
-      const messageTexts = messages.map((msg: any) => msg.content).join('\n');
+      // const messageTexts = messages.map((msg: { content: string }) => msg.content).join('\n');
 
       // Call OpenAI to analyze messages (disabled for now)
       // const completion = await openai.chat.completions.create({
@@ -104,27 +106,24 @@ export const UserReporter = {
         reportedUser.isOffensive = true;
         await reportedUser.save();
         actionTaken = 'User has been marked as offensive';
-        
-        console.log(`User ${reportedUserId} marked as offensive`);
-      } else {
-        console.log(`User ${reportedUserId} not marked as offensive - messages deemed acceptable`);
       }
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Report submitted successfully',
         data: {
           isOffensive: analysis.isOffensive,
-          actionTaken: actionTaken
+          actionTaken
         }
       });
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error processing report:', error);
-      return res.status(500).json({
+      const err = error as { message?: string };
+      res.status(500).json({
         success: false,
         message: 'Failed to process report',
-        error: error.message
+        error: err.message
       });
     }
   }
