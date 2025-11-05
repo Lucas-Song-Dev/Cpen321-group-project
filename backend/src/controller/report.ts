@@ -4,7 +4,7 @@ import { UserModel } from '../models/User';
 import Message from '../models/Message';
 
 export const UserReporter = {
-  report: async (req: Request, res: Response): Promise<void> => {
+  report: async (req: Request, res: Response): Promise<any> => {
     try {
       const { reportedUserId, reporterId, groupId, reason } = req.body;
 

@@ -135,11 +135,12 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
   // Broadcast message via Socket.IO
   try {
     const io = socketHandler.getIO();
+    const populatedSender = message.senderId as any;
     const messageData = {
       id: message._id.toString(),
       content: message.content,
       senderId: message.senderId._id.toString(),
-      senderName: (message.senderId as unknown).name || 'User',
+      senderName: populatedSender.name || 'User',
       groupId,
       timestamp: message.createdAt.getTime(),
       type: message.type
@@ -312,7 +313,7 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
   }
 
   // Add vote - remove existing vote from this user first
-  message.pollData.votes = message.pollData.votes.filter((vote: unknown) => 
+  message.pollData.votes = message.pollData.votes.filter((vote: any) => 
     vote.userId.toString() !== req.user?._id.toString()
   );
   

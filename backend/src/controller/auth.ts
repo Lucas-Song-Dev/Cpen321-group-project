@@ -15,7 +15,7 @@ async function verifyGoogleToken(idToken: string) {
 }
 
 export const AuthController = {
-  signup: async (req: Request, res: Response): Promise<void> => {
+  signup: async (req: Request, res: Response): Promise<any> => {
     try {
       //for debugging
       // console.log('Signup request body:', req.body);
@@ -32,7 +32,7 @@ export const AuthController = {
     }
   },
 
-  login: async (req: Request, res: Response): Promise<void> => {
+  login: async (req: Request, res: Response): Promise<any> => {
     try {
       const { token } = req.body;
       if (!token) return res.status(400).json({ success: false, message: "Missing ID token" });

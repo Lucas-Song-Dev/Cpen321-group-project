@@ -84,14 +84,14 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     startOfWeek.setHours(0, 0, 0, 0);
 
     // Remove existing assignment for this week
-    task.assignments = task.assignments.filter((assignment: unknown) => 
+    task.assignments = task.assignments.filter((assignment: any) => 
       assignment.weekStart.getTime() !== startOfWeek.getTime()
     );
     
     // Assign to specified users
     assignedUserIds.forEach((userId: string) => {
       task.assignments.push({
-        userId: userId as unknown,
+        userId: userId as any,
         weekStart: startOfWeek,
         status: 'incomplete'
       });
@@ -210,7 +210,7 @@ router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Update assignment status
-  const assignment = task.assignments.find((assignment: unknown) => 
+  const assignment = task.assignments.find((assignment: any) => 
     assignment.userId.toString() === req.user?._id.toString() &&
     assignment.weekStart.getTime() === startOfWeek.getTime()
   );
@@ -371,7 +371,7 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     }
 
     // Check if task already has assignments for this week
-    const hasAssignmentForThisWeek = task.assignments.some((assignment: unknown) => 
+    const hasAssignmentForThisWeek = task.assignments.some((assignment: any) => 
       assignment.weekStart.getTime() === startOfWeek.getTime()
     );
     

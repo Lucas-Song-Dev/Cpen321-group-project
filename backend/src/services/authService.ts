@@ -121,7 +121,7 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
 };
 
 // Verify JWT token
-export const verifyJWT = (token: string): unknown => {
+export const verifyJWT = (token: string): any => {
   try {
     return jwt.verify(token, process.env.JWT_SECRET!);
   } catch (error) {

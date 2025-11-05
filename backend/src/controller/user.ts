@@ -3,7 +3,7 @@ import { UserModel } from '../models/User';
 import Group from '../models/Group';
 
 export const UserController = {
-  setProfile: async (req: Request, res: Response): Promise<void> => {
+  setProfile: async (req: Request, res: Response): Promise<any> => {
     const { email, dob, gender } = req.body;
 
     //validate inputs
@@ -60,7 +60,7 @@ export const UserController = {
   },
 
   //for optional profile settings/updates
-  updateProfile: async (req: Request, res: Response): Promise<void> => {
+  updateProfile: async (req: Request, res: Response): Promise<any> => {
     const { email, bio, profilePicture, livingPreferences } = req.body;
 
     console.log('calling updateOptionalProfile');
@@ -162,7 +162,7 @@ export const UserController = {
     }
   },
 
-  deleteUser: async (req: Request, res: Response): Promise<void> => {
+  deleteUser: async (req: Request, res: Response): Promise<any> => {
     const timestamp = new Date().toISOString();
       
     try {

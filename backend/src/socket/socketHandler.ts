@@ -31,7 +31,7 @@ export class SocketHandler {
       socket.on('authenticate', (token: string) => {
         try {
           console.log('[SOCKET] Authenticating socket with token...');
-          const decoded = jwt.verify(token, config.JWT_SECRET) as unknown;
+          const decoded = jwt.verify(token, config.JWT_SECRET) as any;
                   socket.userId = decoded.id || decoded.userId; // Support both 'id' and 'userId' in JWT payload
           if (socket.userId) {
             this.connectedUsers.set(socket.userId, socket.id);
@@ -96,7 +96,7 @@ export class SocketHandler {
       });
 
       // Send message
-      socket.on('send-message', (data: unknown) => {
+      socket.on('send-message', (data: any) => {
         if (!socket.userId || !socket.groupId) {
           socket.emit('error', 'User not in a group');
           return;
@@ -117,7 +117,7 @@ export class SocketHandler {
             });
 
       // Create poll
-      socket.on('create-poll', (data: unknown) => {
+      socket.on('create-poll', (data: any) => {
         if (!socket.userId || !socket.groupId) {
           socket.emit('error', 'User not in a group');
           return;
@@ -141,7 +141,7 @@ export class SocketHandler {
             });
 
       // Vote on poll
-      socket.on('vote-poll', (data: unknown) => {
+      socket.on('vote-poll', (data: any) => {
         if (!socket.userId) {
           socket.emit('error', 'User not authenticated');
           return;

@@ -5,7 +5,7 @@ import { UserModel } from "../models/User";
 
 // Request interface is already defined in types/express.d.ts
 
-export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
   const timestamp = new Date().toISOString();
   
   const authHeader = req.headers.authorization;
@@ -25,7 +25,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       }
       
       req.user = {
-        _id: user._id.toString(),
+        _id: (user._id as any).toString(),
         email: user.email,
         name: user.name,
         groupName: user.groupName
@@ -42,7 +42,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       }
       
       req.user = {
-        _id: user._id.toString(),
+        _id: (user._id as any).toString(),
         email: user.email,
         name: user.name,
         groupName: user.groupName
@@ -53,7 +53,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     }
     
     // Handle real JWT tokens
-      const decoded = jwt.verify(token, config.JWT_SECRET) as unknown;
+      const decoded = jwt.verify(token, config.JWT_SECRET) as any;
       
     // Fetch user from database to get complete user information
       const user = await UserModel.findById(decoded.id);
