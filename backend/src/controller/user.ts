@@ -23,7 +23,7 @@ export const UserController = {
       }
 
       //enforce immutability
-      if (user.dob || user.gender) {
+      if (user.dob ?? user.gender) {
         return res.status(400).json({ success: false, message: 'DOB and gender cannot be changed once set' });
       }
 
@@ -50,7 +50,7 @@ export const UserController = {
           dob: user.dob,
           gender: user.gender,
           profileComplete: user.profileComplete,
-          groupName: user.groupName || null,
+          groupName: user.groupName ?? null,
         },
       });
     } catch (err) {
@@ -182,20 +182,20 @@ export const UserController = {
       if (group) {
         console.log(`[${timestamp}] DELETE USER: Removing user from group ${group._id}`);
         // Filter out the user from members
-        group.members = group.members.filter((m: any) => m.userId.toString() !== userId.toString());
+        group.members = group.members.filter((m: unknown) => m.userId.toString() !== userId.toString());
 
         // If the user was the owner, transfer ownership or handle empty group
         if (group.owner && group.owner.toString() === userId.toString()) {
           if (group.members.length > 0) {
             // Find the oldest member (earliest join date) to transfer ownership to
-            const oldestMember = group.members.reduce((oldest: any, current: any) => {
+            const oldestMember = group.members.reduce((oldest: unknown, current: any) => {
               const oldestDate = new Date(oldest.joinDate);
               const currentDate = new Date(current.joinDate);
               return currentDate < oldestDate ? current : oldest;
             });
             
             const newOwner = oldestMember.userId;
-            group.owner = newOwner as any;
+            group.owner = newOwner as unknown;
             console.log(`[${timestamp}] DELETE USER: Transferred ownership to oldest member ${newOwner} (joined: ${oldestMember.joinDate})`);
             
             // Update the new owner's groupName to match the group

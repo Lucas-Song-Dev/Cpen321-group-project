@@ -42,7 +42,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   }
   
   // Cannot rate yourself
-  if (ratedUserId === req.user!._id.toString()) {
+  if (ratedUserId === req.user?._id.toString()) {
     return res.status(400).json({
       success: false,
       message: 'You cannot rate yourself'
@@ -59,7 +59,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   }
   
   const ratedUserMember = group.members.find(m => m.userId.toString() === ratedUserId);
-  const raterMember = group.members.find(m => m.userId.toString() === req.user!._id.toString());
+  const raterMember = group.members.find(m => m.userId.toString() === req.user?._id.toString());
   
   if (!ratedUserMember || !raterMember) {
     return res.status(403).json({
@@ -102,21 +102,21 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   // Check if rating already exists (for logging purposes)
   const existingRating = await Rating.findOne({
     ratedUserId: new mongoose.Types.ObjectId(ratedUserId),
-    raterUserId: new mongoose.Types.ObjectId(req.user!._id),
+    raterUserId: new mongoose.Types.ObjectId(req.user?._id),
     groupId: new mongoose.Types.ObjectId(groupId)
   });
   
   if (existingRating) {
     console.log(`Updating existing rating: ${existingRating._id} (old rating: ${existingRating.rating}, new rating: ${rating})`);
   } else {
-    console.log(`Creating new rating for user ${ratedUserId} by ${req.user!._id} in group ${groupId}`);
+    console.log(`Creating new rating for user ${ratedUserId} by ${req.user?._id} in group ${groupId}`);
   }
   
   // Create or update rating (upsert ensures one rating per user pair per group)
   const newRating = await Rating.findOneAndUpdate(
     {
       ratedUserId: new mongoose.Types.ObjectId(ratedUserId),
-      raterUserId: new mongoose.Types.ObjectId(req.user!._id),
+      raterUserId: new mongoose.Types.ObjectId(req.user?._id),
       groupId: new mongoose.Types.ObjectId(groupId)
     },
     {

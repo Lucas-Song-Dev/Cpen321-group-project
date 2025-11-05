@@ -20,10 +20,10 @@ const defaultConfig = {
 
 //create configuration by merging defaults with environment variables
 export const config = {
-  PORT: parseInt(process.env.PORT || defaultConfig.PORT.toString(), 10),
-  MONGODB_URI: process.env.MONGODB_URI || defaultConfig.MONGODB_URI,
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || defaultConfig.GOOGLE_CLIENT_ID,
-  JWT_SECRET: process.env.JWT_SECRET || defaultConfig.JWT_SECRET
+  PORT: parseInt(process.env.PORT ?? defaultConfig.PORT.toString(), 10),
+  MONGODB_URI: process.env.MONGODB_URI ?? defaultConfig.MONGODB_URI,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? defaultConfig.GOOGLE_CLIENT_ID,
+  JWT_SECRET: process.env.JWT_SECRET ?? defaultConfig.JWT_SECRET
 };
 
 // Validate required environment variables in production

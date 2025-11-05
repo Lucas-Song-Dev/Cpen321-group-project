@@ -67,7 +67,7 @@ export const generateTokens = (user: IUser): AuthTokens => {
   //   expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   // });
 
-  const secret = process.env.JWT_SECRET as string;
+  const secret = process.env.JWT_SECRET ?? 'fallback-secret-key';
   const accessToken = jwt.sign(payload, secret, { expiresIn: '1h' });
 
   return { accessToken };
@@ -126,7 +126,7 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
 };
 
 // Verify JWT token
-export const verifyJWT = (token: string): any => {
+export const verifyJWT = (token: string): unknown => {
   try {
     return jwt.verify(token, process.env.JWT_SECRET!);
   } catch (error) {

@@ -48,7 +48,7 @@ router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response
 
   console.log(`[${timestamp}] CHAT GET MESSAGES: Group found, checking membership`);
   const isMember = group.members.some(member => 
-    member.userId.toString() === req.user!._id.toString()
+    member.userId.toString() === req.user?._id.toString()
   );
 
   if (!isMember) {
@@ -130,7 +130,7 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
   }
 
   const isMember = group.members.some(member => 
-    member.userId.toString() === req.user!._id.toString()
+    member.userId.toString() === req.user?._id.toString()
   );
 
   if (!isMember) {
@@ -143,7 +143,7 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
   // Create message
   const message = await Message.create({
     groupId,
-    senderId: req.user!._id,
+    senderId: req.user?._id,
     content: content.trim(),
     type: 'text'
   });
@@ -158,8 +158,8 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
       id: message._id.toString(),
       content: message.content,
       senderId: message.senderId._id.toString(),
-      senderName: (message.senderId as any).name || 'User',
-      groupId: groupId,
+      senderName: (message.senderId as unknown).name || 'User',
+      groupId,
       timestamp: message.createdAt.getTime(),
       type: message.type
     };
@@ -214,7 +214,7 @@ router.post('/:groupId/poll', asyncHandler(async (req: Request, res: Response) =
   }
 
   const isMember = group.members.some(member => 
-    member.userId.toString() === req.user!._id.toString()
+    member.userId.toString() === req.user?._id.toString()
   );
 
   if (!isMember) {
@@ -230,7 +230,7 @@ router.post('/:groupId/poll', asyncHandler(async (req: Request, res: Response) =
 
   const message = await Message.create({
     groupId,
-    senderId: req.user!._id,
+    senderId: req.user?._id,
     content: question.trim(),
     type: 'poll',
     pollData: {
@@ -299,7 +299,7 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
   }
 
   const isMember = group.members.some(member => 
-    member.userId.toString() === req.user!._id.toString()
+    member.userId.toString() === req.user?._id.toString()
   );
 
   if (!isMember) {
@@ -326,13 +326,13 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
   }
 
   // Add vote - remove existing vote from this user first
-  message.pollData.votes = message.pollData.votes.filter((vote: any) => 
-    vote.userId.toString() !== req.user!._id.toString()
+  message.pollData.votes = message.pollData.votes.filter((vote: unknown) => 
+    vote.userId.toString() !== req.user?._id.toString()
   );
   
   // Add new vote
   message.pollData.votes.push({
-    userId: req.user!._id as any,
+    userId: req.user?._id as any,
     option,
     timestamp: new Date()
   });
@@ -372,7 +372,7 @@ router.delete('/:groupId/message/:messageId', asyncHandler(async (req: Request, 
   }
 
   // Only the sender can delete their message
-  if (message.senderId.toString() !== req.user!._id.toString()) {
+  if (message.senderId.toString() !== req.user?._id.toString()) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. You can only delete your own messages.'

@@ -2,7 +2,7 @@ import { config } from "./config";  // Import config first to ensure env variabl
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import mongoose from "mongoose";
+import mongoose, { ConnectionStates } from "mongoose";
 import { createServer } from "http";
 import { authRouter } from "./routes/auth";
 import { userRouter } from "./routes/user";
@@ -55,14 +55,14 @@ app.use((req, res, next) => {
 
 // Health check endpoint (no auth required)
 app.get("/api/health", (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  const dbStatus = mongoose.connection.readyState === ConnectionStates.connected ? 'connected' : 'disconnected';
   
   res.status(200).json({ 
     message: 'RoomSync Backend is running!', 
     timestamp: new Date().toISOString(),
     database: dbStatus,
     version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV ?? 'development'
   });
 });
 
@@ -94,7 +94,7 @@ mongoose
     console.log("Database name:", mongoose.connection.name);
     console.log("Database host:", mongoose.connection.host);
   })
-  .catch((err) => {
+  .catch((err: unknown) => {
     console.error("MongoDB connection error details:");
     console.error("Error name:", err.name);
     console.error("Error message:", err.message);
@@ -120,7 +120,7 @@ mongoose.connection.on('disconnected', () => {
         strict: true,
         deprecationErrors: true,
       }
-    }).catch(err => {
+    }).catch((err: unknown) => {
       console.error('Reconnection failed:', err.message);
     });
   }, 5000);
