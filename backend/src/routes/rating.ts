@@ -97,7 +97,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const timeSpentMinutes = timeSpentDays * 24 * 60; // Convert to minutes
   
 
-  // Check if rating already exists (for logging purposes)
+  // Check if rating already exists (affects status code and logging)
   const existingRating = await Rating.findOne({
     ratedUserId: new mongoose.Types.ObjectId(ratedUserId),
     raterUserId: new mongoose.Types.ObjectId(req.user?._id),
@@ -130,9 +130,10 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     { averageRating: Math.round(ratingStats.averageRating * 10) / 10 }
   );
   
-  res.status(201).json({
+  const statusCode = existingRating ? 200 : 201;
+  res.status(statusCode).json({
     success: true,
-    message: 'Rating submitted successfully',
+    message: existingRating ? 'Rating updated successfully' : 'Rating submitted successfully',
     data: newRating
   });
 }));
