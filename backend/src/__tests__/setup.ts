@@ -24,8 +24,25 @@ afterEach(async () => {
 
 // Teardown after all tests
 afterAll(async () => {
-  await mongoose.connection.dropDatabase();
-  await mongoose.connection.close();
-  await mongoServer.stop();
+  try {
+    // Only drop database if connection is ready
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.dropDatabase();
+    }
+    // Close connection if it's open
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+    }
+  } catch (error) {
+    // Ignore errors during teardown to prevent test failures
+    console.warn('Error during test teardown:', error);
+  }
+  
+  try {
+    await mongoServer.stop();
+  } catch (error) {
+    // Ignore errors stopping mongo server
+    console.warn('Error stopping mongo server:', error);
+  }
 });
 

@@ -29,6 +29,26 @@ describe('Health Check API Tests - With Mocking', () => {
     jest.clearAllMocks();
   });
 
+  afterEach(() => {
+    // Restore any mongoose connection property mocks to prevent teardown issues
+    try {
+      // Try to restore readyState if it was mocked
+      // Delete the property descriptor we might have added
+      const descriptor = Object.getOwnPropertyDescriptor(mongoose.connection, 'readyState');
+      if (descriptor && descriptor.configurable) {
+        // Try to delete and let mongoose restore the original
+        try {
+          delete (mongoose.connection as any).readyState;
+        } catch (e) {
+          // If delete fails, try to redefine with original getter
+          // This is a best-effort restoration
+        }
+      }
+    } catch (error) {
+      // Ignore restore errors - the property will be restored by mongoose
+    }
+  });
+
   // ===================================================================
   // GET /api/health - with mocking
   // ===================================================================
@@ -44,22 +64,33 @@ describe('Health Check API Tests - With Mocking', () => {
     test('should return health status when database is disconnected', async () => {
       // Mock mongoose connection state to disconnected
       const originalReadyState = Object.getOwnPropertyDescriptor(mongoose.connection, 'readyState');
-      Object.defineProperty(mongoose.connection, 'readyState', {
-        get: () => 0, // disconnected
-        configurable: true
-      });
+      try {
+        Object.defineProperty(mongoose.connection, 'readyState', {
+          get: () => 0, // disconnected
+          configurable: true
+        });
 
-      const response = await request(app)
-        .get('/api/health');
+        const response = await request(app)
+          .get('/api/health');
 
-      expect(response.status).toBe(200);
-      expect(response.body.message).toBe('RoomSync Backend is running!');
-      expect(response.body.database).toBe('disconnected');
-      expect(response.body.version).toBe('1.0.0');
-
-      // Restore original readyState
-      if (originalReadyState) {
-        Object.defineProperty(mongoose.connection, 'readyState', originalReadyState);
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('RoomSync Backend is running!');
+        expect(response.body.database).toBe('disconnected');
+        expect(response.body.version).toBe('1.0.0');
+      } finally {
+        // Always try to restore original readyState
+        if (originalReadyState) {
+          try {
+            Object.defineProperty(mongoose.connection, 'readyState', originalReadyState);
+          } catch (e) {
+            // If restore fails, delete the property to let mongoose restore it
+            try {
+              delete (mongoose.connection as any).readyState;
+            } catch (e2) {
+              // Ignore - mongoose will restore it
+            }
+          }
+        }
       }
     });
 
@@ -74,22 +105,33 @@ describe('Health Check API Tests - With Mocking', () => {
     test('should return health status when database is connected', async () => {
       // Mock mongoose connection state to connected
       const originalReadyState = Object.getOwnPropertyDescriptor(mongoose.connection, 'readyState');
-      Object.defineProperty(mongoose.connection, 'readyState', {
-        get: () => 1, // connected
-        configurable: true
-      });
+      try {
+        Object.defineProperty(mongoose.connection, 'readyState', {
+          get: () => 1, // connected
+          configurable: true
+        });
 
-      const response = await request(app)
-        .get('/api/health');
+        const response = await request(app)
+          .get('/api/health');
 
-      expect(response.status).toBe(200);
-      expect(response.body.message).toBe('RoomSync Backend is running!');
-      expect(response.body.database).toBe('connected');
-      expect(response.body.version).toBe('1.0.0');
-
-      // Restore original readyState
-      if (originalReadyState) {
-        Object.defineProperty(mongoose.connection, 'readyState', originalReadyState);
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('RoomSync Backend is running!');
+        expect(response.body.database).toBe('connected');
+        expect(response.body.version).toBe('1.0.0');
+      } finally {
+        // Always try to restore original readyState
+        if (originalReadyState) {
+          try {
+            Object.defineProperty(mongoose.connection, 'readyState', originalReadyState);
+          } catch (e) {
+            // If restore fails, delete the property to let mongoose restore it
+            try {
+              delete (mongoose.connection as any).readyState;
+            } catch (e2) {
+              // Ignore - mongoose will restore it
+            }
+          }
+        }
       }
     });
 
@@ -155,30 +197,41 @@ describe('Health Check API Tests - With Mocking', () => {
     test('should handle database connection state changes', async () => {
       // First call - disconnected
       const originalReadyState = Object.getOwnPropertyDescriptor(mongoose.connection, 'readyState');
-      let callCount = 0;
-      Object.defineProperty(mongoose.connection, 'readyState', {
-        get: () => {
-          callCount++;
-          return callCount === 1 ? 0 : 1; // First call disconnected, subsequent connected
-        },
-        configurable: true
-      });
+      try {
+        let callCount = 0;
+        Object.defineProperty(mongoose.connection, 'readyState', {
+          get: () => {
+            callCount++;
+            return callCount === 1 ? 0 : 1; // First call disconnected, subsequent connected
+          },
+          configurable: true
+        });
 
-      const response1 = await request(app)
-        .get('/api/health');
+        const response1 = await request(app)
+          .get('/api/health');
 
-      expect(response1.status).toBe(200);
-      expect(response1.body.database).toBe('disconnected');
+        expect(response1.status).toBe(200);
+        expect(response1.body.database).toBe('disconnected');
 
-      const response2 = await request(app)
-        .get('/api/health');
+        const response2 = await request(app)
+          .get('/api/health');
 
-      expect(response2.status).toBe(200);
-      expect(response2.body.database).toBe('connected');
-
-      // Restore original readyState
-      if (originalReadyState) {
-        Object.defineProperty(mongoose.connection, 'readyState', originalReadyState);
+        expect(response2.status).toBe(200);
+        expect(response2.body.database).toBe('connected');
+      } finally {
+        // Always try to restore original readyState
+        if (originalReadyState) {
+          try {
+            Object.defineProperty(mongoose.connection, 'readyState', originalReadyState);
+          } catch (e) {
+            // If restore fails, delete the property to let mongoose restore it
+            try {
+              delete (mongoose.connection as any).readyState;
+            } catch (e2) {
+              // Ignore - mongoose will restore it
+            }
+          }
+        }
       }
     });
   });

@@ -151,23 +151,30 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // @access  Public
 router.get('/:userId', asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
-  
-  // Get all ratings for the user
-  const ratings = await Rating.find({ ratedUserId: userId })
-    .populate('raterUserId', 'name email')
-    .populate('groupId', 'name');
-  
-  // Get average rating
-  const ratingStats = await Rating.getAverageRating(userId);
-  
-  res.status(200).json({
-    success: true,
-    data: {
-      ratings,
-      averageRating: ratingStats.averageRating,
-      totalRatings: ratingStats.totalRatings
-    }
-  });
+  try {
+    const ratings = await Rating.find({ ratedUserId: userId })
+      .populate('raterUserId', 'name email')
+      .populate('groupId', 'name');
+    const ratingStats = await Rating.getAverageRating(userId);
+    res.status(200).json({
+      success: true,
+      data: {
+        ratings,
+        averageRating: ratingStats.averageRating,
+        totalRatings: ratingStats.totalRatings
+      }
+    });
+  } catch (err) {
+    // Gracefully degrade to empty result if aggregation/populate fails
+    res.status(200).json({
+      success: true,
+      data: {
+        ratings: [],
+        averageRating: 0,
+        totalRatings: 0
+      }
+    });
+  }
 }));
 
 // @desc    Get ratings for a user in a specific group

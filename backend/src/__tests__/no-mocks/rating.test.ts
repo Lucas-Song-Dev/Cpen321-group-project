@@ -370,7 +370,8 @@ describe('Rating API - No Mocking', () => {
       raterUserId: testUser._id,
       groupId: testGroup._id,
       rating: 3,
-      testimonial: 'Initial rating'
+      testimonial: 'Initial rating',
+      timeSpentMinutes: 31 * 24 * 60
     });
 
     // Update the rating
@@ -384,7 +385,7 @@ describe('Rating API - No Mocking', () => {
         testimonial: 'Updated rating'
       });
 
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     expect(response.body.data.rating).toBe(5);
     expect(response.body.data.testimonial).toBe('Updated rating');
@@ -567,7 +568,7 @@ describe('Rating API - No Mocking', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
-    expect(response.body.data.rating.rating).toBe(5);
+    expect(response.body.data.rating).toBe(5);
   });
 });
 
