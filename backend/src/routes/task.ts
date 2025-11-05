@@ -203,17 +203,13 @@ router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
 
-  // Find task and update assignment
-  const task = await Task.findOne({
-    _id: id,
-    'assignments.userId': req.user!._id,
-    'assignments.weekStart': startOfWeek
-  });
+  // Find task first
+  const task = await Task.findById(id);
 
   if (!task) {
     return res.status(404).json({
       success: false,
-      message: 'Task not found or not assigned to you'
+      message: 'Task not found'
     });
   }
 
