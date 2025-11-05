@@ -277,9 +277,6 @@ fun AppNavigation() {
                         onDeleteAccount = {
                             println("Navigation: Delete account called")
                             authViewModel.deleteUser()
-                        },
-                        onEditProfile = {
-                            navController.navigate(NavRoutes.OPTIONAL_PROFILE)
                         }
                     )
                 }
