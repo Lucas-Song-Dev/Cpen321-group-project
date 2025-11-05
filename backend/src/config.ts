@@ -12,8 +12,7 @@ const defaultConfig = {
 // //try to load environment variables
 // try {
 //   const envPath = path.resolve(process.cwd(), '.env');
-//   console.log('Loading .env file from:', envPath);
-//   dotenv.config({ path: envPath });
+// //   dotenv.config({ path: envPath });
 // } catch (error) {
 //   console.warn('Error loading .env file:', error);
 // }
@@ -38,11 +37,6 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Log the final configuration (excluding sensitive values)
-console.log('Final configuration:', {
-  PORT: config.PORT,
-  GOOGLE_CLIENT_ID: config.GOOGLE_CLIENT_ID ? '[SET]' : '[NOT SET]',
-  JWT_SECRET: config.JWT_SECRET ? '[SET]' : '[NOT SET]'
-});
 
 // dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 

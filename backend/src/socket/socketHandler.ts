@@ -26,37 +26,31 @@ export class SocketHandler {
 
   private setupSocketHandlers() {
     this.io.on('connection', (socket: AuthenticatedSocket) => {
-      console.log(`Socket connected: ${socket.id}`);
-
+    
       // Authenticate user
       socket.on('authenticate', (token: string) => {
         try {
           console.log('[SOCKET] Authenticating socket with token...');
           const decoded = jwt.verify(token, config.JWT_SECRET) as unknown;
-          console.log('[SOCKET] Token decoded:', decoded);
-          socket.userId = decoded.id || decoded.userId; // Support both 'id' and 'userId' in JWT payload
+                  socket.userId = decoded.id || decoded.userId; // Support both 'id' and 'userId' in JWT payload
           if (socket.userId) {
             this.connectedUsers.set(socket.userId, socket.id);
-            console.log(`[SOCKET] User authenticated: ${socket.userId}`);
-            // Emit authentication success event
+                      // Emit authentication success event
             socket.emit('authenticated', { success: true, userId: socket.userId });
           } else {
             console.log('[SOCKET] No userId found in decoded token');
             socket.emit('authenticated', { success: false, error: 'No userId in token' });
           }
         } catch (error) {
-          console.log('[SOCKET] Authentication failed:', error);
-          socket.emit('authenticated', { success: false, error: 'Invalid token' });
+                  socket.emit('authenticated', { success: false, error: 'Invalid token' });
           socket.disconnect();
         }
       });
 
       // Join group
       socket.on('join-group', (groupId: string) => {
-        console.log(`[SOCKET] Received join-group request for group: ${groupId}, socket.userId: ${socket.userId}`);
-        if (!socket.userId) {
-          console.log('[SOCKET] Socket not authenticated, cannot join group');
-          socket.emit('error', 'User not authenticated');
+              if (!socket.userId) {
+                  socket.emit('error', 'User not authenticated');
           return;
         }
 
@@ -68,9 +62,6 @@ export class SocketHandler {
         }
         this.groupMembers.get(groupId)?.add(socket.userId);
 
-        console.log(`[SOCKET] User ${socket.userId} joined group ${groupId}`);
-        console.log(`[SOCKET] Total members in group ${groupId}: ${this.groupMembers.get(groupId)?.size}`);
-        console.log(`[SOCKET] Socket rooms for this socket:`, Array.from(socket.rooms));
         
         // Notify other group members
         socket.to(groupId).emit('user-joined', {
@@ -95,8 +86,7 @@ export class SocketHandler {
           }
         }
 
-        console.log(`User ${socket.userId} left group ${groupId}`);
-        
+              
         // Notify other group members
         socket.to(groupId).emit('user-left', {
           userId: socket.userId,
@@ -124,8 +114,7 @@ export class SocketHandler {
 
         // Broadcast to all group members
         this.io.to(socket.groupId).emit('new-message', messageData);
-        console.log(`Message sent in group ${socket.groupId}: ${data.content}`);
-      });
+            });
 
       // Create poll
       socket.on('create-poll', (data: unknown) => {
@@ -149,8 +138,7 @@ export class SocketHandler {
 
         // Broadcast to all group members
         this.io.to(socket.groupId).emit('new-message', pollData);
-        console.log(`Poll created in group ${socket.groupId}: ${data.question}`);
-      });
+            });
 
       // Vote on poll
       socket.on('vote-poll', (data: unknown) => {
@@ -168,8 +156,7 @@ export class SocketHandler {
 
         // Broadcast poll update to all group members
         this.io.to(socket.groupId ?? '').emit('poll-update', voteData);
-        console.log(`Vote cast on poll ${data.pollId}: ${data.option}`);
-      });
+            });
 
       // Handle disconnect
       socket.on('disconnect', () => {
@@ -193,8 +180,7 @@ export class SocketHandler {
             });
           }
         }
-        console.log(`Socket disconnected: ${socket.id}`);
-      });
+            });
     });
   }
 

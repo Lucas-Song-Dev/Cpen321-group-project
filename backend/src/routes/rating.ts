@@ -91,13 +91,11 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     });
   }
   
-  console.log(`Rating validation: Rated user in group for ${ratedUserDays} days, Rater in group for ${raterDays} days`);
 
   // Calculate time spent together (minimum of both users' durations)
   const timeSpentDays = Math.min(ratedUserDays, raterDays);
   const timeSpentMinutes = timeSpentDays * 24 * 60; // Convert to minutes
   
-  console.log(`Auto-calculated time spent together: ${timeSpentDays} days (${timeSpentMinutes} minutes)`);
 
   // Check if rating already exists (for logging purposes)
   const existingRating = await Rating.findOne({
@@ -107,10 +105,8 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   });
   
   if (existingRating) {
-    console.log(`Updating existing rating: ${existingRating._id} (old rating: ${existingRating.rating}, new rating: ${rating})`);
-  } else {
-    console.log(`Creating new rating for user ${ratedUserId} by ${req.user?._id} in group ${groupId}`);
-  }
+    } else {
+    }
   
   // Create or update rating (upsert ensures one rating per user pair per group)
   const newRating = await Rating.findOneAndUpdate(
