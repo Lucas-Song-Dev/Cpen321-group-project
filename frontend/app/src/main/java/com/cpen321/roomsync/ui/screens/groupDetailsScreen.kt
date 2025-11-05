@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -1040,14 +1041,17 @@ fun RatingDialog(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp),
+                        .height(120.dp)
+                        .testTag("testimonialInput"),
                     placeholder = { Text("Share your experience as a roommate...") },
                     maxLines = 5,
                     supportingText = {
                         Text(
                             text = "${testimonial.length}/500",
                             fontSize = 12.sp,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("charCounter"),
                             textAlign = TextAlign.End
                         )
                     }
@@ -1068,7 +1072,8 @@ fun RatingDialog(
                         onSubmit(selectedRating, testimonial.trim())
                     }
                 },
-                enabled = selectedRating > 0
+                enabled = selectedRating > 0,
+                modifier = Modifier.testTag("submitRatingButton")
             ) {
                 Text("Submit Rating")
             }

@@ -26,8 +26,7 @@ export interface AuthTokens {
 // Verify Google ID token
 export const verifyGoogleToken = async (idToken: string): Promise<GoogleTokenPayload> => {
   try {
-    console.log('Verifying Google token with audience:', '445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com');
-    
+      
     const ticket = await client.verifyIdToken({
       idToken,
       audience: '445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com',
@@ -39,8 +38,7 @@ export const verifyGoogleToken = async (idToken: string): Promise<GoogleTokenPay
       throw new Error('Invalid token payload');
     }
 
-    console.log('Token verification successful for user:', payload.email);
-    return {
+      return {
       sub: payload.sub,
       email: payload.email!,
       name: payload.name!,
@@ -67,7 +65,7 @@ export const generateTokens = (user: IUser): AuthTokens => {
   //   expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   // });
 
-  const secret = process.env.JWT_SECRET as string;
+  const secret = process.env.JWT_SECRET ?? 'fallback-secret-key';
   const accessToken = jwt.sign(payload, secret, { expiresIn: '1h' });
 
   return { accessToken };
@@ -76,12 +74,10 @@ export const generateTokens = (user: IUser): AuthTokens => {
 // Find or create user from Google payload
 export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUser> => {
   try {
-    console.log('Finding or creating user for:', payload.email);
-    
+      
     // Try to find existing user by Google ID
     let user = await User.findOne({ googleId: payload.sub });
-    console.log('User found by Google ID:', !!user);
-
+  
     if (user) {
       // Update user info if needed
       if (user.email !== payload.email) {
@@ -94,8 +90,7 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
 
     // Try to find existing user by email
     user = await User.findOne({ email: payload.email });
-    console.log('User found by email:', !!user);
-
+  
     if (user) {
       // Link Google account to existing user
       user.googleId = payload.sub;
@@ -126,7 +121,7 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
 };
 
 // Verify JWT token
-export const verifyJWT = (token: string): any => {
+export const verifyJWT = (token: string): unknown => {
   try {
     return jwt.verify(token, process.env.JWT_SECRET!);
   } catch (error) {

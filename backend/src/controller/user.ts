@@ -3,7 +3,7 @@ import { UserModel } from '../models/User';
 import Group from '../models/Group';
 
 export const UserController = {
-  setProfile: async (req: Request, res: Response) => {
+  setProfile: async (req: Request, res: Response): Promise<void> => {
     const { email, dob, gender } = req.body;
 
     //validate inputs
@@ -23,7 +23,7 @@ export const UserController = {
       }
 
       //enforce immutability
-      if (user.dob || user.gender) {
+      if (user.dob ?? user.gender) {
         return res.status(400).json({ success: false, message: 'DOB and gender cannot be changed once set' });
       }
 
@@ -50,7 +50,7 @@ export const UserController = {
           dob: user.dob,
           gender: user.gender,
           profileComplete: user.profileComplete,
-          groupName: user.groupName || null,
+          groupName: user.groupName ?? null,
         },
       });
     } catch (err) {
@@ -60,12 +60,11 @@ export const UserController = {
   },
 
   //for optional profile settings/updates
-  updateProfile: async (req: Request, res: Response) => {
+  updateProfile: async (req: Request, res: Response): Promise<void> => {
     const { email, bio, profilePicture, livingPreferences } = req.body;
 
     console.log('calling updateOptionalProfile');
-    console.log('Received data:', { email, bio, profilePicture, livingPreferences });
-
+  
     //validate inputs
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email is required' });
@@ -163,49 +162,42 @@ export const UserController = {
     }
   },
 
-  deleteUser: async (req: Request, res: Response) => {
+  deleteUser: async (req: Request, res: Response): Promise<void> => {
     const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] DELETE USER: Starting user deletion`);
-    
+      
     try {
       const userId = req.user?._id;
       
       if (!userId) {
-        console.log(`[${timestamp}] DELETE USER: No user ID found in request`);
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
+              return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
 
-      console.log(`[${timestamp}] DELETE USER: Deleting user with ID: ${userId}`);
-
+    
       // Remove user from any group memberships first
       const group = await Group.findOne({ 'members.userId': userId });
       if (group) {
-        console.log(`[${timestamp}] DELETE USER: Removing user from group ${group._id}`);
-        // Filter out the user from members
-        group.members = group.members.filter((m: any) => m.userId.toString() !== userId.toString());
+              // Filter out the user from members
+        group.members = group.members.filter((m: unknown) => m.userId.toString() !== userId.toString());
 
         // If the user was the owner, transfer ownership or handle empty group
         if (group.owner && group.owner.toString() === userId.toString()) {
           if (group.members.length > 0) {
             // Find the oldest member (earliest join date) to transfer ownership to
-            const oldestMember = group.members.reduce((oldest: any, current: any) => {
+            const oldestMember = group.members.reduce((oldest: unknown, current: any) => {
               const oldestDate = new Date(oldest.joinDate);
               const currentDate = new Date(current.joinDate);
               return currentDate < oldestDate ? current : oldest;
             });
             
             const newOwner = oldestMember.userId;
-            group.owner = newOwner as any;
-            console.log(`[${timestamp}] DELETE USER: Transferred ownership to oldest member ${newOwner} (joined: ${oldestMember.joinDate})`);
-            
+            group.owner = newOwner as unknown;
+                      
             // Update the new owner's groupName to match the group
             await UserModel.findByIdAndUpdate(newOwner, { groupName: group.name });
-            console.log(`[${timestamp}] DELETE USER: Updated new owner's groupName to ${group.name}`);
-          } else {
+                    } else {
             // No members left; delete the group
             await group.deleteOne();
-            console.log(`[${timestamp}] DELETE USER: Group ${group._id} deleted as it has no members`);
-          }
+                    }
         }
 
         // Save group if it still exists and has members
@@ -218,12 +210,10 @@ export const UserController = {
       const deletedUser = await UserModel.findByIdAndDelete(userId);
       
       if (!deletedUser) {
-        console.log(`[${timestamp}] DELETE USER: User not found`);
-        return res.status(404).json({ success: false, message: 'User not found' });
+              return res.status(404).json({ success: false, message: 'User not found' });
       }
 
-      console.log(`[${timestamp}] DELETE USER: User deleted successfully`);
-      
+          
       return res.json({
         success: true,
         message: 'Account deleted successfully and group membership updated'

@@ -135,9 +135,9 @@ export interface SocketEvents {
     groupId: string;
     content: string;
     type: 'text' | 'poll';
-    pollData?: any;
+    pollData?: unknown;
   }) => void;
   'new-message': (data: IMessage) => void;
-  'send-poll': (data: any) => void;
-  'new-poll': (data: any) => void;
+  'send-poll': (data: unknown) => void;
+  'new-poll': (data: unknown) => void;
 }

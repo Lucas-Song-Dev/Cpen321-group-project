@@ -2,7 +2,7 @@ import { config } from "./config";  // Import config first to ensure env variabl
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
-import mongoose from "mongoose";
+import mongoose, { ConnectionStates } from "mongoose";
 import { createServer } from "http";
 import { authRouter } from "./routes/auth";
 import { userRouter } from "./routes/user";
@@ -20,13 +20,9 @@ const server = createServer(app);
 // Request logging middleware
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${req.method} ${req.path}`);
-  console.log(`[${timestamp}] Headers:`, JSON.stringify(req.headers, null, 2));
   if (req.body && Object.keys(req.body).length > 0) {
-    console.log(`[${timestamp}] Body:`, JSON.stringify(req.body, null, 2));
   }
   if (req.query && Object.keys(req.query).length > 0) {
-    console.log(`[${timestamp}] Query:`, JSON.stringify(req.query, null, 2));
   }
   next();
 });
@@ -39,13 +35,10 @@ app.use((req, res, next) => {
   const originalSend = res.send;
   res.send = function(data) {
     const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] Response ${res.statusCode} for ${req.method} ${req.path}`);
-    if (data) {
+      if (data) {
       try {
         const parsedData = JSON.parse(data);
-        console.log(`[${timestamp}] Response Body:`, JSON.stringify(parsedData, null, 2));
       } catch (e) {
-        console.log(`[${timestamp}] Response Body (raw):`, data);
       }
     }
     return originalSend.call(this, data);
@@ -55,14 +48,14 @@ app.use((req, res, next) => {
 
 // Health check endpoint (no auth required)
 app.get("/api/health", (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  const dbStatus = mongoose.connection.readyState === ConnectionStates.connected ? 'connected' : 'disconnected';
   
   res.status(200).json({ 
     message: 'RoomSync Backend is running!', 
     timestamp: new Date().toISOString(),
     database: dbStatus,
     version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV ?? 'development'
   });
 });
 
@@ -74,7 +67,6 @@ app.use("/api/chat", authenticate, chatRouter);  //protected with auth middlewar
 app.use("/api/rating", ratingRouter);  //uses its own auth middleware
 app.use("/api", userRouter);  //protected with auth middleware
 
-console.log('Attempting to connect to MongoDB with URI:', config.MONGODB_URI);
 console.log("Attempting MongoDB connection...");
 mongoose.set('strictQuery', true);
 mongoose
@@ -91,10 +83,8 @@ mongoose
   })
   .then(() => {
     console.log("Connected to MongoDB successfully");
-    console.log("Database name:", mongoose.connection.name);
-    console.log("Database host:", mongoose.connection.host);
-  })
-  .catch((err) => {
+      })
+  .catch((err: unknown) => {
     console.error("MongoDB connection error details:");
     console.error("Error name:", err.name);
     console.error("Error message:", err.message);
@@ -120,7 +110,7 @@ mongoose.connection.on('disconnected', () => {
         strict: true,
         deprecationErrors: true,
       }
-    }).catch(err => {
+    }).catch((err: unknown) => {
       console.error('Reconnection failed:', err.message);
     });
   }, 5000);
@@ -137,8 +127,6 @@ const socketHandler = new SocketHandler(server);
 export { socketHandler };
 
 server.listen(config.PORT, () => {
-  console.log(`Server running on port ${config.PORT}`);
-  console.log(`Socket.IO server ready for real-time chat`);
 });
 //later need to switch to this for .env
 // const PORT = process.env.PORT || 5000;
@@ -223,19 +211,16 @@ server.listen(config.PORT, () => {
 
 // // Socket.IO connection handling
 // io.on('connection', (socket) => {
-//   console.log('User connected:', socket.id);
-
+// 
 //   // Join group room
 //   socket.on('join-group', (groupId) => {
 //     socket.join(`group-${groupId}`);
-//     console.log(`User ${socket.id} joined group ${groupId}`);
-//   });
+//   //   });
 
 //   // Leave group room
 //   socket.on('leave-group', (groupId) => {
 //     socket.leave(`group-${groupId}`);
-//     console.log(`User ${socket.id} left group ${groupId}`);
-//   });
+//   //   });
 
 //   // Handle chat messages
 //   socket.on('send-message', async (data) => {
@@ -329,8 +314,7 @@ server.listen(config.PORT, () => {
 //   });
 
 //   socket.on('disconnect', () => {
-//     console.log('User disconnected:', socket.id);
-//   });
+//   //   });
 // });
 
 // // Error handling middleware
@@ -353,12 +337,9 @@ server.listen(config.PORT, () => {
 
 // const startServer = async () => {
 //   console.log("Starting backend server...");
-//   console.log("Connecting to MongoDB with URI:", process.env.MONGODB_URI);
-//   await connectDB();
+// //   await connectDB();
 //   server.listen(PORT, () => {
-//     console.log(`RoomSync Backend running on port ${PORT}`);
-//     console.log(`Health check: http://localhost:${PORT}/api/health`);
-//   });
+//   //   //   });
 // };
 
 // startServer().catch(console.error);

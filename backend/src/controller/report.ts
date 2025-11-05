@@ -4,7 +4,7 @@ import { UserModel } from '../models/User';
 import Message from '../models/Message';
 
 export const UserReporter = {
-  report: async (req: Request, res: Response) => {
+  report: async (req: Request, res: Response): Promise<void> => {
     try {
       const { reportedUserId, reporterId, groupId, reason } = req.body;
 
@@ -29,7 +29,7 @@ export const UserReporter = {
 
       // Fetch all messages from the reported user in this group
       const messages = await Message.find({
-        groupId: groupId,
+        groupId,
         senderId: reportedUserId,
         type: 'text'
       })
@@ -37,8 +37,7 @@ export const UserReporter = {
         .limit(100)
         .lean();
 
-      console.log(`Found ${messages.length} messages from user ${reportedUserId}`);
-
+    
       if (messages.length === 0) {
         return res.status(400).json({
           success: false,
@@ -52,7 +51,7 @@ export const UserReporter = {
       // });
 
       // Prepare messages for OpenAI analysis
-      const messageTexts = messages.map((msg: any) => msg.content).join('\n');
+      const messageTexts = messages.map((msg: unknown) => msg.content).join('\n');
 
       // Call OpenAI to analyze messages (disabled for now)
       // const completion = await openai.chat.completions.create({
@@ -104,10 +103,6 @@ export const UserReporter = {
         reportedUser.isOffensive = true;
         await reportedUser.save();
         actionTaken = 'User has been marked as offensive';
-        
-        console.log(`User ${reportedUserId} marked as offensive`);
-      } else {
-        console.log(`User ${reportedUserId} not marked as offensive - messages deemed acceptable`);
       }
 
       return res.status(200).json({
@@ -115,11 +110,11 @@ export const UserReporter = {
         message: 'Report submitted successfully',
         data: {
           isOffensive: analysis.isOffensive,
-          actionTaken: actionTaken
+          actionTaken
         }
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error processing report:', error);
       return res.status(500).json({
         success: false,
