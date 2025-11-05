@@ -96,9 +96,31 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
   }
 
   console.log(`[${timestamp}] GROUP JOIN: Checking if user is already in a group`);
-  // Check if user is already in a group
+  // Find group by code
+  const group = await Group.findOne({ groupCode: groupCode.toUpperCase() });
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'Group not found'
+    });
+  }
+
+  // Check if user is already a member of this group
+  const isAlreadyMember = group.members.some(member => 
+    member.userId.toString() === req.user!._id.toString()
+  );
+
+  if (isAlreadyMember) {
+    return res.status(400).json({
+      success: false,
+      message: 'User is already a member of this group'
+    });
+  }
+
+  // Check if user is already in a different group
   const existingGroup = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user!._id) 
+    'members.userId': req.user!._id 
   });
 
   if (existingGroup) {
@@ -108,33 +130,11 @@ router.post('/join', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  // Find group by code
-  const group = await Group.findOne({ groupCode: groupCode.trim().toUpperCase() });
-
-  if (!group) {
-    return res.status(404).json({
-      success: false,
-      message: 'Group not found'
-    });
-  }
-
   // Check if group is full
   if (group.members.length >= 8) {
     return res.status(400).json({
       success: false,
       message: 'Group is full (maximum 8 members)'
-    });
-  }
-
-  // Check if user is already a member
-  const isAlreadyMember = group.members.some(member => 
-    member.userId.toString() === req.user!._id.toString()
-  );
-
-  if (isAlreadyMember) {
-    return res.status(400).json({
-      success: false,
-      message: 'User is already a member of this group'
     });
   }
 
