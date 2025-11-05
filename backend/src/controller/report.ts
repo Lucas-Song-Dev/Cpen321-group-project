@@ -4,7 +4,7 @@ import { UserModel } from '../models/User';
 import Message from '../models/Message';
 
 export const UserReporter = {
-  report: async (req: Request, res: Response) => {
+  report: async (req: Request, res: Response): Promise<void> => {
     try {
       const { reportedUserId, reporterId, groupId, reason } = req.body;
 
@@ -37,8 +37,7 @@ export const UserReporter = {
         .limit(100)
         .lean();
 
-      console.log(`Found ${messages.length} messages from user ${reportedUserId}`);
-
+    
       if (messages.length === 0) {
         return res.status(400).json({
           success: false,
@@ -104,10 +103,6 @@ export const UserReporter = {
         reportedUser.isOffensive = true;
         await reportedUser.save();
         actionTaken = 'User has been marked as offensive';
-        
-        console.log(`User ${reportedUserId} marked as offensive`);
-      } else {
-        console.log(`User ${reportedUserId} not marked as offensive - messages deemed acceptable`);
       }
 
       return res.status(200).json({
