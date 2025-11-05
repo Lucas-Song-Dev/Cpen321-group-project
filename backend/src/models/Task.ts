@@ -51,11 +51,11 @@ const TaskSchema = new Schema<ITask>({
   },
   deadline: {
     type: Date,
-    required: function(this: unknown) {
+    required: function(this: { recurrence: string }) {
       return this.recurrence === 'one-time';
     },
     validate: {
-      validator: function(this: unknown, value: Date) {
+      validator: function(this: { recurrence: string }, value: Date) {
         if (this.recurrence === 'one-time' && value) {
           return value > new Date();
         }
@@ -90,22 +90,22 @@ const TaskSchema = new Schema<ITask>({
 });
 
 // Virtual for completion rate
-TaskSchema.virtual('completionRate').get(function(this: unknown) {
+TaskSchema.virtual('completionRate').get(function(this: { assignments: { status: string }[] }) {
   if (this.assignments.length === 0) return 0;
-  const completed = this.assignments.filter((assignment: unknown) => 
+  const completed = this.assignments.filter((assignment: { status: string }) => 
     assignment.status === 'completed'
   ).length;
   return Math.round((completed / this.assignments.length) * 100);
 });
 
 // Virtual for current week assignment
-TaskSchema.virtual('currentWeekAssignment').get(function(this: unknown) {
+TaskSchema.virtual('currentWeekAssignment').get(function(this: { assignments: { weekStart: Date }[] }) {
   const now = new Date();
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
   
-  return this.assignments.find((assignment: unknown) => 
+  return this.assignments.find((assignment: { weekStart: Date }) => 
     assignment.weekStart.getTime() === startOfWeek.getTime()
   );
 });
@@ -119,7 +119,7 @@ TaskSchema.index({ 'assignments.weekStart': 1 });
 // Method to assign task to users for a specific week
 TaskSchema.methods.assignToWeek = function(weekStart: Date, userIds: string[]) {
   // Remove existing assignment for this week
-  this.assignments = this.assignments.filter((assignment: unknown) => 
+  this.assignments = this.assignments.filter((assignment: { weekStart: Date }) => 
     assignment.weekStart.getTime() !== weekStart.getTime()
   );
   

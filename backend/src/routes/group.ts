@@ -168,29 +168,29 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       await group.populate('owner', 'name email bio averageRating');
           
       // Validate that owner still exists and has valid data
-      if (!group.owner || typeof group.owner === 'string' || !(group.owner as unknown).name) {
+      if (!group.owner || typeof group.owner === 'string' || !(group.owner as { name?: string }).name) {
               
         // If owner is invalid, transfer to oldest valid member
-        const validMembers = group.members.filter((member: unknown) => 
-          member.userId && typeof member.userId === 'object' && member.userId.name
+        const validMembers = group.members.filter(member => 
+          typeof member.userId === 'object' && (member.userId as { name?: string }).name
         );
         
         if (validMembers.length > 0) {
           // Find the oldest member (earliest join date) to transfer ownership to
-          const oldestMember = validMembers.reduce((oldest: unknown, current: any) => {
+          const oldestMember = validMembers.reduce((oldest, current) => {
             const oldestDate = new Date(oldest.joinDate);
             const currentDate = new Date(current.joinDate);
             return currentDate < oldestDate ? current : oldest;
           });
           
-          group.owner = oldestMember.userId as unknown;
+          group.owner = oldestMember.userId;
           await group.save();
           
           // Re-populate the new owner
           await group.populate('owner', 'name email bio averageRating');
         } else {
                   // Create a placeholder owner if no valid members exist
-          (group as unknown).owner = {
+          (group as unknown as { owner: { _id: string; name: string; email: string; bio: string; averageRating: number } }).owner = {
             _id: 'deleted-owner',
             name: 'Deleted User',
             email: '',
@@ -203,19 +203,19 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       console.error(`[${timestamp}] GROUP GET: Error populating owner:`, populateError);
       
       // Try to fix ownership by transferring to oldest valid member
-      const validMembers = group.members.filter((member: unknown) => 
-        member.userId && typeof member.userId === 'object' && member.userId.name
+      const validMembers = group.members.filter(member => 
+        typeof member.userId === 'object' && (member.userId as { name?: string }).name
       );
       
       if (validMembers.length > 0) {
         // Find the oldest member (earliest join date) to transfer ownership to
-        const oldestMember = validMembers.reduce((oldest: unknown, current: any) => {
+        const oldestMember = validMembers.reduce((oldest, current) => {
           const oldestDate = new Date(oldest.joinDate);
           const currentDate = new Date(current.joinDate);
           return currentDate < oldestDate ? current : oldest;
         });
         
-        group.owner = oldestMember.userId as unknown;
+        group.owner = oldestMember.userId;
         await group.save();
         
         // Try to populate again
@@ -224,7 +224,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         } catch (retryError) {
           console.error(`[${timestamp}] GROUP GET: Retry populate also failed:`, retryError);
           // Create placeholder owner
-          (group as unknown).owner = {
+          (group as unknown as { owner: { _id: string; name: string; email: string; bio: string; averageRating: number } }).owner = {
             _id: 'deleted-owner',
             name: 'Deleted User',
             email: '',
@@ -234,7 +234,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         }
       } else {
         // Create placeholder owner if no valid members exist
-        (group as any).owner = {
+        (group as unknown as { owner: { _id: string; name: string; email: string; bio: string; averageRating: number } }).owner = {
           _id: 'deleted-owner',
           name: 'Deleted User',
           email: '',
@@ -250,7 +250,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         } catch (populateError) {
       console.error(`[${timestamp}] GROUP GET: Error populating members:`, populateError);
       // Filter out any members that failed to populate
-      group.members = group.members.filter((member: unknown) => {
+      group.members = group.members.filter(member => {
         if (!member.userId || typeof member.userId === 'string') {
                   return false;
         }
@@ -260,8 +260,8 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     
     // Log how long each user has been in the group
     const now = new Date();
-    group.members.forEach((member: unknown) => {
-      if (member.userId && member.userId.name) {
+    group.members.forEach(member => {
+      if ((member.userId as { name?: string }).name) {
         const joinDate = new Date(member.joinDate);
         const durationMs = now.getTime() - joinDate.getTime();
         const durationMinutes = Math.floor(durationMs / (1000 * 60));
@@ -438,7 +438,7 @@ router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
   if (isOwner) {
     if (group.members.length > 0) {
       // Transfer ownership to the first remaining member
-      group.owner = group.members[0].userId as unknown;
+      group.owner = group.members[0].userId;
     } else {
       // No members left; delete the group and clear user groupName
       await group.deleteOne();
