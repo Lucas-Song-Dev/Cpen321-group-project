@@ -76,7 +76,7 @@ MessageSchema.virtual('pollResults').get(function() {
   });
   
   // Count votes
-  this.pollData.votes.forEach((vote: unknown) => {
+  this.pollData.votes.forEach((vote: any) => {
     results[vote.option] = (results[vote.option] || 0) + 1;
   });
   
@@ -112,7 +112,7 @@ MessageSchema.methods.addVote = function(userId: string, option: string) {
   }
   
   // Remove existing vote from this user
-  this.pollData.votes = this.pollData.votes.filter((vote: unknown) => 
+  this.pollData.votes = this.pollData.votes.filter((vote: any) => 
     vote.userId.toString() !== userId.toString()
   );
   
@@ -128,7 +128,7 @@ MessageSchema.methods.addVote = function(userId: string, option: string) {
 MessageSchema.methods.hasUserVoted = function(userId: string) {
   if (this.type !== 'poll' || !this.pollData) return false;
   
-  return this.pollData.votes.some((vote: unknown) => 
+  return this.pollData.votes.some((vote: any) => 
     vote.userId.toString() === userId.toString()
   );
 };

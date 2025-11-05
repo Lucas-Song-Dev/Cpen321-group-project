@@ -135,12 +135,11 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
   // Broadcast message via Socket.IO
   try {
     const io = socketHandler.getIO();
-    const populatedSender = message.senderId as any;
     const messageData = {
       id: message._id.toString(),
       content: message.content,
       senderId: message.senderId._id.toString(),
-      senderName: populatedSender.name || 'User',
+      senderName: (message.senderId as any).name || 'User',
       groupId,
       timestamp: message.createdAt.getTime(),
       type: message.type
@@ -263,7 +262,7 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
   }
 
   const voteGroupIsMember = voteGroup.members.some(member => 
-    member.userId.toString() === req.user?._id.toString()
+    member.userId.toString() === req.user!._id.toString()
   );
 
   if (!voteGroupIsMember) {

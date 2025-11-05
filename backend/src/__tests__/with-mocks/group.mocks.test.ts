@@ -24,15 +24,22 @@ app.use(errorHandler);
 // Use lightweight overrides (not jest spies) to avoid accumulating large mock call histories
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
+const originalConsoleLog = console.log;
 
 beforeAll(() => {
   console.error = () => {};
   console.warn = () => {};
+  console.log = () => {};
 });
 
 afterAll(() => {
   console.error = originalConsoleError;
   console.warn = originalConsoleWarn;
+  console.log = originalConsoleLog;
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe('Group API Tests - With Mocking', () => {
