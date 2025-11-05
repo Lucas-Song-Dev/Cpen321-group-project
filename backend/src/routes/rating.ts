@@ -19,53 +19,59 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   
   // Validate required fields (timeSpentMinutes no longer required from client)
   if (!ratedUserId || !groupId || !rating) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: 'Missing required fields: ratedUserId, groupId, rating'
     });
+    return;
   }
   
   // Validate rating is 1-5
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: 'Rating must be an integer between 1 and 5'
     });
+    return;
   }
   
   // Validate testimonial length if provided
   if (testimonial && testimonial.length > 500) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: 'Testimonial must be 500 characters or less'
     });
+    return;
   }
   
   // Cannot rate yourself
   if (ratedUserId === req.user?._id.toString()) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: 'You cannot rate yourself'
     });
+    return;
   }
   
   // Verify both users are in the same group and check their join duration
   const group = await Group.findById(groupId);
   if (!group) {
-    return res.status(404).json({
+    res.status(404).json({
       success: false,
       message: 'Group not found'
     });
+    return;
   }
   
   const ratedUserMember = group.members.find(m => m.userId.toString() === ratedUserId);
   const raterMember = group.members.find(m => m.userId.toString() === req.user?._id.toString());
   
   if (!ratedUserMember || !raterMember) {
-    return res.status(403).json({
+    res.status(403).json({
       success: false,
       message: 'Both users must be members of the same group'
     });
+    return;
   }
   
   // Check that both users have been in the group for at least 1 month (30 days)
@@ -78,17 +84,19 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const MINIMUM_GROUP_DURATION_DAYS = 30; // 1 month
   
   if (ratedUserDays < MINIMUM_GROUP_DURATION_DAYS) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: `Cannot rate user who has been in group for less than ${MINIMUM_GROUP_DURATION_DAYS} days (current: ${ratedUserDays} days)`
     });
+    return;
   }
   
   if (raterDays < MINIMUM_GROUP_DURATION_DAYS) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       message: `You must be in the group for at least ${MINIMUM_GROUP_DURATION_DAYS} days before rating (current: ${raterDays} days)`
     });
+    return;
   }
   
 
