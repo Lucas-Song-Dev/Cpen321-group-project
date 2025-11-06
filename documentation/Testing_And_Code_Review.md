@@ -191,16 +191,7 @@
 
 ### 2.3. Jest Coverage Report Screenshots for Tests Without Mocking
 
-_(Placeholder for Jest coverage screenshot without mocking)_
-
-**Instructions for Generating Screenshot:**
-
-1. Run: `cd backend && npm run test:coverage`
-2. Open `backend/coverage/lcov-report/index.html` in a browser
-3. Take a screenshot of the coverage summary table showing:
-   - Individual file coverage percentages
-   - Overall coverage statistics (Statements, Branches, Functions, Lines)
-4. Include both the summary table and individual file breakdown
+![image](documentation/images/Coverage without mocking.png)
 
 ### 2.4. Jest Coverage Report Screenshots for Tests With Mocking
 
