@@ -89,6 +89,26 @@ describe('Rating API - No Mocking', () => {
   });
 
   /**
+   * Test: POST /api/rating - should handle missing testimonial (fallback to empty string, line 124)
+   * Expected Behavior: Should use empty string when testimonial is undefined
+   */
+  test('POST /api/rating - should handle missing testimonial', async () => {
+    const response = await request(app)
+      .post('/api/rating')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        ratedUserId: ratedUser._id.toString(),
+        groupId: testGroup._id.toString(),
+        rating: 4
+        // testimonial not provided - should use empty string (line 124)
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.testimonial).toBe('');
+  });
+
+  /**
    * Test: POST /api/rating
    * Input: Invalid rating (out of range)
    * Expected Status: 400
@@ -159,6 +179,40 @@ describe('Rating API - No Mocking', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data.averageRating).toBeDefined();
     expect(Array.isArray(response.body.data.ratings)).toBe(true);
+  });
+
+  /**
+   * Test: GET /api/rating/user/:userId/group/:groupId - should handle no ratings (fallback to 0, lines 215-216)
+   * Expected Behavior: Should return 0 for averageRating and totalRatings when no ratings exist
+   */
+  test('GET /api/rating/user/:userId/group/:groupId - should handle no ratings', async () => {
+    // Create a user with no ratings
+    const unratedUser = await UserModel.create({
+      email: 'unrated@example.com',
+      name: 'Unrated User',
+      googleId: 'unrated-google-id',
+      profileComplete: true
+    });
+
+    const joinDate = new Date();
+    joinDate.setDate(joinDate.getDate() - 31);
+    const unratedGroup = await Group.create({
+      name: 'Unrated Group',
+      owner: testUser._id,
+      members: [
+        { userId: testUser._id, joinDate },
+        { userId: unratedUser._id, joinDate }
+      ]
+    });
+
+    const response = await request(app)
+      .get(`/api/rating/user/${unratedUser._id}/group/${unratedGroup._id}`)
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.averageRating).toBe(0); // Fallback value (line 215)
+    expect(response.body.data.totalRatings).toBe(0); // Fallback value (line 216)
   });
 
   /**

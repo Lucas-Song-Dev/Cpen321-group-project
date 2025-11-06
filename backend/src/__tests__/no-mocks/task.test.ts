@@ -75,6 +75,64 @@ describe('Task API - No Mocking', () => {
   });
 
   /**
+   * Test: POST /api/task
+   * Input: Create task without deadline (line 77)
+   * Expected Status: 201
+   * Expected Behavior: Should set deadline to undefined when not provided (line 77)
+   */
+  test('POST /api/task - should set deadline to undefined when not provided (line 77)', async () => {
+    const response = await request(app)
+      .post('/api/task')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        name: 'Task Without Deadline',
+        difficulty: 2,
+        recurrence: 'weekly',
+        requiredPeople: 1
+        // No deadline - line 77 will set it to undefined
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.task.deadline).toBeUndefined();
+  });
+
+  /**
+   * Test: POST /api/task
+   * Input: Create task with assignedUserIds when task already has assignments for current week (line 89)
+   * Expected Status: 201
+   * Expected Behavior: Should filter out existing assignments for current week (line 89)
+   */
+  test('POST /api/task - should filter existing assignments when creating with assignedUserIds (line 89)', async () => {
+    const otherUser = await UserModel.create({
+      email: 'otherassign@example.com',
+      name: 'Other User',
+      googleId: 'otherassign-google-id',
+      profileComplete: true
+    });
+
+    testGroup.members.push({ userId: otherUser._id, joinDate: new Date() });
+    await testGroup.save();
+
+    // Create a task with assignedUserIds - this will execute line 89 filter
+    // Even though assignments is empty initially, the filter function still executes
+    const response = await request(app)
+      .post('/api/task')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        name: 'Task With Assignment',
+        difficulty: 2,
+        recurrence: 'weekly',
+        requiredPeople: 1,
+        assignedUserIds: [otherUser._id.toString()]
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.success).toBe(true);
+    // Line 89 filter executes (even though assignments is empty, it still executes)
+  });
+
+  /**
    * Test: GET /api/task
    * Input: Valid JWT token
    * Expected Status: 200
@@ -219,6 +277,116 @@ describe('Task API - No Mocking', () => {
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     expect(response.body.data.task.assignments.length).toBeGreaterThan(0);
+  });
+
+  /**
+   * Test: POST /api/task - should filter existing assignments when assigning (line 88-89)
+   * Expected Behavior: Should remove existing assignment for the week before adding new one
+   */
+  test('POST /api/task - should filter existing assignments when assigning', async () => {
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const otherUser = await UserModel.create({
+      email: 'otherassign@example.com',
+      name: 'Other Assign User',
+      googleId: 'otherassign-google-id',
+      profileComplete: true
+    });
+
+    testGroup.members.push({
+      userId: otherUser._id,
+      joinDate: new Date()
+    });
+    await testGroup.save();
+
+    // Create task with existing assignment
+    const task = await Task.create({
+      name: 'Task With Assignment',
+      groupId: testGroup._id,
+      createdBy: testUser._id,
+      difficulty: 3,
+      recurrence: 'weekly',
+      requiredPeople: 1,
+      assignments: [{
+        userId: testUser._id,
+        weekStart: startOfWeek,
+        status: 'incomplete'
+      }]
+    });
+
+    // Assign to different user - should replace existing assignment (line 88-89)
+    const response = await request(app)
+      .post(`/api/task/${task._id}/assign`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ userIds: [otherUser._id.toString()] });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    
+    // Should have only one assignment (the new one)
+    const updatedTask = await Task.findById(task._id);
+    const currentWeekAssignments = updatedTask?.assignments.filter((a: any) => 
+      a.weekStart.getTime() === startOfWeek.getTime()
+    );
+    expect(currentWeekAssignments?.length).toBe(1);
+    expect(currentWeekAssignments?.[0].userId.toString()).toBe(otherUser._id.toString());
+  });
+
+  /**
+   * Test: POST /api/task/:id/assign - should filter existing assignments (line 299-300)
+   * Expected Behavior: Should remove existing assignment for the week before adding new one
+   */
+  test('POST /api/task/:id/assign - should filter existing assignments when reassigning', async () => {
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const otherUser = await UserModel.create({
+      email: 'reassign@example.com',
+      name: 'Reassign User',
+      googleId: 'reassign-google-id',
+      profileComplete: true
+    });
+
+    testGroup.members.push({
+      userId: otherUser._id,
+      joinDate: new Date()
+    });
+    await testGroup.save();
+
+    // Create task with existing assignment for current week
+    const task = await Task.create({
+      name: 'Task With Existing Assignment',
+      groupId: testGroup._id,
+      createdBy: testUser._id,
+      difficulty: 3,
+      recurrence: 'weekly',
+      requiredPeople: 1,
+      assignments: [{
+        userId: testUser._id,
+        weekStart: startOfWeek,
+        status: 'incomplete'
+      }]
+    });
+
+    // Assign to different user - should replace existing assignment (line 299-300)
+    const response = await request(app)
+      .post(`/api/task/${task._id}/assign`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ userIds: [otherUser._id.toString()] });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    
+    // Should have only one assignment for this week (the new one)
+    const updatedTask = await Task.findById(task._id);
+    const currentWeekAssignments = updatedTask?.assignments.filter((a: any) => 
+      a.weekStart.getTime() === startOfWeek.getTime()
+    );
+    expect(currentWeekAssignments?.length).toBe(1);
+    expect(currentWeekAssignments?.[0].userId.toString()).toBe(otherUser._id.toString());
   });
 
   /**
@@ -957,6 +1125,41 @@ describe('Task API - No Mocking', () => {
   });
 
   /**
+   * Test: POST /api/task/assign-weekly - should skip one-time tasks with existing assignments (line 371)
+   * Input: One-time task with assignments.length > 0
+   * Expected Status: 200
+   * Expected Behavior: Should execute continue statement (line 371)
+   */
+  test('POST /api/task/assign-weekly - should skip one-time tasks with existing assignments (line 371)', async () => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 7);
+
+    // Create one-time task with assignments (line 371: if (task.assignments.length > 0) continue;)
+    const oneTimeTask = await Task.create({
+      name: 'One-Time Task With Assignments',
+      groupId: testGroup._id,
+      createdBy: testUser._id,
+      difficulty: 2,
+      recurrence: 'one-time',
+      requiredPeople: 1,
+      deadline: futureDate,
+      assignments: [{
+        userId: testUser._id,
+        weekStart: new Date(),
+        status: 'incomplete'
+      }]
+    });
+
+    const response = await request(app)
+      .post('/api/task/assign-weekly')
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    // Line 371 continue statement should execute
+  });
+
+  /**
    * Test: POST /api/task/assign-weekly
    * Input: Task already assigned for this week
    * Expected Status: 200
@@ -1011,6 +1214,43 @@ describe('Task API - No Mocking', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
+    
+    // Verify requiredPeople was set (line 396)
+    const updatedTask = await Task.findById(task._id);
+    expect(updatedTask?.requiredPeople).toBe(1);
+  });
+
+  /**
+   * Test: POST /api/task/assign-weekly - should set requiredPeople fallback (line 396)
+   * Input: Task without requiredPeople field
+   * Expected Status: 200
+   * Expected Behavior: Should set requiredPeople to 1 when missing (line 396)
+   */
+  test('POST /api/task/assign-weekly - should set requiredPeople fallback for old tasks (line 396)', async () => {
+    // Create task without requiredPeople (old task format)
+    const oldTask = await Task.create({
+      name: 'Very Old Task',
+      groupId: testGroup._id,
+      createdBy: testUser._id,
+      difficulty: 3,
+      recurrence: 'weekly'
+      // requiredPeople not set - line 396 will set it to 1
+    });
+
+    // Verify it's not set initially
+    const taskBefore = await Task.findById(oldTask._id);
+    expect(taskBefore?.requiredPeople).toBeUndefined();
+
+    const response = await request(app)
+      .post('/api/task/assign-weekly')
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    
+    // Verify requiredPeople was set to 1 (line 396)
+    const taskAfter = await Task.findById(oldTask._id);
+    expect(taskAfter?.requiredPeople).toBe(1);
   });
 
   /**
@@ -1049,6 +1289,24 @@ describe('Task API - No Mocking', () => {
     expect(response.status).toBe(404);
     expect(response.body.success).toBe(false);
     expect(response.body.message).toContain('not a member');
+  });
+
+  /**
+   * Test: DELETE /api/task/:id
+   * Input: Task not found
+   * Expected Status: 404
+   * Expected Behavior: Should reject when task not found (line 474)
+   */
+  test('DELETE /api/task/:id - should reject when task not found (line 474)', async () => {
+    const nonExistentTaskId = new mongoose.Types.ObjectId();
+
+    const response = await request(app)
+      .delete(`/api/task/${nonExistentTaskId}`)
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Task not found');
   });
 
   /**

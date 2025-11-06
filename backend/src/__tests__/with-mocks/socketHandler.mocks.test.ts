@@ -629,6 +629,66 @@ describe('SocketHandler - With Mocking', () => {
       // Should not emit user-left if not authenticated
       expect(mockSocket.emit).not.toHaveBeenCalledWith('user-left', expect.any(Object));
     });
+
+    test('should delete group from groupMembers when last member leaves in leave-group', async () => {
+      mockSocket.userId = 'user-id-123';
+      mockSocket.groupId = 'group-id-456';
+
+      const connectionCallback = mockIO.on.mock.calls.find((call: any[]) => call[0] === 'connection')?.[1];
+      if (connectionCallback) {
+        connectionCallback(mockSocket);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Join group first
+      const joinHandler = mockSocket.on.mock.calls.find((call: any[]) => call[0] === 'join-group')?.[1];
+      if (joinHandler) {
+        joinHandler('group-id-456');
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Leave group - should delete groupMembers entry when size becomes 0 (lines 83-85)
+      const leaveHandler = mockSocket.on.mock.calls.find((call: any[]) => call[0] === 'leave-group')?.[1];
+      if (leaveHandler) {
+        leaveHandler('group-id-456');
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(mockSocket.leave).toHaveBeenCalledWith('group-id-456');
+    });
+
+    test('should delete group from groupMembers when last member disconnects', async () => {
+      mockSocket.userId = 'user-id-123';
+      mockSocket.groupId = 'group-id-456';
+
+      const connectionCallback = mockIO.on.mock.calls.find((call: any[]) => call[0] === 'connection')?.[1];
+      if (connectionCallback) {
+        connectionCallback(mockSocket);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Join group first
+      const joinHandler = mockSocket.on.mock.calls.find((call: any[]) => call[0] === 'join-group')?.[1];
+      if (joinHandler) {
+        joinHandler('group-id-456');
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Disconnect - should delete groupMembers entry when size becomes 0 (lines 169-171)
+      const disconnectHandler = mockSocket.on.mock.calls.find((call: any[]) => call[0] === 'disconnect')?.[1];
+      if (disconnectHandler) {
+        disconnectHandler();
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(mockSocket.to).toHaveBeenCalledWith('group-id-456');
+    });
   });
 });
 

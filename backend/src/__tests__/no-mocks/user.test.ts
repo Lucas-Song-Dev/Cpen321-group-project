@@ -152,6 +152,34 @@ describe('User API - No Mocking', () => {
   });
 
   /**
+   * Test: PUT /api/user/users/optionalProfile - should update profilePicture (line 134)
+   * Input: { email: "testuser@example.com", profilePicture: "https://example.com/pic.jpg" }
+   * Expected Status: 200
+   * Expected Behavior: Should update profilePicture when provided (line 134)
+   */
+  test('PUT /api/user/users/optionalProfile - should update profilePicture (line 134)', async () => {
+    // First set the required profile
+    await request(app)
+      .put('/api/user/users/profile')
+      .send({
+        email: 'testuser@example.com',
+        dob: '2000-01-01',
+        gender: 'Male'
+      });
+
+    const response = await request(app)
+      .put('/api/user/users/optionalProfile')
+      .send({
+        email: 'testuser@example.com',
+        profilePicture: 'https://example.com/picture.jpg'
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.user.profilePicture).toBe('https://example.com/picture.jpg');
+  });
+
+  /**
    * Test: DELETE /api/user/users/me
    * Input: Valid JWT token
    * Expected Status: 200
@@ -734,15 +762,24 @@ describe('User API - No Mocking', () => {
       profileComplete: true
     });
 
+    // Create group with members in order that tests both branches of line 205:
+    // return currentDate < oldestDate ? current : oldest;
+    // When comparing: olderUser (2024-01-01) vs newerUser (2024-01-02)
+    // - olderUser < newerUser: returns olderUser (current) - tests first branch
+    // - newerUser >= olderUser: returns olderUser (oldest) - tests second branch
     const group = await Group.create({
       name: 'Test Group',
       owner: testUser._id,
       members: [
-        { userId: testUser._id, joinDate: new Date('2024-01-01') },
-        { userId: olderUser._id, joinDate: new Date('2024-01-02') },
-        { userId: newerUser._id, joinDate: new Date('2024-01-03') }
+        { userId: testUser._id, joinDate: new Date('2024-01-03') },  // Owner joins last
+        { userId: olderUser._id, joinDate: new Date('2024-01-01') },  // Oldest - joined first
+        { userId: newerUser._id, joinDate: new Date('2024-01-02') }   // Newer - joined second
       ]
     });
+
+    await UserModel.findByIdAndUpdate(testUser._id, { groupName: group.name });
+    await UserModel.findByIdAndUpdate(olderUser._id, { groupName: group.name });
+    await UserModel.findByIdAndUpdate(newerUser._id, { groupName: group.name });
 
     const response = await request(app)
       .delete('/api/user/users/me')
@@ -751,13 +788,79 @@ describe('User API - No Mocking', () => {
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
 
-    // Verify ownership was transferred to oldest member (olderUser joined on 2024-01-02, before newerUser on 2024-01-03)
+    // Verify ownership was transferred to oldest member (olderUser joined on 2024-01-01)
+    // This tests the reduce function where both branches of line 205 are executed:
+    // - When comparing olderUser (2024-01-01) with newerUser (2024-01-02): olderUser < newerUser, returns olderUser (first branch)
+    // - When comparing olderUser (2024-01-01) with owner: olderUser < owner, returns olderUser (first branch)
     const updatedGroup = await Group.findById(group._id);
     expect(updatedGroup?.owner.toString()).toBe((olderUser._id as any).toString());
     
     // Verify olderUser's groupName was updated
     const updatedOlderUser = await UserModel.findById(olderUser._id);
     expect(updatedOlderUser?.groupName).toBe(group.name);
+  });
+
+  /**
+   * Test: DELETE /api/user/users/me - should test both branches of ternary in reduce (line 205)
+   * Input: Owner deleting with members arranged to test both branches: currentDate < oldestDate ? current : oldest
+   * Expected Status: 200
+   * Expected Behavior: Should test both branches of the ternary operator in reduce function
+   */
+  test('DELETE /api/user/users/me - should test both branches of ternary operator (line 205)', async () => {
+    const member1 = await UserModel.create({
+      email: 'member1@example.com',
+      name: 'Member 1',
+      googleId: 'member1-google-id',
+      profileComplete: true
+    });
+
+    const member2 = await UserModel.create({
+      email: 'member2@example.com',
+      name: 'Member 2',
+      googleId: 'member2-google-id',
+      profileComplete: true
+    });
+
+    const member3 = await UserModel.create({
+      email: 'member3@example.com',
+      name: 'Member 3',
+      googleId: 'member3-google-id',
+      profileComplete: true
+    });
+
+    // Arrange members so reduce function tests both branches of line 205:
+    // - Start with member2 (2024-01-02) as initial oldest
+    // - Compare with member1 (2024-01-01): member1 < member2, returns member1 (branch 1: current)
+    // - Compare with member3 (2024-01-03): member3 >= member1, returns member1 (branch 2: oldest)
+    const group = await Group.create({
+      name: 'Ternary Test Group',
+      owner: testUser._id,
+      members: [
+        { userId: testUser._id, joinDate: new Date('2024-01-04') },  // Owner joins last
+        { userId: member2._id, joinDate: new Date('2024-01-02') },   // Second oldest
+        { userId: member1._id, joinDate: new Date('2024-01-01') },   // Oldest
+        { userId: member3._id, joinDate: new Date('2024-01-03') }    // Third oldest
+      ]
+    });
+
+    await UserModel.findByIdAndUpdate(testUser._id, { groupName: group.name });
+    await UserModel.findByIdAndUpdate(member1._id, { groupName: group.name });
+    await UserModel.findByIdAndUpdate(member2._id, { groupName: group.name });
+    await UserModel.findByIdAndUpdate(member3._id, { groupName: group.name });
+
+    const response = await request(app)
+      .delete('/api/user/users/me')
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+
+    // Verify ownership was transferred to oldest member (member1)
+    // The reduce function tests both branches:
+    // - member1 (2024-01-01) < member2 (2024-01-02): returns member1 (branch 1: current)
+    // - member3 (2024-01-03) >= member1 (2024-01-01): returns member1 (branch 2: oldest)
+    const updatedGroup = await Group.findById(group._id);
+    expect(updatedGroup?.owner.toString()).toBe((member1._id as any).toString());
   });
 
   /**
@@ -900,13 +1003,20 @@ describe('User API - No Mocking', () => {
         gender: 'Male'
       });
 
-    // Verify livingPreferences is undefined or empty (Mongoose may return {} for nested schemas)
+    // Verify livingPreferences is undefined before update (line 138 will initialize it)
+    // Use $unset to remove livingPreferences to ensure line 138 is executed
+    await UserModel.updateOne(
+      { email: 'freshuser@example.com' },
+      { $unset: { livingPreferences: '' } }
+    );
+    
+    // Reload user to ensure livingPreferences is undefined
     const userBeforeUpdate = await UserModel.findOne({ email: 'freshuser@example.com' });
-    // For nested schemas, Mongoose may initialize as {}, so check if schedule is not set
-    const scheduleBefore = userBeforeUpdate?.livingPreferences?.schedule;
-    expect(scheduleBefore).toBeUndefined();
+    // Force livingPreferences to be undefined by using lean() and checking
+    const userDoc = await UserModel.findOne({ email: 'freshuser@example.com' }).lean();
+    expect(userDoc?.livingPreferences).toBeUndefined();
 
-    // Update with livingPreferences
+    // Update with livingPreferences - should initialize empty object (line 138)
     const response = await request(app)
       .put('/api/user/users/optionalProfile')
       .send({
@@ -920,6 +1030,11 @@ describe('User API - No Mocking', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.user.livingPreferences).toBeDefined();
     expect(response.body.user.livingPreferences?.schedule).toBe('Night');
+    
+    // Verify the user in the database has livingPreferences initialized
+    const updatedUser = await UserModel.findOne({ email: 'freshuser@example.com' });
+    expect(updatedUser?.livingPreferences).toBeDefined();
+    expect(updatedUser?.livingPreferences?.schedule).toBe('Night');
   });
 
   /**

@@ -483,4 +483,338 @@ describe('Task API Tests - With Mocking', () => {
       Task.findByIdAndDelete = originalFindByIdAndDelete;
     });
   });
+
+  // ===================================================================
+  // GET /api/task/my-tasks - with mocking
+  // ===================================================================
+  describe('GET /api/task/my-tasks - with mocking', () => {
+    /**
+     * Test: GET /api/task/my-tasks
+     * Input: Valid request, but Group.findOne fails
+     * Expected Status: 500
+     * Expected Output: { success: false, message: "Internal server error" }
+     * Expected Behavior: Should handle database errors when finding group
+     * Mock Behavior: Group.findOne throws an error
+     */
+    test('should handle database error when finding group', async () => {
+      const originalFindOne = Group.findOne;
+      Group.findOne = jest.fn().mockRejectedValue(new Error('Database query failed'));
+
+      const response = await request(app)
+        .get('/api/task/my-tasks')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(500);
+      expect(response.body.success).toBe(false);
+
+      // Restore original
+      Group.findOne = originalFindOne;
+    });
+
+    /**
+     * Test: GET /api/task/my-tasks
+     * Input: Valid request, but Task.find fails
+     * Expected Status: 500
+     * Expected Output: { success: false, message: "Internal server error" }
+     * Expected Behavior: Should handle database errors when finding tasks
+     * Mock Behavior: Task.find throws an error
+     */
+    test('should handle database error when finding tasks', async () => {
+      const mockGroup = {
+        _id: testGroup._id,
+        members: [{ userId: testUser._id }]
+      };
+
+      const originalFindOne = Group.findOne;
+      Group.findOne = jest.fn().mockResolvedValue(mockGroup);
+
+      const originalFind = Task.find;
+      Task.find = jest.fn().mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          sort: jest.fn().mockRejectedValue(new Error('Query failed'))
+        })
+      });
+
+      const response = await request(app)
+        .get('/api/task/my-tasks')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(500);
+      expect(response.body.success).toBe(false);
+
+      // Restore originals
+      Group.findOne = originalFindOne;
+      Task.find = originalFind;
+    });
+  });
+
+  // ===================================================================
+  // GET /api/task/week/:weekStart - with mocking
+  // ===================================================================
+  describe('GET /api/task/week/:weekStart - with mocking', () => {
+    /**
+     * Test: GET /api/task/week/:weekStart
+     * Input: Valid weekStart date, but Group.findOne fails
+     * Expected Status: 500
+     * Expected Output: { success: false, message: "Internal server error" }
+     * Expected Behavior: Should handle database errors when finding group
+     * Mock Behavior: Group.findOne throws an error
+     */
+    test('should handle database error when finding group', async () => {
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+
+      const originalFindOne = Group.findOne;
+      Group.findOne = jest.fn().mockRejectedValue(new Error('Database query failed'));
+
+      const response = await request(app)
+        .get(`/api/task/week/${weekStart.toISOString()}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(500);
+      expect(response.body.success).toBe(false);
+
+      // Restore original
+      Group.findOne = originalFindOne;
+    });
+
+    /**
+     * Test: GET /api/task/week/:weekStart
+     * Input: Valid weekStart date, but Task.find fails
+     * Expected Status: 500
+     * Expected Output: { success: false, message: "Internal server error" }
+     * Expected Behavior: Should handle database errors when finding tasks
+     * Mock Behavior: Task.find throws an error
+     */
+    test('should handle database error when finding tasks', async () => {
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+
+      const mockGroup = {
+        _id: testGroup._id,
+        members: [{ userId: testUser._id }]
+      };
+
+      const originalFindOne = Group.findOne;
+      Group.findOne = jest.fn().mockResolvedValue(mockGroup);
+
+      const originalFind = Task.find;
+      Task.find = jest.fn().mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          sort: jest.fn().mockRejectedValue(new Error('Query failed'))
+        })
+      });
+
+      const response = await request(app)
+        .get(`/api/task/week/${weekStart.toISOString()}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(500);
+      expect(response.body.success).toBe(false);
+
+      // Restore originals
+      Group.findOne = originalFindOne;
+      Task.find = originalFind;
+    });
+  });
+
+  // ===================================================================
+  // GET /api/task/date/:date - with mocking
+  // ===================================================================
+  describe('GET /api/task/date/:date - with mocking', () => {
+    /**
+     * Test: GET /api/task/date/:date
+     * Input: Valid date, but Group.findOne fails
+     * Expected Status: 500
+     * Expected Output: { success: false, message: "Internal server error" }
+     * Expected Behavior: Should handle database errors when finding group
+     * Mock Behavior: Group.findOne throws an error
+     */
+    test('should handle database error when finding group', async () => {
+      const targetDate = new Date();
+      targetDate.setHours(0, 0, 0, 0);
+
+      const originalFindOne = Group.findOne;
+      Group.findOne = jest.fn().mockRejectedValue(new Error('Database query failed'));
+
+      const response = await request(app)
+        .get(`/api/task/date/${targetDate.toISOString()}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(500);
+      expect(response.body.success).toBe(false);
+
+      // Restore original
+      Group.findOne = originalFindOne;
+    });
+
+    /**
+     * Test: GET /api/task/date/:date
+     * Input: Valid date, but Task.find fails
+     * Expected Status: 500
+     * Expected Output: { success: false, message: "Internal server error" }
+     * Expected Behavior: Should handle database errors when finding tasks
+     * Mock Behavior: Task.find throws an error
+     */
+    test('should handle database error when finding tasks', async () => {
+      const targetDate = new Date();
+      targetDate.setHours(0, 0, 0, 0);
+
+      const mockGroup = {
+        _id: testGroup._id,
+        members: [{ userId: testUser._id }]
+      };
+
+      const originalFindOne = Group.findOne;
+      Group.findOne = jest.fn().mockResolvedValue(mockGroup);
+
+      const originalFind = Task.find;
+      Task.find = jest.fn().mockReturnValue({
+        populate: jest.fn().mockReturnValue({
+          sort: jest.fn().mockRejectedValue(new Error('Query failed'))
+        })
+      });
+
+      const response = await request(app)
+        .get(`/api/task/date/${targetDate.toISOString()}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(response.status).toBe(500);
+      expect(response.body.success).toBe(false);
+
+      // Restore originals
+      Group.findOne = originalFindOne;
+      Task.find = originalFind;
+    });
+  });
+
+  // ===================================================================
+  // POST /api/task - Mock to test line 89 filter callback
+  // ===================================================================
+  describe('POST /api/task - Mock to test line 89', () => {
+    /**
+     * Test: POST /api/task - should execute filter callback when task has assignments (line 89)
+     * Input: Task creation with assignedUserIds, but task already has assignments
+     * Expected Status: 201
+     * Expected Behavior: Should execute filter callback on line 89
+     * Mock Behavior: Mock Task.create to return task with existing assignments
+     */
+    test('should execute filter callback when task has assignments (line 89)', async () => {
+      const otherUser = await UserModel.create({
+        email: 'otheruser89@example.com',
+        name: 'Other User',
+        googleId: 'otheruser89-google-id',
+        profileComplete: true
+      });
+
+      testGroup.members.push({ userId: otherUser._id, joinDate: new Date() });
+      await testGroup.save();
+
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      // Mock Task.create to return a task with existing assignments
+      const originalCreate = Task.create;
+      Task.create = jest.fn().mockImplementation(async (data: any) => {
+        // Create the task normally
+        const task = await originalCreate.call(Task, data);
+        // Manually add an assignment for current week to trigger filter callback
+        task.assignments = [{
+          userId: testUser._id,
+          weekStart: startOfWeek,
+          status: 'incomplete'
+        }];
+        return task;
+      });
+
+      try {
+        const response = await request(app)
+          .post('/api/task')
+          .set('Authorization', `Bearer ${authToken}`)
+          .send({
+            name: 'Task With Existing Assignment',
+            difficulty: 2,
+            recurrence: 'weekly',
+            requiredPeople: 1,
+            assignedUserIds: [otherUser._id.toString()]
+          });
+
+        expect(response.status).toBe(201);
+        expect(response.body.success).toBe(true);
+        // Line 89 filter callback should have executed to filter out the existing assignment
+      } finally {
+        // Restore original
+        Task.create = originalCreate;
+      }
+    });
+  });
+
+  // ===================================================================
+  // POST /api/task/assign-weekly - Mock to test line 396
+  // ===================================================================
+  describe('POST /api/task/assign-weekly - Mock to test line 396', () => {
+    /**
+     * Test: POST /api/task/assign-weekly - should set requiredPeople fallback (line 396)
+     * Input: Task without requiredPeople field
+     * Expected Status: 200
+     * Expected Behavior: Should set requiredPeople to 1 when missing (line 396)
+     */
+    test('should set requiredPeople fallback for task without requiredPeople (line 396)', async () => {
+      // Create a weekly recurring task without requiredPeople (old task format)
+      // Must be weekly (not one-time) and have no assignments for this week
+      const oldTask = await Task.create({
+        name: 'Very Old Weekly Task',
+        groupId: testGroup._id,
+        createdBy: testUser._id,
+        difficulty: 3,
+        recurrence: 'weekly',
+        assignments: [] // No assignments
+        // requiredPeople not set - line 396 will set it to 1
+      });
+
+      // Use raw MongoDB to remove requiredPeople field (simulating old task)
+      await Task.collection.updateOne(
+        { _id: oldTask._id },
+        { $unset: { requiredPeople: '' } }
+      );
+
+      // Ensure task has no assignments so it gets processed
+      await Task.updateOne(
+        { _id: oldTask._id },
+        { $set: { assignments: [] } }
+      );
+      
+      // Mock Task.find to return task with requiredPeople undefined
+      // This ensures line 396 executes (Mongoose might apply defaults otherwise)
+      const originalFind = Task.find;
+      const allTasks = await Task.find({ groupId: testGroup._id });
+      const mockTask = allTasks.find(t => t._id.toString() === oldTask._id.toString());
+      
+      if (mockTask) {
+        // Manually set requiredPeople to undefined to trigger line 396
+        (mockTask as any).requiredPeople = undefined;
+        // Mock Task.find to return array directly (route uses Task.find() not Task.find().populate())
+        Task.find = jest.fn().mockResolvedValue([mockTask]);
+      }
+
+      try {
+        const response = await request(app)
+          .post('/api/task/assign-weekly')
+          .set('Authorization', `Bearer ${authToken}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+        
+        // Verify requiredPeople was set to 1 (line 396)
+        // The task should have requiredPeople set in memory even if not saved
+        expect(mockTask?.requiredPeople).toBe(1);
+      } finally {
+        // Restore original
+        Task.find = originalFind;
+      }
+    });
+  });
 });
