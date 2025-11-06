@@ -70,8 +70,10 @@ class TaskRepository {
             TaskResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TaskResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: RuntimeException) {
-            TaskResponse(false, "Unexpected runtime error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TaskResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TaskResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -88,8 +90,10 @@ class TaskRepository {
             TaskResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TaskResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: RuntimeException) {
-            TaskResponse(false, "Unexpected runtime error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TaskResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TaskResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
