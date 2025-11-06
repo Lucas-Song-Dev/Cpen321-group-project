@@ -191,55 +191,28 @@
 
 ### 2.3. Jest Coverage Report Screenshots for Tests Without Mocking
 
-_(Placeholder for Jest coverage screenshot without mocking)_
-
-**Instructions for Generating Screenshot:**
-
-1. Run: `cd backend && npm run test:coverage`
-2. Open `backend/coverage/lcov-report/index.html` in a browser
-3. Take a screenshot of the coverage summary table showing:
-   - Individual file coverage percentages
-   - Overall coverage statistics (Statements, Branches, Functions, Lines)
-4. Include both the summary table and individual file breakdown
+![image](images/Coverage%20without%20mocking.png)
 
 ### 2.4. Jest Coverage Report Screenshots for Tests With Mocking
 
-_(Placeholder for Jest coverage screenshot with mocking)_
+![image](images/Coverage%20with%20mocking.png)
 
-**Note:** Mocked tests are implemented in the `with-mocks/` directory. These tests use mocks to simulate external component failures and error scenarios. To run only mocked tests:
 
-```bash
-cd backend
-npm test -- --testPathPattern=with-mocks
-```
-
-Coverage may vary as mocked tests focus on error handling scenarios that may not be fully covered in no-mocks tests.
 
 ### 2.5. Jest Coverage Report Screenshots for Both Tests With and Without Mocking
 
-_(Placeholder for Jest coverage screenshot both with and without mocking)_
+![image](images/Coverage%20with%20and%20without%20mocking.png)
 
-**Instructions for Generating Screenshot:**
 
-1. Run all tests (both no-mocks and with-mocks):
-   ```bash
-   cd backend
-   npm run test:coverage
-   ```
-2. Open `backend/coverage/lcov-report/index.html` in a browser
-3. Take a screenshot showing combined coverage
-4. Expected: High coverage (ideally 90%+ for most files)
-5. If coverage is less than 100%, document the reasons in the justification below
 
 **Coverage Justification:**
 
-_(To be filled after generating coverage reports)_
+The routes for group, rating, and tasks have less than 100% coverage.
 
-- List any files with less than 100% coverage
-- Explain why certain code paths are not covered (e.g., error handlers, edge cases that are difficult to test, deprecated code paths)
-- Note any intentional exclusions (as configured in `jest.config.js`)
-
----
+Justification:
+Group (98.05%): Coverage misses mutually exclusive owner-handling branches (valid owner vs invalid owner vs retry/placeholder) and some member-population error paths. Mocks emphasize failure paths while no-mocks cover happy paths, so not all branches executed.
+Rating (97.14%): Rating: Some validation branches (combinations of missing fields, boundary ratings, testimonial variants) aren’t all exercised.
+Task (99.41%): The random function meant to slightly randomize who does which task is sometimes missed.
 
 
 ## 3. Back-end Test Specification: Tests of Non-Functional Requirements
