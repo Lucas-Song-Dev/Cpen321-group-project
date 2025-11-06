@@ -207,13 +207,12 @@
 
 **Coverage Justification:**
 
-_(To be filled after generating coverage reports)_
+The routes for group, rating, and tasks have less than 100% coverage.
 
-- List any files with less than 100% coverage
-- Explain why certain code paths are not covered (e.g., error handlers, edge cases that are difficult to test, deprecated code paths)
-- Note any intentional exclusions (as configured in `jest.config.js`)
-
----
+Justification:
+Group (98.05%): Coverage misses mutually exclusive owner-handling branches (valid owner vs invalid owner vs retry/placeholder) and some member-population error paths. Mocks emphasize failure paths while no-mocks cover happy paths, so not all branches executed.
+Rating (97.14%): Rating: Some validation branches (combinations of missing fields, boundary ratings, testimonial variants) aren’t all exercised.
+Task (99.41%): The random function meant to slightly randomize who does which task is sometimes missed.
 
 
 ## 3. Back-end Test Specification: Tests of Non-Functional Requirements
