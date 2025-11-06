@@ -41,6 +41,15 @@ jest.mock('google-auth-library', () => {
               })
             };
           }
+          if (idToken === 'no-name-token') {
+            return {
+              getPayload: () => ({
+                email: 'noname@example.com',
+                // name is undefined - should fallback to "Unknown" (line 14)
+                sub: 'google-id-789'
+              })
+            };
+          }
           if (idToken === 'null-payload-token') {
             return {
               getPayload: () => null // Simulate null payload (lines 12-14)
@@ -132,6 +141,24 @@ describe('Auth API Tests', () => {
       // Verify user was created
       const user = await UserModel.findOne({ email: 'newuser@example.com' });
       expect(user).toBeDefined();
+    });
+
+    /**
+     * Test: POST /api/auth/signup - should use "Unknown" as name when name is undefined (line 14)
+     * Expected Behavior: Should fallback to "Unknown" when payload.name is undefined
+     */
+    test('should use "Unknown" as name when name is undefined', async () => {
+      const response = await request(app)
+        .post('/api/auth/signup')
+        .send({ token: 'no-name-token' });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      
+      // Verify user was created with "Unknown" as name
+      const user = await UserModel.findOne({ email: 'noname@example.com' });
+      expect(user).toBeDefined();
+      expect(user?.name).toBe('Unknown');
     });
 
     /**

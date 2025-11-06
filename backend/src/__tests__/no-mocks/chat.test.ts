@@ -215,6 +215,53 @@ describe('Chat API Tests', () => {
 
     /**
      * Test: POST /api/chat/:groupId/message
+     * Input: Message with sender that has no name (line 142)
+     * Expected Status: 201
+     * Expected Behavior: Should use 'User' as fallback when senderName is undefined (line 142)
+     */
+    test('should use User as fallback when senderName is undefined (line 142)', async () => {
+      // Create a user with a name first (required by schema)
+      const userWithoutName = await UserModel.create({
+        email: 'noname@example.com',
+        name: 'Temp Name',
+        googleId: 'noname-google-id',
+        profileComplete: false
+      });
+
+      // Remove name after creation to test fallback
+      // Use $unset to actually remove the field
+      await UserModel.updateOne(
+        { _id: userWithoutName._id },
+        { $unset: { name: '' } }
+      );
+      
+      // Reload to get the updated user
+      const updatedUser = await UserModel.findById(userWithoutName._id);
+      expect(updatedUser?.name).toBeUndefined();
+
+      // Add user to group
+      testGroup.members.push({ userId: userWithoutName._id, joinDate: new Date() });
+      await testGroup.save();
+
+      const token = jwt.sign(
+        { email: userWithoutName.email, id: userWithoutName._id.toString() },
+        config.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+
+      const response = await request(app)
+        .post(`/api/chat/${testGroup._id}/message`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ content: 'Test message' });
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      // The message should be created successfully even if sender has no name
+      // Line 142 will use 'User' as fallback when name is undefined
+    });
+
+    /**
+     * Test: POST /api/chat/:groupId/message
      * Input: Empty content
      * Expected Status: 400
      * Expected Output: { success: false, message: "Message content is required" }

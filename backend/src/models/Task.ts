@@ -40,10 +40,9 @@ const TaskSchema = new Schema<ITask>({
   },
   requiredPeople: {
     type: Number,
-    required: true,
+    required: false,
     min: 1,
     max: 10,
-    default: 1,
     validate: {
       validator: Number.isInteger,
       message: 'Required people must be an integer between 1 and 10'
@@ -51,11 +50,11 @@ const TaskSchema = new Schema<ITask>({
   },
   deadline: {
     type: Date,
-    required: function(this: { recurrence: string }) {
+    required: function(this: any) {
       return this.recurrence === 'one-time';
     },
     validate: {
-      validator: function(this: { recurrence: string }, value: Date) {
+      validator: function(this: any, value: Date) {
         if (this.recurrence === 'one-time' && value) {
           return value > new Date();
         }
@@ -90,22 +89,22 @@ const TaskSchema = new Schema<ITask>({
 });
 
 // Virtual for completion rate
-TaskSchema.virtual('completionRate').get(function(this: { assignments: { status: string }[] }) {
+TaskSchema.virtual('completionRate').get(function(this: any) {
   if (this.assignments.length === 0) return 0;
-  const completed = this.assignments.filter((assignment: { status: string }) => 
+  const completed = this.assignments.filter((assignment: any) => 
     assignment.status === 'completed'
   ).length;
   return Math.round((completed / this.assignments.length) * 100);
 });
 
 // Virtual for current week assignment
-TaskSchema.virtual('currentWeekAssignment').get(function(this: { assignments: { weekStart: Date }[] }) {
+TaskSchema.virtual('currentWeekAssignment').get(function(this: any) {
   const now = new Date();
   const startOfWeek = new Date(now);
   startOfWeek.setDate(now.getDate() - now.getDay());
   startOfWeek.setHours(0, 0, 0, 0);
   
-  return this.assignments.find((assignment: { weekStart: Date }) => 
+  return this.assignments.find((assignment: any) => 
     assignment.weekStart.getTime() === startOfWeek.getTime()
   );
 });
@@ -118,8 +117,8 @@ TaskSchema.index({ 'assignments.weekStart': 1 });
 
 // Method to assign task to users for a specific week
 TaskSchema.methods.assignToWeek = function(weekStart: Date, userIds: string[]) {
-  // Remove existing assignment for this week
-  this.assignments = this.assignments.filter((assignment: { weekStart: Date }) => 
+  // Remove existing anyfor this week
+  this.assignments = this.assignments.filter((assignment: any) => 
     assignment.weekStart.getTime() !== weekStart.getTime()
   );
   

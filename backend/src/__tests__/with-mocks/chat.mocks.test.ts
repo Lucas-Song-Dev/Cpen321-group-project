@@ -463,6 +463,24 @@ describe('Chat API Tests - With Mocking', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
     });
+
+    /**
+     * Test: POST /api/chat/:groupId/poll/:messageId/vote
+     * Input: Invalid groupId format
+     * Expected Status: 400
+     * Expected Output: { success: false, message: "Invalid group ID format" }
+     * Expected Behavior: Should reject invalid groupId format (line 249)
+     */
+    test('should reject invalid groupId format (line 249)', async () => {
+      const response = await request(app)
+        .post(`/api/chat/invalid-group-id/poll/${poll._id}/vote`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ option: 'Yes' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Invalid group ID format');
+    });
   });
 
   // ===================================================================
