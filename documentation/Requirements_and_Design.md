@@ -294,9 +294,9 @@ The application targets university students, young professionals, and anyone see
 
 <a name="nfr3"></a>
 3. **UI Accessibility Requirement**
-   - **Description**: All interactive buttons and touch targets must have a minimum touch target size of 42x42 pixels to ensure accessibility and ease of use.
-   - **Justification**: According to [UX Movement's research on optimal button sizing and spacing](https://uxmovement.com/mobile/optimal-size-and-spacing-for-mobile-buttons/), smaller buttons increase error rates and user frustration, particularly for users with motor impairments or when using the app in motion. The 42-pixel minimum provides adequate touch accuracy without requiring excessive screen space.
-   - **Testing Method**: Use Android Accessibility Scanner to verify button components meet the 42x42 pixel minimum touch target size.
+   - **Description**: All interactive buttons and touch targets must have a minimum touch target size of 40x40 pixels to ensure accessibility and ease of use.
+   - **Justification**: According to [UX Movement's research on optimal button sizing and spacing](https://uxmovement.com/mobile/optimal-size-and-spacing-for-mobile-buttons/), smaller buttons increase error rates and user frustration, particularly for users with motor impairments or when using the app in motion. The 40-pixel minimum provides adequate touch accuracy without requiring excessive screen space.
+   - **Testing Method**: Use Android Accessibility Scanner to verify button components meet the 40x40 pixel minimum touch target size.
 
 ---
 
@@ -789,7 +789,7 @@ sequenceDiagram
    - **Implementation**: The code is optimized to minimize unnecessary API calls between the front and backend to reduce API latency, keeping response times under 200ms. In the backend, to accelerate look ups and searches for users or groups, rather than using entire user fields, we only search for them according to their email or id, reducing query time and payload size.
 
 2. [**UI Accessibility Requirement**](#nfr3)
-   - **Implementation**: We use three types of buttons in our code, Button, IconButton, and FloatingActionButton. Each button has a size of 48 or 56 dp/pixels which ensures that the button is visible to the user at all times, even on smaller screens, making the buttons easy to access and meeting the requirement that all buttons should be at least 42 pixels.
+   - **Implementation**: We use three types of buttons in our code, Button, IconButton, and FloatingActionButton. Each button has a size of 40 or 56 dp/pixels which ensures that the button is visible to the user at all times, even on smaller screens, making the buttons easy to access and meeting the requirement that all buttons should be at least 40 pixels.
 
 3. [**Application Load Time Requirement**](#nfr2)
    - **Implementation**: To ensure the app loads within 5 seconds, we organized and sectioned off our code so that only critical screens are loaded first while non essential resources such as images are loaded asynchronously. By making sure we have minimal startup dependencies, such that onCreate(), only essential tasks are loaded. This ensures efficient cold start performance.

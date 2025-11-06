@@ -173,7 +173,7 @@ fun OptionalProfileScreen(
                 ) {
                     OutlinedButton(
                         onClick = { imagePickerLauncher.launch("image/*") },
-                        modifier = Modifier.height(48.dp)
+                        modifier = Modifier.height(40.dp)
                     ) {
                         Icon(
                             Icons.Default.Add,
@@ -187,7 +187,7 @@ fun OptionalProfileScreen(
                     if (selectedImageUri != null) {
                         OutlinedButton(
                             onClick = { selectedImageUri = null },
-                            modifier = Modifier.height(48.dp)
+                            modifier = Modifier.height(40.dp)
                         ) {
                             Text("Remove", fontSize = 12.sp)
                         }
