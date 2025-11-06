@@ -128,8 +128,10 @@ class TaskRepository {
             ApiResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             ApiResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: RuntimeException) {
-            ApiResponse(false, "Unexpected runtime error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            ApiResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            ApiResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
