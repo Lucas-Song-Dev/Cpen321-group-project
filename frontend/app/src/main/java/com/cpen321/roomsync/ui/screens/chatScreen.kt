@@ -93,23 +93,7 @@ fun MessageBubble(
         }
     ) {
         if (!message.isOwnMessage) {
-            // Avatar
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = message.senderName.first().uppercase(),
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
+            MessageBubblePart2(message)
         }
 
         Column(
@@ -132,94 +116,10 @@ fun MessageBubble(
             
             when (message.type) {
                 MessageType.TEXT -> {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(
-                            topStart = 16.dp,
-                            topEnd = 16.dp,
-                            bottomStart = if (message.isOwnMessage) 16.dp else 4.dp,
-                            bottomEnd = if (message.isOwnMessage) 4.dp else 16.dp
-                        ),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (message.isOwnMessage) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.surfaceVariant
-                            }
-                        )
-                    ) {
-                        Text(
-                            text = message.content,
-                            modifier = Modifier.padding(12.dp),
-                            color = if (message.isOwnMessage) {
-                                Color.White
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                    }
+                    MessageBubblePart3(message)
                 }
                 MessageType.POLL -> {
-                    // Show poll as a special message with poll icon
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPollClick() },
-                        shape = RoundedCornerShape(
-                            topStart = 16.dp,
-                            topEnd = 16.dp,
-                            bottomStart = if (message.isOwnMessage) 16.dp else 4.dp,
-                            bottomEnd = if (message.isOwnMessage) 4.dp else 16.dp
-                        ),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (message.isOwnMessage) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.surfaceVariant
-                            }
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "📊",
-                                    fontSize = 16.sp,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(
-                                    text = "Poll",
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (message.isOwnMessage) {
-                                        Color.White
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    }
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = message.content,
-                                color = if (message.isOwnMessage) {
-                                    Color.White
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Tap to view and vote →",
-                                fontSize = 12.sp,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (message.isOwnMessage) {
-                                    Color.White.copy(alpha = 0.8f)
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                }
-                            )
-                        }
-                    }
+                    MessageBubblePart4(message, onPollClick)
                 }
             }
             
@@ -234,24 +134,146 @@ fun MessageBubble(
         }
 
         if (message.isOwnMessage) {
-            Spacer(modifier = Modifier.width(8.dp))
-            // Avatar
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.secondary)
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Y",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            MessageBubblePart5()
         }
+    }
+}
+
+@Composable
+private fun MessageBubblePart2(message: ChatMessage) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary)
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message.senderName.first().uppercase(),
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    Spacer(modifier = Modifier.width(8.dp))
+}
+
+@Composable
+private fun MessageBubblePart3(message: ChatMessage) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(
+            topStart = 16.dp,
+            topEnd = 16.dp,
+            bottomStart = if (message.isOwnMessage) 16.dp else 4.dp,
+            bottomEnd = if (message.isOwnMessage) 4.dp else 16.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (message.isOwnMessage) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
+        )
+    ) {
+        Text(
+            text = message.content,
+            modifier = Modifier.padding(12.dp),
+            color = if (message.isOwnMessage) {
+                Color.White
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+    }
+}
+
+@Composable
+private fun MessageBubblePart4(message: ChatMessage, onPollClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onPollClick() },
+        shape = RoundedCornerShape(
+            topStart = 16.dp,
+            topEnd = 16.dp,
+            bottomStart = if (message.isOwnMessage) 16.dp else 4.dp,
+            bottomEnd = if (message.isOwnMessage) 4.dp else 16.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (message.isOwnMessage) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant
+            }
+        )
+    ) {
+        MessageBubblePart4Content(message)
+    }
+}
+
+@Composable
+private fun MessageBubblePart4Content(message: ChatMessage) {
+    Column(modifier = Modifier.padding(12.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "📊",
+                fontSize = 16.sp,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(
+                text = "Poll",
+                fontWeight = FontWeight.Bold,
+                color = if (message.isOwnMessage) {
+                    Color.White
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = message.content,
+            color = if (message.isOwnMessage) {
+                Color.White
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Tap to view and vote →",
+            fontSize = 12.sp,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (message.isOwnMessage) {
+                Color.White.copy(alpha = 0.8f)
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            }
+        )
+    }
+}
+
+@Composable
+private fun MessageBubblePart5() {
+    Spacer(modifier = Modifier.width(8.dp))
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.secondary)
+            .padding(8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Y",
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
@@ -339,124 +361,13 @@ fun CreatePollDialog(
         },
         text = {
             Column {
-                OutlinedTextField(
-                    value = question,
-                    onValueChange = { question = it },
-                    label = { Text("Poll Question") },
-                    modifier = Modifier.fillMaxWidth(),
-                    maxLines = 2
+                CreatePollDialogPart2(
+                    question = question,
+                    onQuestionChange = { question = it },
+                    options = options,
+                    onOptionsChange = { options = it }
                 )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = "Options:",
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                
-                options.forEachIndexed { index, option ->
-                    OutlinedTextField(
-                        value = option,
-                        onValueChange = { newValue ->
-                            options = options.toMutableList().apply {
-                                set(index, newValue)
-                            }
-                        },
-                        label = { Text("Option ${index + 1}") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                    )
-                }
-                
-                if (options.size < 10) {
-                    Button(
-                        onClick = {
-                            options = options + ""
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Add Option")
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Poll type selection
-                Text(
-                    text = "Poll Type",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterChip(
-                        selected = pollType == PollType.SINGLE_CHOICE,
-                        onClick = { pollType = PollType.SINGLE_CHOICE },
-                        label = { Text("Single Choice") }
-                    )
-                    FilterChip(
-                        selected = pollType == PollType.MULTIPLE_CHOICE,
-                        onClick = { pollType = PollType.MULTIPLE_CHOICE },
-                        label = { Text("Multiple Choice") }
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Duration selection
-                Text(
-                    text = "Duration (days)",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // First row - 2 options
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = duration == 1,
-                            onClick = { duration = 1 },
-                            label = { Text("1 day") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            selected = duration == 3,
-                            onClick = { duration = 3 },
-                            label = { Text("3 days") },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    // Second row - 2 options
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = duration == 7,
-                            onClick = { duration = 7 },
-                            label = { Text("1 week") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            selected = duration == 30,
-                            onClick = { duration = 30 },
-                            label = { Text("1 month") },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
+                CreatePollDialogPart3(pollType, { pollType = it }, duration, { duration = it })
             }
         },
         confirmButton = {
@@ -481,6 +392,145 @@ fun CreatePollDialog(
     )
 }
 
+@Composable
+private fun CreatePollDialogPart2(
+    question: String,
+    onQuestionChange: (String) -> Unit,
+    options: List<String>,
+    onOptionsChange: (List<String>) -> Unit
+) {
+    OutlinedTextField(
+        value = question,
+        onValueChange = onQuestionChange,
+        label = { Text("Poll Question") },
+        modifier = Modifier.fillMaxWidth(),
+        maxLines = 2
+    )
+    
+    Spacer(modifier = Modifier.height(16.dp))
+    
+    Text(
+        text = "Options:",
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+    
+    options.forEachIndexed { index, option ->
+        OutlinedTextField(
+            value = option,
+            onValueChange = { newValue ->
+                onOptionsChange(options.toMutableList().apply {
+                    set(index, newValue)
+                })
+            },
+            label = { Text("Option ${index + 1}") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        )
+    }
+    
+    if (options.size < 10) {
+        Button(
+            onClick = {
+                onOptionsChange(options + "")
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Add Option")
+        }
+    }
+}
+
+@Composable
+private fun CreatePollDialogPart3(
+    pollType: PollType,
+    onPollTypeChange: (PollType) -> Unit,
+    duration: Int,
+    onDurationChange: (Int) -> Unit
+) {
+    Spacer(modifier = Modifier.height(16.dp))
+    
+    Text(
+        text = "Poll Type",
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.onSurface
+    )
+    
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FilterChip(
+            selected = pollType == PollType.SINGLE_CHOICE,
+            onClick = { onPollTypeChange(PollType.SINGLE_CHOICE) },
+            label = { Text("Single Choice") }
+        )
+        FilterChip(
+            selected = pollType == PollType.MULTIPLE_CHOICE,
+            onClick = { onPollTypeChange(PollType.MULTIPLE_CHOICE) },
+            label = { Text("Multiple Choice") }
+        )
+    }
+    
+    Spacer(modifier = Modifier.height(16.dp))
+    
+    Text(
+        text = "Duration (days)",
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.onSurface
+    )
+    
+    CreatePollDialogPart4(duration, onDurationChange)
+}
+
+@Composable
+private fun CreatePollDialogPart4(
+    duration: Int,
+    onDurationChange: (Int) -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = duration == 1,
+                onClick = { onDurationChange(1) },
+                label = { Text("1 day") },
+                modifier = Modifier.weight(1f)
+            )
+            FilterChip(
+                selected = duration == 3,
+                onClick = { onDurationChange(3) },
+                label = { Text("3 days") },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = duration == 7,
+                onClick = { onDurationChange(7) },
+                label = { Text("1 week") },
+                modifier = Modifier.weight(1f)
+            )
+            FilterChip(
+                selected = duration == 30,
+                onClick = { onDurationChange(30) },
+                label = { Text("1 month") },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -500,11 +550,9 @@ fun ChatScreen(
 
     println("ChatScreen: Received groupId: '$groupId', currentUserId: '$currentUserId'")
 
-    // Get auth token from AuthViewModel
     val authState by authViewModel.authState.collectAsState()
     val authToken = authState?.token
 
-    // Use ViewModel with key to recreate when token becomes available
     val viewModel: ChatViewModel = viewModel(key = "$groupId-$authToken") { 
         ChatViewModel(groupId, currentUserId, authToken) 
     }
@@ -517,73 +565,8 @@ fun ChatScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Top App Bar with extra padding
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 4.dp
-            ) {
-                Column(
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    TopAppBar(
-                        title = {
-                            Column {
-                                Text(
-                                    text = groupName,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "Group Chat",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = onBack) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                            }
-                        },
-                actions = {
-                    IconButton(onClick = { showPollDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Create Poll")
-                    }
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-                }
-            }
-
-            // Messages List
-            println("ChatScreen: Current UI state: $uiState")
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(vertical = 8.dp),
-                reverseLayout = true
-            ) {
-                val reversedMessages = uiState.messages.reversed()
-                println("ChatScreen: Displaying ${reversedMessages.size} messages")
-                items(reversedMessages) { message ->
-                    println("ChatScreen: Displaying message: $message")
-                    MessageBubble(
-                        message = convertViewModelMessage(message),
-                        onPollClick = onNavigateToPolls
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-
-            // Message Input
+            ChatScreenPart2(groupName, onBack, { showPollDialog = true }, { showMenu = true })
+            ChatScreenPart3(uiState, listState, onNavigateToPolls)
             MessageInput(
                 messageText = messageText,
                 onMessageTextChange = { messageText = it },
@@ -592,8 +575,6 @@ fun ChatScreen(
                         viewModel.sendMessage(messageText)
                         messageText = ""
                         keyboardController?.hide()
-                        
-                        // Auto-scroll to bottom
                         coroutineScope.launch {
                             listState.animateScrollToItem(0)
                         }
@@ -603,7 +584,6 @@ fun ChatScreen(
             )
         }
 
-        // Poll Dialog
         if (showPollDialog) {
             CreatePollDialog(
                 onDismiss = { showPollDialog = false },
@@ -614,53 +594,133 @@ fun ChatScreen(
             )
         }
 
-        // Menu Dropdown
         if (showMenu) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { showMenu = false }
-            ) {
-                Card(
-                    modifier = Modifier
-                        .padding(end = 16.dp, top = 80.dp)
-                        .width(200.dp)
-                ) {
-                    Column {
-                        TextButton(
-                            onClick = {
-                                showMenu = false
-                                // TODO: Implement group settings
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Group Settings",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                        TextButton(
-                            onClick = {
-                                showMenu = false
-                                // TODO: Implement member list
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "View Members",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                    }
-                }
-            }
+            ChatScreenPart4({ showMenu = false })
         }
 
-        // Show error snackbar
         uiState.error?.let { error ->
             LaunchedEffect(error) {
-                // TODO: Show snackbar with error message
                 viewModel.clearError()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChatScreenPart2(
+    groupName: String,
+    onBack: () -> Unit,
+    onShowPollDialog: () -> Unit,
+    onShowMenu: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(top = 16.dp)
+        ) {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = groupName,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Group Chat",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onShowPollDialog) {
+                        Icon(Icons.Default.Add, contentDescription = "Create Poll")
+                    }
+                    IconButton(onClick = onShowMenu) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.ChatScreenPart3(
+    uiState: com.cpen321.roomsync.ui.viewmodels.ChatUiState,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    onNavigateToPolls: () -> Unit
+) {
+    println("ChatScreen: Current UI state: $uiState")
+    LazyColumn(
+        state = listState,
+        modifier = Modifier
+            .weight(1f)
+            .padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(vertical = 8.dp),
+        reverseLayout = true
+    ) {
+        val reversedMessages = uiState.messages.reversed()
+        println("ChatScreen: Displaying ${reversedMessages.size} messages")
+        items(reversedMessages) { message ->
+            println("ChatScreen: Displaying message: $message")
+            MessageBubble(
+                message = convertViewModelMessage(message),
+                onPollClick = onNavigateToPolls
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun ChatScreenPart4(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable { onDismiss() }
+    ) {
+        Card(
+            modifier = Modifier
+                .padding(end = 16.dp, top = 80.dp)
+                .width(200.dp)
+        ) {
+            Column {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Group Settings",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "View Members",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
         }
     }
