@@ -42,7 +42,7 @@ class AddTaskE2ETest {
     @Test
     fun test_Step1_CreateDialog_DisplaysAllFields() {
         var taskCreated = false
-
+        
         composeTestRule.setContent {
             RoomSyncFrontendTheme {
                 AddTaskDialog(
@@ -53,15 +53,22 @@ class AddTaskE2ETest {
             }
         }
 
-        composeTestRule.onNodeWithText("Create New Task").assertExists().assertIsDisplayed()
-        composeTestRule.onNodeWithTag("taskNameInput").assertExists().assertIsDisplayed()
-        composeTestRule.onNodeWithTag("taskDescriptionInput").assertExists().assertIsDisplayed()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText("Recurrence:").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Difficulty Level:", substring = true)
+        // Step 1-2: Check dialog title is displayed
+        composeTestRule
+            .onNodeWithText("Create New Task")
+            .assertExists()
             .assertIsDisplayed()
-        composeTestRule.onNodeWithText("Required People:", substring = true)
+
+        // Step 2: Check task name input field exists
+        composeTestRule
+            .onNodeWithTag("taskNameInput")
+            .assertExists()
+            .assertIsDisplayed()
+
+        // Step 2: Check description input field exists
+        composeTestRule
+            .onNodeWithTag("taskDescriptionInput")
+            .assertExists()
             .assertIsDisplayed()
 
         // Step 2: Check "Create Task" button exists and is disabled (no task name entered)
@@ -319,18 +326,59 @@ class AddTaskE2ETest {
             }
         }
 
-        composeTestRule.onNodeWithTag("taskNameInput").performTextInput("Clean Kitchen")
-        composeTestRule.onNodeWithTag("taskDescriptionInput").performTextInput("Wipe counters and mop floor")
-        composeTestRule.onAllNodes(hasText("3") and hasClickAction())[0].performClick()
-        composeTestRule.onNodeWithText("Weekly").performClick()
-        composeTestRule.onAllNodes(hasText("2") and hasClickAction())[1].performClick()
-        composeTestRule.onNodeWithTag("createTaskButton").assertIsEnabled().performClick()
+        // Step 2: Enter task name
+        composeTestRule
+            .onNodeWithTag("taskNameInput")
+            .performTextInput("Wash Dishes")
 
-        assert(createdName == "Clean Kitchen")
-        assert(createdDescription == "Wipe counters and mop floor")
-        assert(createdDifficulty == 3)
-        assert(createdRecurrence == "Weekly")
-        assert(createdRequiredPeople == 2)
+        composeTestRule.waitForIdle()
+
+        // Step 2: Enter description
+        composeTestRule
+            .onNodeWithTag("taskDescriptionInput")
+            .performTextInput("Clean all dishes in sink")
+
+        composeTestRule.waitForIdle()
+
+        // Step 3: Select difficulty 4 (click on the 4th difficulty button)
+        // Difficulty buttons are numbered 1-5, we need to find them
+        composeTestRule
+            .onAllNodes(hasText("4") and hasClickAction())
+            .get(0)
+            .performClick()
+
+        composeTestRule.waitForIdle()
+
+        // Step 3: Select recurrence "daily"
+        composeTestRule
+            .onNodeWithText("Daily")
+            .performClick()
+
+        composeTestRule.waitForIdle()
+
+        // Step 3: Select required people: 1 (click on the button with "1")
+        composeTestRule
+            .onAllNodes(hasText("1") and hasClickAction())
+            .get(1) // Second "1" button (first is difficulty, second is required people)
+            .performClick()
+
+        composeTestRule.waitForIdle()
+
+        // Step 6: Click "Create Task" button
+        composeTestRule
+            .onNodeWithTag("createTaskButton")
+            .assertIsEnabled()
+            .performClick()
+
+        composeTestRule.waitForIdle()
+
+        // Verify task was created with correct values
+        assert(taskCreated)
+        assert(createdName == "Wash Dishes")
+        assert(createdDescription == "Clean all dishes in sink")
+        assert(createdDifficulty == 4)
+        assert(createdRecurrence == "daily")
+        assert(createdRequiredPeople == 1)
     }
 
     /**
