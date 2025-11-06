@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { IGroup } from '../types';
 
 const GroupSchema = new Schema<IGroup>({

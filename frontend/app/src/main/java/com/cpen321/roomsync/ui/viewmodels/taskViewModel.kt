@@ -206,27 +206,29 @@ class TaskViewModel(
                     )
                 }
             } catch (e: java.io.IOException) {
-                _uiState.value = _uiState.value.copy(
-                    error = "Network error: ${e.message}",
-                    isLoading = false
-                )
+                loadTasksPart2(e)
             } catch (e: retrofit2.HttpException) {
-                _uiState.value = _uiState.value.copy(
-                    error = "HTTP error: ${e.code()} - ${e.message()}",
-                    isLoading = false
-                )
+                loadTasksPart2(e)
             } catch (e: IllegalArgumentException) {
-                _uiState.value = _uiState.value.copy(
-                    error = "Invalid data loading tasks: ${e.message}",
-                    isLoading = false
-                )
+                loadTasksPart2(e)
             } catch (e: IllegalStateException) {
-                _uiState.value = _uiState.value.copy(
-                    error = "State error loading tasks: ${e.message}",
-                    isLoading = false
-                )
+                loadTasksPart2(e)
             }
         }
+    }
+    
+    private fun loadTasksPart2(e: Exception) {
+        val errorMsg = when (e) {
+            is java.io.IOException -> "Network error: ${e.message}"
+            is retrofit2.HttpException -> "HTTP error: ${e.code()} - ${e.message()}"
+            is IllegalArgumentException -> "Invalid data loading tasks: ${e.message}"
+            is IllegalStateException -> "State error loading tasks: ${e.message}"
+            else -> "Error loading tasks: ${e.message}"
+        }
+        _uiState.value = _uiState.value.copy(
+            error = errorMsg,
+            isLoading = false
+        )
     }
     
     fun loadMyTasks() {

@@ -112,27 +112,29 @@ class PollingViewModel(
                     )
                 }
             } catch (e: java.io.IOException) {
-                _uiState.value = _uiState.value.copy(
-                    error = "Network error while loading polls: ${e.message}",
-                    isLoading = false
-                )
+                loadPollsPart2(e)
             } catch (e: retrofit2.HttpException) {
-                _uiState.value = _uiState.value.copy(
-                    error = "HTTP error while loading polls: ${e.code()} - ${e.message()}",
-                    isLoading = false
-                )
+                loadPollsPart2(e)
             } catch (e: IllegalArgumentException) {
-                _uiState.value = _uiState.value.copy(
-                    error = "Invalid data while loading polls: ${e.message}",
-                    isLoading = false
-                )
+                loadPollsPart2(e)
             } catch (e: IllegalStateException) {
-                _uiState.value = _uiState.value.copy(
-                    error = "State error while loading polls: ${e.message}",
-                    isLoading = false
-                )
+                loadPollsPart2(e)
             }
         }
+    }
+    
+    private fun loadPollsPart2(e: Exception) {
+        val errorMsg = when (e) {
+            is java.io.IOException -> "Network error while loading polls: ${e.message}"
+            is retrofit2.HttpException -> "HTTP error while loading polls: ${e.code()} - ${e.message()}"
+            is IllegalArgumentException -> "Invalid data while loading polls: ${e.message}"
+            is IllegalStateException -> "State error while loading polls: ${e.message}"
+            else -> "Error loading polls: ${e.message}"
+        }
+        _uiState.value = _uiState.value.copy(
+            error = errorMsg,
+            isLoading = false
+        )
     }
 
     fun refreshPolls() {
