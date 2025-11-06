@@ -215,13 +215,16 @@ fun OptionalProfileScreen(
                 )
             }
 
-            OptionalProfileScreenPart2(
-                morningNight, { morningNight = it },
-                drinking, { drinking = it },
-                partying, { partying = it },
-                noise, { noise = it },
-                profession, { profession = it }
+            Text(
+                text = "Living Preferences:",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
             )
+            
+            OptionalProfileScreenPart2(morningNight, { morningNight = it }, drinking, { drinking = it }, partying, { partying = it })
+            OptionalProfileScreenPart3(noise, { noise = it }, profession, { profession = it })
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -277,33 +280,15 @@ private fun OptionalProfileScreenPart2(
     drinking: String?,
     onDrinkingChange: (String?) -> Unit,
     partying: String?,
-    onPartyingChange: (String?) -> Unit,
-    noise: String?,
-    onNoiseChange: (String?) -> Unit,
-    profession: String?,
-    onProfessionChange: (String?) -> Unit
+    onPartyingChange: (String?) -> Unit
 ) {
-    Text(
-        text = "Living Preferences:",
-        fontSize = 18.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
-    )
-    
-    OptionalProfileScreenPart3(morningNight, onMorningNightChange, drinking, onDrinkingChange, partying, onPartyingChange)
-    OptionalProfileScreenPart4(noise, onNoiseChange, profession, onProfessionChange)
+    OptionalProfileScreenPart2Schedule(morningNight, onMorningNightChange)
+    OptionalProfileScreenPart2Drinking(drinking, onDrinkingChange)
+    OptionalProfileScreenPart2Partying(partying, onPartyingChange)
 }
 
 @Composable
-private fun OptionalProfileScreenPart3(
-    morningNight: String?,
-    onMorningNightChange: (String?) -> Unit,
-    drinking: String?,
-    onDrinkingChange: (String?) -> Unit,
-    partying: String?,
-    onPartyingChange: (String?) -> Unit
-) {
+private fun OptionalProfileScreenPart2Schedule(morningNight: String?, onChange: (String?) -> Unit) {
     Column {
         Text(
             text = "Schedule:",
@@ -315,24 +300,15 @@ private fun OptionalProfileScreenPart3(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(
-                onClick = { onMorningNightChange("Morning") },
-                label = { Text("Morning") },
-                selected = morningNight == "Morning"
-            )
-            FilterChip(
-                onClick = { onMorningNightChange("Night") },
-                label = { Text("Night") },
-                selected = morningNight == "Night"
-            )
-            FilterChip(
-                onClick = { onMorningNightChange("Flexible") },
-                label = { Text("Flexible") },
-                selected = morningNight == "Flexible"
-            )
+            FilterChip(onClick = { onChange("Morning") }, label = { Text("Morning") }, selected = morningNight == "Morning")
+            FilterChip(onClick = { onChange("Night") }, label = { Text("Night") }, selected = morningNight == "Night")
+            FilterChip(onClick = { onChange("Flexible") }, label = { Text("Flexible") }, selected = morningNight == "Flexible")
         }
     }
-    
+}
+
+@Composable
+private fun OptionalProfileScreenPart2Drinking(drinking: String?, onChange: (String?) -> Unit) {
     Column {
         Text(
             text = "Drinking:",
@@ -344,24 +320,15 @@ private fun OptionalProfileScreenPart3(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(
-                onClick = { onDrinkingChange("None") },
-                label = { Text("None") },
-                selected = drinking == "None"
-            )
-            FilterChip(
-                onClick = { onDrinkingChange("Occasional") },
-                label = { Text("Occasional") },
-                selected = drinking == "Occasional"
-            )
-            FilterChip(
-                onClick = { onDrinkingChange("Regular") },
-                label = { Text("Regular") },
-                selected = drinking == "Regular"
-            )
+            FilterChip(onClick = { onChange("None") }, label = { Text("None") }, selected = drinking == "None")
+            FilterChip(onClick = { onChange("Occasional") }, label = { Text("Occasional") }, selected = drinking == "Occasional")
+            FilterChip(onClick = { onChange("Regular") }, label = { Text("Regular") }, selected = drinking == "Regular")
         }
     }
-    
+}
+
+@Composable
+private fun OptionalProfileScreenPart2Partying(partying: String?, onChange: (String?) -> Unit) {
     Column {
         Text(
             text = "Partying:",
@@ -373,27 +340,15 @@ private fun OptionalProfileScreenPart3(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(
-                onClick = { onPartyingChange("None") },
-                label = { Text("None") },
-                selected = partying == "None"
-            )
-            FilterChip(
-                onClick = { onPartyingChange("Occasional") },
-                label = { Text("Occasional") },
-                selected = partying == "Occasional"
-            )
-            FilterChip(
-                onClick = { onPartyingChange("Regular") },
-                label = { Text("Regular") },
-                selected = partying == "Regular"
-            )
+            FilterChip(onClick = { onChange("None") }, label = { Text("None") }, selected = partying == "None")
+            FilterChip(onClick = { onChange("Occasional") }, label = { Text("Occasional") }, selected = partying == "Occasional")
+            FilterChip(onClick = { onChange("Regular") }, label = { Text("Regular") }, selected = partying == "Regular")
         }
     }
 }
 
 @Composable
-private fun OptionalProfileScreenPart4(
+private fun OptionalProfileScreenPart3(
     noise: String?,
     onNoiseChange: (String?) -> Unit,
     profession: String?,
@@ -410,21 +365,9 @@ private fun OptionalProfileScreenPart4(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(
-                onClick = { onNoiseChange("Quiet") },
-                label = { Text("Quiet") },
-                selected = noise == "Quiet"
-            )
-            FilterChip(
-                onClick = { onNoiseChange("Moderate") },
-                label = { Text("Moderate") },
-                selected = noise == "Moderate"
-            )
-            FilterChip(
-                onClick = { onNoiseChange("Loud") },
-                label = { Text("Loud") },
-                selected = noise == "Loud"
-            )
+            FilterChip(onClick = { onNoiseChange("Quiet") }, label = { Text("Quiet") }, selected = noise == "Quiet")
+            FilterChip(onClick = { onNoiseChange("Moderate") }, label = { Text("Moderate") }, selected = noise == "Moderate")
+            FilterChip(onClick = { onNoiseChange("Loud") }, label = { Text("Loud") }, selected = noise == "Loud")
         }
     }
     
@@ -439,21 +382,9 @@ private fun OptionalProfileScreenPart4(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(
-                onClick = { onProfessionChange("Student") },
-                label = { Text("Student") },
-                selected = profession == "Student"
-            )
-            FilterChip(
-                onClick = { onProfessionChange("Worker") },
-                label = { Text("Worker") },
-                selected = profession == "Worker"
-            )
-            FilterChip(
-                onClick = { onProfessionChange("Unemployed") },
-                label = { Text("Unemployed") },
-                selected = profession == "Unemployed"
-            )
+            FilterChip(onClick = { onProfessionChange("Student") }, label = { Text("Student") }, selected = profession == "Student")
+            FilterChip(onClick = { onProfessionChange("Worker") }, label = { Text("Worker") }, selected = profession == "Worker")
+            FilterChip(onClick = { onProfessionChange("Unemployed") }, label = { Text("Unemployed") }, selected = profession == "Unemployed")
         }
     }
 }

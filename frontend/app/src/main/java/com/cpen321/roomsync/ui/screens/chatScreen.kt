@@ -209,46 +209,51 @@ private fun MessageBubblePart4(message: ChatMessage, onPollClick: () -> Unit) {
             }
         )
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "📊",
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = "Poll",
-                    fontWeight = FontWeight.Bold,
-                    color = if (message.isOwnMessage) {
-                        Color.White
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
+        MessageBubblePart4Content(message)
+    }
+}
+
+@Composable
+private fun MessageBubblePart4Content(message: ChatMessage) {
+    Column(modifier = Modifier.padding(12.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = message.content,
+                text = "📊",
+                fontSize = 16.sp,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(
+                text = "Poll",
+                fontWeight = FontWeight.Bold,
                 color = if (message.isOwnMessage) {
                     Color.White
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 }
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Tap to view and vote →",
-                fontSize = 12.sp,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (message.isOwnMessage) {
-                    Color.White.copy(alpha = 0.8f)
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                }
-            )
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = message.content,
+            color = if (message.isOwnMessage) {
+                Color.White
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Tap to view and vote →",
+            fontSize = 12.sp,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (message.isOwnMessage) {
+                Color.White.copy(alpha = 0.8f)
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            }
+        )
     }
 }
 
@@ -355,16 +360,15 @@ fun CreatePollDialog(
             Text("Create Poll")
         },
         text = {
-            CreatePollDialogPart2(
-                question = question,
-                onQuestionChange = { question = it },
-                options = options,
-                onOptionsChange = { options = it },
-                pollType = pollType,
-                onPollTypeChange = { pollType = it },
-                duration = duration,
-                onDurationChange = { duration = it }
-            )
+            Column {
+                CreatePollDialogPart2(
+                    question = question,
+                    onQuestionChange = { question = it },
+                    options = options,
+                    onOptionsChange = { options = it }
+                )
+                CreatePollDialogPart3(pollType, { pollType = it }, duration, { duration = it })
+            }
         },
         confirmButton = {
             Button(
@@ -393,56 +397,48 @@ private fun CreatePollDialogPart2(
     question: String,
     onQuestionChange: (String) -> Unit,
     options: List<String>,
-    onOptionsChange: (List<String>) -> Unit,
-    pollType: PollType,
-    onPollTypeChange: (PollType) -> Unit,
-    duration: Int,
-    onDurationChange: (Int) -> Unit
+    onOptionsChange: (List<String>) -> Unit
 ) {
-    Column {
+    OutlinedTextField(
+        value = question,
+        onValueChange = onQuestionChange,
+        label = { Text("Poll Question") },
+        modifier = Modifier.fillMaxWidth(),
+        maxLines = 2
+    )
+    
+    Spacer(modifier = Modifier.height(16.dp))
+    
+    Text(
+        text = "Options:",
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+    
+    options.forEachIndexed { index, option ->
         OutlinedTextField(
-            value = question,
-            onValueChange = onQuestionChange,
-            label = { Text("Poll Question") },
-            modifier = Modifier.fillMaxWidth(),
-            maxLines = 2
+            value = option,
+            onValueChange = { newValue ->
+                onOptionsChange(options.toMutableList().apply {
+                    set(index, newValue)
+                })
+            },
+            label = { Text("Option ${index + 1}") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = "Options:",
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
-        options.forEachIndexed { index, option ->
-            OutlinedTextField(
-                value = option,
-                onValueChange = { newValue ->
-                    onOptionsChange(options.toMutableList().apply {
-                        set(index, newValue)
-                    })
-                },
-                label = { Text("Option ${index + 1}") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-            )
+    }
+    
+    if (options.size < 10) {
+        Button(
+            onClick = {
+                onOptionsChange(options + "")
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Add Option")
         }
-        
-        if (options.size < 10) {
-            Button(
-                onClick = {
-                    onOptionsChange(options + "")
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Add Option")
-            }
-        }
-        
-        CreatePollDialogPart3(pollType, onPollTypeChange, duration, onDurationChange)
     }
 }
 

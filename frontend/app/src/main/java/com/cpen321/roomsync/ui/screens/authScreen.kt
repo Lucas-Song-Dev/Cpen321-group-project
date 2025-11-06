@@ -102,7 +102,7 @@ fun AuthScreen(
 private fun AuthScreenPart2(
     onSignUp: () -> Unit,
     onLogin: () -> Unit,
-    authState: com.cpen321.roomsync.ui.viewmodels.AuthState?
+    authState: com.cpen321.roomsync.data.models.AuthResponse?
 ) {
     Button(
         onClick = onSignUp,
