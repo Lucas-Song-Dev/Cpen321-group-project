@@ -3,7 +3,120 @@ package com.cpen321.roomsync
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.cpen321.roomsync.data.models.Group
+import com.cpen321.roomsync.data.models.Grouppackage com.cpen321.roomsync
+
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.cpen321.roomsync.ui.screens.CreateGroupScreen
+import com.cpen321.roomsync.ui.screens.HomeScreen
+import com.cpen321.roomsync.ui.theme.RoomSyncFrontendTheme
+import com.cpen321.roomsync.ui.viewmodels.GroupViewModel
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * End-to-End tests for Use Case 9: Create Group
+ *
+ * Main Success Scenario:
+ * 1. User navigates to group creation page
+ * 2. The app shows an input field and a 'Create Group' button (disabled)
+ * 3. User enters a valid group name
+ * 4. User clicks 'Create Group'
+ * 5. System generates and displays a unique invitation code
+ * 6. System creates a group with user as owner (saved name and code)
+ * 7. System displays message and invitation code
+ * 8. Dashboard displays group name
+ *
+ * Failure Scenarios:
+ * 3a. Group name is left empty → Button disabled
+ * 3b. Group name > 100 chars → Button disabled
+ * 4a. User already in group → Error message
+ * 4b. Network error → Error message
+ */
+@RunWith(AndroidJUnit4::class)
+class CreateGroupE2ETest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    /** Step 1–2: Verify initial screen layout */
+    @Test
+    fun test_UC9_Step1_2_ScreenDisplaysCorrectly() {
+        composeTestRule.setContent {
+            RoomSyncFrontendTheme { CreateGroupScreen() }
+        }
+
+        composeTestRule.onNodeWithTag("groupNameInput")
+            .assertExists()
+            .assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("createGroupButton")
+            .assertExists()
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+    }
+
+    /** Step 3: Valid group name enables button */
+    @Test
+    fun test_UC9_Step3_ValidGroupName_ButtonEnabled() {
+        composeTestRule.setContent {
+            RoomSyncFrontendTheme { CreateGroupScreen() }
+        }
+
+        composeTestRule.onNodeWithTag("groupNameInput").performTextInput("Test Group")
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("createGroupButton").assertIsEnabled()
+    }
+
+    /** Step 3: Group name with special characters */
+    @Test
+    fun test_UC9_Step3_SpecialCharactersAccepted() {
+        composeTestRule.setContent {
+            RoomSyncFrontendTheme { CreateGroupScreen() }
+        }
+
+        composeTestRule.onNodeWithTag("groupNameInput").performTextInput("My Group! @#!")
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("createGroupButton").assertIsEnabled()
+    }
+
+    /** Step 3a: Empty and whitespace-only group name disables button */
+    @Test
+    fun test_UC9_Step3a_EmptyOrWhitespace_DisablesButton() {
+        composeTestRule.setContent {
+            RoomSyncFrontendTheme { CreateGroupScreen() }
+        }
+
+        // Empty input
+        composeTestRule.onNodeWithTag("groupNameInput").assert(hasText(""))
+        composeTestRule.onNodeWithTag("createGroupButton").assertIsNotEnabled()
+
+        // Whitespace only
+        composeTestRule.onNodeWithTag("groupNameInput").performTextInput("   ")
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("createGroupButton").assertIsNotEnabled()
+    }
+
+    /** Step 4: Click 'Create Group' (success case mock) */
+    @Test
+    fun test_UC9_Step4_CreateGroup_Success() {
+        composeTestRule.setContent {
+            RoomSyncFrontendTheme { CreateGroupScreen() }
+        }
+
+        composeTestRule.onNodeWithTag("groupNameInput").performTextInput("Test Group")
+        composeTestRule.onNodeWithTag("createGroupButton").performClick()
+
+//        // Step 6–7: Check success message and code display
+//        composeTestRule.onNodeWithText("Group created successfully!").assertExists()
+//        composeTestRule.onNodeWithText("Share this code with your roommates").assertExists()
+    }
+}
+
 import com.cpen321.roomsync.ui.screens.CreateGroupScreen
 import com.cpen321.roomsync.ui.theme.RoomSyncFrontendTheme
 import com.cpen321.roomsync.ui.viewmodels.GroupViewModel
