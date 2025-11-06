@@ -93,7 +93,7 @@
    npm test
    ```
 
-   This will run all test files in the `src/__tests__/no-mocks/` directory.
+   Runs all backend tests (both `no-mocks/` and `with-mocks/`) per `jest.config.js`.
 
 6. **Run Tests with Coverage Report:**
 
@@ -115,17 +115,25 @@
 
    This will run tests in watch mode, automatically re-running tests when files change.
 
-8. **Run Specific Test File:**
+8. **Run Specific Tests:**
 
-   ```bash
-   npm test -- auth.test.ts
-   ```
+   - By file name (pattern):
 
-   Or to run a specific test file with pattern matching:
+     ```bash
+     npm test -- --testPathPattern=auth
+     ```
 
-   ```bash
-   npm test -- --testPathPattern=auth
-   ```
+   - Exact file path:
+
+     ```bash
+     npm test -- src/__tests__/no-mocks/auth.test.ts
+     ```
+
+   - Only non-functional (response time) tests:
+
+     ```bash
+     npm test -- --testPathPattern=non-functional
+     ```
 
 9. **View Coverage Reports:**
 
