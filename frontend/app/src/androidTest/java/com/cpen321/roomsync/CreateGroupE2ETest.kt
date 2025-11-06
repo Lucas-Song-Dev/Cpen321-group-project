@@ -219,4 +219,3 @@ class CreateGroupE2ETest {
             .assertIsEnabled()
     }
 }
-
