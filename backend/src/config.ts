@@ -1,6 +1,3 @@
-import * as dotenv from "dotenv";
-import path from 'path';
-
 // Hardcoded default configuration
 const defaultConfig = {
   PORT: 4000,
