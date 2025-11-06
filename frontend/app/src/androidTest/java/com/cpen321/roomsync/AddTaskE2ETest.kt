@@ -327,7 +327,7 @@ class AddTaskE2ETest {
         assert(taskCreated)
         assert(taskName == "Clean Kitchen")
         assert(taskDifficulty == 3)
-        assert(recurrence == "weekly")
+        assert(recurrence == "Weekly")
         assert(requiredPeople == 2)
     }
 
