@@ -240,7 +240,6 @@ class GroupViewModel(
     private fun convertApiGroupToViewModel(apiGroup: ApiGroup): Group {
         val groupMembers = apiGroup.members.mapNotNull { member ->
             try {
-                // Skip members with invalid user data
                 if (member.userId?._id == null) {
                     println("GroupViewModel: Skipping member with invalid user ID")
                     return@mapNotNull null
@@ -261,27 +260,30 @@ class GroupViewModel(
             }
         }
         
-        val owner = try {
-            // Handle case where owner might be deleted or invalid
+        val owner = convertApiGroupToViewModelPart2(apiGroup, groupMembers)
+        
+        return Group(
+            id = apiGroup._id,
+            name = apiGroup.name,
+            groupCode = apiGroup.groupCode,
+            owner = owner,
+            members = groupMembers,
+            createdAt = parseIsoDate(apiGroup.createdAt),
+            updatedAt = parseIsoDate(apiGroup.updatedAt)
+        )
+    }
+    
+    private fun convertApiGroupToViewModelPart2(
+        apiGroup: ApiGroup,
+        groupMembers: List<ViewModelGroupMember>
+    ): ViewModelGroupMember {
+        return try {
             val ownerId = apiGroup.owner?._id ?: "deleted-owner"
             val ownerName = apiGroup.owner?.name ?: "Deleted User"
             val ownerEmail = apiGroup.owner?.email ?: ""
             
-            // If owner is deleted, try to find a valid member to show as owner
             if (ownerId == "deleted-owner" || ownerName == "Deleted User") {
-                val validMember = groupMembers.firstOrNull { it.id != "unknown" }
-                if (validMember != null) {
-                    println("GroupViewModel: Using valid member as owner: ${validMember.name}")
-                    validMember.copy(isAdmin = true)
-                } else {
-                    ViewModelGroupMember(
-                        id = ownerId,
-                        name = ownerName,
-                        email = ownerEmail,
-                        joinDate = Date(System.currentTimeMillis()),
-                        isAdmin = true
-                    )
-                }
+                convertApiGroupToViewModelPart3(ownerId, ownerName, ownerEmail, groupMembers)
             } else {
                 ViewModelGroupMember(
                     id = ownerId,
@@ -301,16 +303,27 @@ class GroupViewModel(
                 isAdmin = true
             )
         }
-        
-        return Group(
-            id = apiGroup._id,
-            name = apiGroup.name,
-            groupCode = apiGroup.groupCode,
-            owner = owner,
-            members = groupMembers,
-            createdAt = parseIsoDate(apiGroup.createdAt),
-            updatedAt = parseIsoDate(apiGroup.updatedAt)
-        )
+    }
+    
+    private fun convertApiGroupToViewModelPart3(
+        ownerId: String,
+        ownerName: String,
+        ownerEmail: String,
+        groupMembers: List<ViewModelGroupMember>
+    ): ViewModelGroupMember {
+        val validMember = groupMembers.firstOrNull { it.id != "unknown" }
+        return if (validMember != null) {
+            println("GroupViewModel: Using valid member as owner: ${validMember.name}")
+            validMember.copy(isAdmin = true)
+        } else {
+            ViewModelGroupMember(
+                id = ownerId,
+                name = ownerName,
+                email = ownerEmail,
+                joinDate = Date(System.currentTimeMillis()),
+                isAdmin = true
+            )
+        }
     }
     
     fun refreshGroup() {
