@@ -58,10 +58,10 @@ class AddTaskE2ETest {
         composeTestRule.onNodeWithTag("taskDescriptionInput").assertExists().assertIsDisplayed()
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithText("Recurrence:", useUnmergedTree = true).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Difficulty Level:", substring = true, useUnmergedTree = true)
+        composeTestRule.onNodeWithText("Recurrence:").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Difficulty Level:", substring = true)
             .assertIsDisplayed()
-        composeTestRule.onNodeWithText("Required People:", substring = true, useUnmergedTree = true)
+        composeTestRule.onNodeWithText("Required People:", substring = true)
             .assertIsDisplayed()
 
         // Step 2: Check "Create Task" button exists and is disabled (no task name entered)
@@ -296,21 +296,23 @@ class AddTaskE2ETest {
     @Test
     fun test_Step3_CreateDifferentTask_ValidValues() {
         var taskCreated = false
-        var taskName = ""
-        var taskDifficulty = 0
-        var recurrence = ""
-        var requiredPeople = 0
+        var createdName = ""
+        var createdDescription = ""
+        var createdDifficulty = 0
+        var createdRecurrence = ""
+        var createdRequiredPeople = 0
 
         composeTestRule.setContent {
             RoomSyncFrontendTheme {
                 AddTaskDialog(
                     onDismiss = {},
-                    onCreateTask = { name, _, diff, rec, req, _, _ ->
+                    onCreateTask = { name, description, difficulty, recurrence, requiredPeople, _, _ ->
                         taskCreated = true
-                        taskName = name
-                        taskDifficulty = diff
-                        recurrence = rec
-                        requiredPeople = req
+                        createdName = name
+                        createdDescription = description ?: ""
+                        createdDifficulty = difficulty
+                        createdRecurrence = recurrence
+                        createdRequiredPeople = requiredPeople
                     },
                     groupMembers = mockGroupMembers
                 )
@@ -324,11 +326,11 @@ class AddTaskE2ETest {
         composeTestRule.onAllNodes(hasText("2") and hasClickAction())[1].performClick()
         composeTestRule.onNodeWithTag("createTaskButton").assertIsEnabled().performClick()
 
-        assert(taskCreated)
-        assert(taskName == "Clean Kitchen")
-        assert(taskDifficulty == 3)
-        assert(recurrence == "Weekly")
-        assert(requiredPeople == 2)
+        assert(createdName == "Clean Kitchen")
+        assert(createdDescription == "Wipe counters and mop floor")
+        assert(createdDifficulty == 3)
+        assert(createdRecurrence == "Weekly")
+        assert(createdRequiredPeople == 2)
     }
 
     /**
