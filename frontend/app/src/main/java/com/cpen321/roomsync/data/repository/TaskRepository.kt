@@ -20,8 +20,8 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: RuntimeException) {
+            TasksResponse(false, "Unexpected runtime error: ${e.message}")
         }
     }
 
@@ -38,8 +38,8 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: RuntimeException) {
+            TasksResponse(false, "Unexpected runtime error: ${e.message}")
         }
     }
 
@@ -66,8 +66,8 @@ class TaskRepository {
             TaskResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TaskResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TaskResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: RuntimeException) {
+            TaskResponse(false, "Unexpected runtime error: ${e.message}")
         }
     }
 
@@ -84,8 +84,8 @@ class TaskRepository {
             TaskResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TaskResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TaskResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: RuntimeException) {
+            TaskResponse(false, "Unexpected runtime error: ${e.message}")
         }
     }
 
@@ -120,8 +120,8 @@ class TaskRepository {
             ApiResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             ApiResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            ApiResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: RuntimeException) {
+            ApiResponse(false, "Unexpected runtime error: ${e.message}")
         }
     }
 
@@ -138,8 +138,8 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: RuntimeException) {
+            TasksResponse(false, "Unexpected runtime error: ${e.message}")
         }
     }
 
@@ -156,8 +156,8 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: RuntimeException) {
+            TasksResponse(false, "Unexpected runtime error: ${e.message}")
         }
     }
 
@@ -174,8 +174,8 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: RuntimeException) {
+            TasksResponse(false, "Unexpected runtime error: ${e.message}")
         }
     }
 }

@@ -8,7 +8,7 @@ import mongoose from 'mongoose';
 const router = express.Router();
 
 // All routes below this middleware are protected
-router.use(protect);
+router.use((req, res, next) => { void protect(req, res, next); });
 
 // @desc    Create a new group
 // @route   POST /api/group

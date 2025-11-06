@@ -111,9 +111,24 @@ class PollingViewModel(
                         isLoading = false
                     )
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Failed to load polls: ${e.message}",
+                    error = "Network error while loading polls: ${e.message}",
+                    isLoading = false
+                )
+            } catch (e: retrofit2.HttpException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "HTTP error while loading polls: ${e.code()} - ${e.message()}",
+                    isLoading = false
+                )
+            } catch (e: IllegalArgumentException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Invalid data while loading polls: ${e.message}",
+                    isLoading = false
+                )
+            } catch (e: IllegalStateException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "State error while loading polls: ${e.message}",
                     isLoading = false
                 )
             }
@@ -144,9 +159,24 @@ class PollingViewModel(
                         isLoading = false
                     )
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Failed to create poll: ${e.message}",
+                    error = "Network error while creating poll: ${e.message}",
+                    isLoading = false
+                )
+            } catch (e: retrofit2.HttpException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "HTTP error while creating poll: ${e.code()} - ${e.message()}",
+                    isLoading = false
+                )
+            } catch (e: IllegalArgumentException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Invalid data while creating poll: ${e.message}",
+                    isLoading = false
+                )
+            } catch (e: IllegalStateException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "State error while creating poll: ${e.message}",
                     isLoading = false
                 )
             }
@@ -168,9 +198,24 @@ class PollingViewModel(
                         isLoading = false
                     )
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Failed to vote on poll: ${e.message}",
+                    error = "Network error while voting: ${e.message}",
+                    isLoading = false
+                )
+            } catch (e: retrofit2.HttpException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "HTTP error while voting: ${e.code()} - ${e.message()}",
+                    isLoading = false
+                )
+            } catch (e: IllegalArgumentException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Invalid data while voting on poll: ${e.message}",
+                    isLoading = false
+                )
+            } catch (e: IllegalStateException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "State error while voting on poll: ${e.message}",
                     isLoading = false
                 )
             }
@@ -184,9 +229,14 @@ class PollingViewModel(
                 
                 // For now, just refresh polls - backend doesn't have close poll endpoint yet
                 loadPolls()
-            } catch (e: Exception) {
+            } catch (e: IllegalStateException) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Failed to close poll: ${e.message}",
+                    error = "State error while closing poll: ${e.message}",
+                    isLoading = false
+                )
+            } catch (e: IllegalArgumentException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Invalid data while closing poll: ${e.message}",
                     isLoading = false
                 )
             }

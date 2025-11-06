@@ -85,23 +85,23 @@ export const UserController = {
       const validProfessions = ['Student', 'Worker', 'Unemployed'];
 
 
-      if (livingPreferences.schedule && !validSchedules.includes(livingPreferences.schedule)) {
+      if (typeof livingPreferences.schedule === 'string' && !validSchedules.includes(livingPreferences.schedule)) {
         res.status(400).json({ success: false, message: 'Invalid schedule value' });
         return;
       }
-      if (livingPreferences.drinking && !validFrequencies.includes(livingPreferences.drinking)) {
+      if (typeof livingPreferences.drinking === 'string' && !validFrequencies.includes(livingPreferences.drinking)) {
         res.status(400).json({ success: false, message: 'Invalid drinking value' });
         return;
       }
-      if (livingPreferences.partying && !validFrequencies.includes(livingPreferences.partying)) {
+      if (typeof livingPreferences.partying === 'string' && !validFrequencies.includes(livingPreferences.partying)) {
         res.status(400).json({ success: false, message: 'Invalid partying value' });
         return;
       }
-      if (livingPreferences.noise && !validNoise.includes(livingPreferences.noise)) {
+      if (typeof livingPreferences.noise === 'string' && !validNoise.includes(livingPreferences.noise)) {
         res.status(400).json({ success: false, message: 'Invalid noise value' });
         return;
       }
-      if (livingPreferences.profession && !validProfessions.includes(livingPreferences.profession)) {
+      if (typeof livingPreferences.profession === 'string' && !validProfessions.includes(livingPreferences.profession)) {
         res.status(400).json({ success: false, message: 'Invalid profession value' });
         return;
       }
