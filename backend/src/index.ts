@@ -60,10 +60,10 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRouter);
-app.use("/api/user", (req, res, next) => { void authenticate(req, res, next); }, userRouter);  //protected with auth middleware
-app.use("/api/group", (req, res, next) => { void authenticate(req, res, next); }, groupRouter);  //protected with auth middleware
-app.use("/api/task", (req, res, next) => { void authenticate(req, res, next); }, taskRouter);  //protected with auth middleware
-app.use("/api/chat", (req, res, next) => { void authenticate(req, res, next); }, chatRouter);  //protected with auth middleware
+app.use("/api/user", (req, res, next) => { authenticate(req, res, next).catch(next); }, userRouter);  //protected with auth middleware
+app.use("/api/group", (req, res, next) => { authenticate(req, res, next).catch(next); }, groupRouter);  //protected with auth middleware
+app.use("/api/task", (req, res, next) => { authenticate(req, res, next).catch(next); }, taskRouter);  //protected with auth middleware
+app.use("/api/chat", (req, res, next) => { authenticate(req, res, next).catch(next); }, chatRouter);  //protected with auth middleware
 app.use("/api/rating", ratingRouter);  //uses its own auth middleware
 app.use("/api", userRouter);  //protected with auth middleware
 

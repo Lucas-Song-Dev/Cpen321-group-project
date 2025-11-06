@@ -20,8 +20,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: RuntimeException) {
-            TasksResponse(false, "Unexpected runtime error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -38,8 +40,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: RuntimeException) {
-            TasksResponse(false, "Unexpected runtime error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -138,8 +142,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: RuntimeException) {
-            TasksResponse(false, "Unexpected runtime error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -156,8 +162,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: RuntimeException) {
-            TasksResponse(false, "Unexpected runtime error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -174,8 +182,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: RuntimeException) {
-            TasksResponse(false, "Unexpected runtime error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 }
