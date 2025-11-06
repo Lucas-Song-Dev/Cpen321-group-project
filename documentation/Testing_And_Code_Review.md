@@ -191,11 +191,11 @@
 
 ### 2.3. Jest Coverage Report Screenshots for Tests Without Mocking
 
-![image](documentation/images/Coverage%20without%20mocking.png)
+![image](/images/Coverage%20without%20mocking.png)
 
 ### 2.4. Jest Coverage Report Screenshots for Tests With Mocking
 
-![image](documentation/images/Coverage%20with%20mocking.png)
+![image](images/Coverage%20with%20mocking.png)
 
 **Note:** Mocked tests are pending implementation. Once mocked tests are added in the `with-mocks/` directory, this section should be updated with:
 
