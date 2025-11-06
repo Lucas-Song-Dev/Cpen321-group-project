@@ -191,33 +191,19 @@
 
 ### 2.3. Jest Coverage Report Screenshots for Tests Without Mocking
 
-![image](/images/Coverage%20without%20mocking.png)
+![image](images/Coverage%20without%20mocking.png)
 
 ### 2.4. Jest Coverage Report Screenshots for Tests With Mocking
 
 ![image](images/Coverage%20with%20mocking.png)
 
-**Note:** Mocked tests are pending implementation. Once mocked tests are added in the `with-mocks/` directory, this section should be updated with:
 
-1. Instructions to run only mocked tests
-2. Screenshot of coverage report when running mocked tests only
-3. Coverage may be lower as mocked tests focus on error handling scenarios
 
 ### 2.5. Jest Coverage Report Screenshots for Both Tests With and Without Mocking
 
-_(Placeholder for Jest coverage screenshot both with and without mocking)_
+![image](images/Coverage%20with%20and%20without%20mocking.png)
 
-**Instructions for Generating Screenshot:**
 
-1. Run all tests (both no-mocks and with-mocks):
-   ```bash
-   cd backend
-   npm run test:coverage
-   ```
-2. Open `backend/coverage/lcov-report/index.html` in a browser
-3. Take a screenshot showing combined coverage
-4. Expected: High coverage (ideally 90%+ for most files)
-5. If coverage is less than 100%, document the reasons in the justification below
 
 **Coverage Justification:**
 
