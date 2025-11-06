@@ -48,7 +48,7 @@ class GroupViewModel(
             val parsedDate = format.parse(isoString)
             println("GroupViewModel: Parsed ISO date '$isoString' to ${parsedDate}")
             parsedDate ?: Date(System.currentTimeMillis())
-        } catch (e: Exception) {
+        } catch (e: java.text.ParseException) {
             println("GroupViewModel: Failed to parse ISO date '$isoString': ${e.message}")
             // Fallback: Try parsing as timestamp
             try {
@@ -60,7 +60,7 @@ class GroupViewModel(
                     println("GroupViewModel: Not a valid timestamp, using current time")
                     Date(System.currentTimeMillis())
                 }
-            } catch (e2: Exception) {
+            } catch (e2: NumberFormatException) {
                 println("GroupViewModel: All parsing failed, using current time")
                 Date(System.currentTimeMillis())
             }

@@ -351,7 +351,7 @@ describe('AuthService - With Mocking', () => {
       const result = verifyJWT('valid-token');
 
       expect(result).toEqual(mockDecoded);
-      expect(jwt.verify).toHaveBeenCalledWith('valid-token', process.env.JWT_SECRET);
+      expect(jwt.verify).toHaveBeenCalledWith('valid-token', process.env.JWT_SECRET ?? 'fallback-secret-key');
     });
 
     test('should throw AppError when token is invalid', () => {

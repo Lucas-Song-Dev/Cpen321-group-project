@@ -205,9 +205,24 @@ class TaskViewModel(
                         isLoading = false
                     )
                 }
-            } catch (e: Exception) {
+            } catch (e: java.io.IOException) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Failed to load tasks: ${e.message}",
+                    error = "Network error: ${e.message}",
+                    isLoading = false
+                )
+            } catch (e: retrofit2.HttpException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "HTTP error: ${e.code()} - ${e.message()}",
+                    isLoading = false
+                )
+            } catch (e: IllegalArgumentException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Invalid data loading tasks: ${e.message}",
+                    isLoading = false
+                )
+            } catch (e: IllegalStateException) {
+                _uiState.value = _uiState.value.copy(
+                    error = "State error loading tasks: ${e.message}",
                     isLoading = false
                 )
             }

@@ -132,6 +132,10 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   );
   
   // Update the rated user's average rating
+  if (typeof ratedUserId !== 'string') {
+    res.status(400).json({ success: false, message: 'Invalid ratedUserId' });
+    return;
+  }
   const ratingStats = await Rating.getAverageRating(ratedUserId);
   await UserModel.findByIdAndUpdate(
     ratedUserId,

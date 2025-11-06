@@ -20,8 +20,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -38,8 +40,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -66,8 +70,10 @@ class TaskRepository {
             TaskResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TaskResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TaskResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TaskResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TaskResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -84,8 +90,10 @@ class TaskRepository {
             TaskResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TaskResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TaskResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TaskResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TaskResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -120,8 +128,10 @@ class TaskRepository {
             ApiResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             ApiResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            ApiResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            ApiResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            ApiResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -138,8 +148,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -156,8 +168,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 
@@ -174,8 +188,10 @@ class TaskRepository {
             TasksResponse(false, "Network error: ${e.message}")
         } catch (e: HttpException) {
             TasksResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
-        } catch (e: Exception) {
-            TasksResponse(false, "Unexpected error: ${e.message}")
+        } catch (e: IllegalStateException) {
+            TasksResponse(false, "State error: ${e.message}")
+        } catch (e: IllegalArgumentException) {
+            TasksResponse(false, "Invalid argument: ${e.message}")
         }
     }
 }

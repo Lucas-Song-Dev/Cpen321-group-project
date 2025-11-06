@@ -123,7 +123,8 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
 // Verify JWT token
 export const verifyJWT = (token: string): { userId: string; email: string; name: string } => {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; email: string; name: string };
+    const secret = process.env.JWT_SECRET ?? 'fallback-secret-key';
+    return jwt.verify(token, secret) as { userId: string; email: string; name: string };
   } catch (error) {
     throw new AppError('Invalid or expired token', 401);
   }
