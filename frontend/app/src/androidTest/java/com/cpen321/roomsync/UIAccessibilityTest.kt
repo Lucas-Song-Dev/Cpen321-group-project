@@ -1,5 +1,6 @@
 package com.cpen321.roomsync
 
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -57,7 +58,7 @@ class UIAccessibilityTest {
             RoomSyncFrontendTheme {
                 Button(
                     onClick = {},
-                    modifier = Modifier.testTag("testButton")
+                    modifier = Modifier.testTag("testButton").heightIn(min = 48.dp)
                 ) {
                     Text("Test Button")
                 }
@@ -89,7 +90,7 @@ class UIAccessibilityTest {
             RoomSyncFrontendTheme {
                 IconButton(
                     onClick = {},
-                    modifier = Modifier.testTag("testIconButton")
+                    modifier = Modifier.testTag("testIconButton").heightIn(min = 48.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Test Icon")
                 }
