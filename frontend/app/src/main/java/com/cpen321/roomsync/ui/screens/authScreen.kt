@@ -67,64 +67,74 @@ fun AuthScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Text(
-                text = "RoomSync",
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 48.dp)
-            )
+            text = "RoomSync",
+            fontSize = 48.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 48.dp)
+        )
 
-        Button(
-            onClick = {
+        AuthScreenPart2(
+            onSignUp = {
                 isSigningUp = true
                 googleSignInClient.signOut().addOnCompleteListener {
                     launcher.launch(googleSignInClient.signInIntent)
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            enabled = authState?.success != true
-        ) {
-            Text("Sign Up", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        OutlinedButton(
-            onClick = {
+            onLogin = {
                 isSigningUp = false
                 googleSignInClient.signOut().addOnCompleteListener {
                     launcher.launch(googleSignInClient.signInIntent)
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            enabled = authState?.success != true
-        ) {
-            Text("Login", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-        }
+            authState = authState
+        )
+    }
+}
 
+@Composable
+private fun AuthScreenPart2(
+    onSignUp: () -> Unit,
+    onLogin: () -> Unit,
+    authState: com.cpen321.roomsync.ui.viewmodels.AuthState?
+) {
+    Button(
+        onClick = onSignUp,
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+        enabled = authState?.success != true
+    ) {
+        Text("Sign Up", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+    }
 
-        Spacer(Modifier.height(24.dp))
+    Spacer(Modifier.height(16.dp))
 
-        //FOR DEBUGGING: Display auth state messages
-        authState?.let { state ->
-            if (state.success) {
-                Text(
-                    "✅ ${state.message}",
-                    color = MaterialTheme.colorScheme.primary
-                )
-            } else {
-                Text(
-                    "❌ ${state.message}",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
+    OutlinedButton(
+        onClick = onLogin,
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+        enabled = authState?.success != true
+    ) {
+        Text("Login", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+    }
+
+    Spacer(Modifier.height(24.dp))
+
+    authState?.let { state ->
+        if (state.success) {
+            Text(
+                "✅ ${state.message}",
+                color = MaterialTheme.colorScheme.primary
+            )
+        } else {
+            Text(
+                "❌ ${state.message}",
+                color = MaterialTheme.colorScheme.error
+            )
         }
     }
 }

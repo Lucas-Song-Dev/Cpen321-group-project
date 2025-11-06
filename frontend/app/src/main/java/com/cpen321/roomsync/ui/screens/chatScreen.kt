@@ -663,7 +663,7 @@ private fun ChatScreenPart2(
 }
 
 @Composable
-private fun ChatScreenPart3(
+private fun ColumnScope.ChatScreenPart3(
     uiState: com.cpen321.roomsync.ui.viewmodels.ChatUiState,
     listState: androidx.compose.foundation.lazy.LazyListState,
     onNavigateToPolls: () -> Unit

@@ -215,174 +215,13 @@ fun OptionalProfileScreen(
                 )
             }
 
-            // Living Preferences Section
-            Text(
-                text = "Living Preferences:",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
+            OptionalProfileScreenPart2(
+                morningNight, { morningNight = it },
+                drinking, { drinking = it },
+                partying, { partying = it },
+                noise, { noise = it },
+                profession, { profession = it }
             )
-
-            // Morning/Night
-            Column {
-                Text(
-                    text = "Schedule:",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectableGroup(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    FilterChip(
-                        onClick = { morningNight = "Morning" },
-                        label = { Text("Morning") },
-                        selected = morningNight == "Morning"
-                    )
-                    FilterChip(
-                        onClick = { morningNight = "Night" },
-                        label = { Text("Night") },
-                        selected = morningNight == "Night"
-                    )
-                    FilterChip(
-                        onClick = { morningNight = "Flexible" },
-                        label = { Text("Flexible") },
-                        selected = morningNight == "Flexible"
-                    )
-                }
-            }
-
-            // Drinking
-            Column {
-                Text(
-                    text = "Drinking:",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectableGroup(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    FilterChip(
-                        onClick = { drinking = "None" },
-                        label = { Text("None") },
-                        selected = drinking == "None"
-                    )
-                    FilterChip(
-                        onClick = { drinking = "Occasional" },
-                        label = { Text("Occasional") },
-                        selected = drinking == "Occasional"
-                    )
-                    FilterChip(
-                        onClick = { drinking = "Regular" },
-                        label = { Text("Regular") },
-                        selected = drinking == "Regular"
-                    )
-                }
-            }
-
-            // Partying
-            Column {
-                Text(
-                    text = "Partying:",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectableGroup(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    FilterChip(
-                        onClick = { partying = "None" },
-                        label = { Text("None") },
-                        selected = partying == "None"
-                    )
-                    FilterChip(
-                        onClick = { partying = "Occasional" },
-                        label = { Text("Occasional") },
-                        selected = partying == "Occasional"
-                    )
-                    FilterChip(
-                        onClick = { partying = "Regular" },
-                        label = { Text("Regular") },
-                        selected = partying == "Regular"
-                    )
-                }
-            }
-
-            // Noise
-            Column {
-                Text(
-                    text = "Noise Preference:",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectableGroup(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    FilterChip(
-                        onClick = { noise = "Quiet" },
-                        label = { Text("Quiet") },
-                        selected = noise == "Quiet"
-                    )
-                    FilterChip(
-                        onClick = { noise = "Moderate" },
-                        label = { Text("Moderate") },
-                        selected = noise == "Moderate"
-                    )
-                    FilterChip(
-                        onClick = { noise = "Loud" },
-                        label = { Text("Loud") },
-                        selected = noise == "Loud"
-                    )
-                }
-            }
-
-            // Profession
-            Column {
-                Text(
-                    text = "Profession:",
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .selectableGroup(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    FilterChip(
-                        onClick = { profession = "Student" },
-                        label = { Text("Student") },
-                        selected = profession == "Student"
-                    )
-                    FilterChip(
-                        onClick = { profession = "Worker" },
-                        label = { Text("Worker") },
-                        selected = profession == "Worker"
-                    )
-                    FilterChip(
-                        onClick = { profession = "Unemployed" },
-                        label = { Text("Unemployed") },
-                        selected = profession == "Unemployed"
-                    )
-                }
-            }
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -427,6 +266,194 @@ fun OptionalProfileScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun OptionalProfileScreenPart2(
+    morningNight: String?,
+    onMorningNightChange: (String?) -> Unit,
+    drinking: String?,
+    onDrinkingChange: (String?) -> Unit,
+    partying: String?,
+    onPartyingChange: (String?) -> Unit,
+    noise: String?,
+    onNoiseChange: (String?) -> Unit,
+    profession: String?,
+    onProfessionChange: (String?) -> Unit
+) {
+    Text(
+        text = "Living Preferences:",
+        fontSize = 18.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
+    )
+    
+    OptionalProfileScreenPart3(morningNight, onMorningNightChange, drinking, onDrinkingChange, partying, onPartyingChange)
+    OptionalProfileScreenPart4(noise, onNoiseChange, profession, onProfessionChange)
+}
+
+@Composable
+private fun OptionalProfileScreenPart3(
+    morningNight: String?,
+    onMorningNightChange: (String?) -> Unit,
+    drinking: String?,
+    onDrinkingChange: (String?) -> Unit,
+    partying: String?,
+    onPartyingChange: (String?) -> Unit
+) {
+    Column {
+        Text(
+            text = "Schedule:",
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilterChip(
+                onClick = { onMorningNightChange("Morning") },
+                label = { Text("Morning") },
+                selected = morningNight == "Morning"
+            )
+            FilterChip(
+                onClick = { onMorningNightChange("Night") },
+                label = { Text("Night") },
+                selected = morningNight == "Night"
+            )
+            FilterChip(
+                onClick = { onMorningNightChange("Flexible") },
+                label = { Text("Flexible") },
+                selected = morningNight == "Flexible"
+            )
+        }
+    }
+    
+    Column {
+        Text(
+            text = "Drinking:",
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilterChip(
+                onClick = { onDrinkingChange("None") },
+                label = { Text("None") },
+                selected = drinking == "None"
+            )
+            FilterChip(
+                onClick = { onDrinkingChange("Occasional") },
+                label = { Text("Occasional") },
+                selected = drinking == "Occasional"
+            )
+            FilterChip(
+                onClick = { onDrinkingChange("Regular") },
+                label = { Text("Regular") },
+                selected = drinking == "Regular"
+            )
+        }
+    }
+    
+    Column {
+        Text(
+            text = "Partying:",
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilterChip(
+                onClick = { onPartyingChange("None") },
+                label = { Text("None") },
+                selected = partying == "None"
+            )
+            FilterChip(
+                onClick = { onPartyingChange("Occasional") },
+                label = { Text("Occasional") },
+                selected = partying == "Occasional"
+            )
+            FilterChip(
+                onClick = { onPartyingChange("Regular") },
+                label = { Text("Regular") },
+                selected = partying == "Regular"
+            )
+        }
+    }
+}
+
+@Composable
+private fun OptionalProfileScreenPart4(
+    noise: String?,
+    onNoiseChange: (String?) -> Unit,
+    profession: String?,
+    onProfessionChange: (String?) -> Unit
+) {
+    Column {
+        Text(
+            text = "Noise Preference:",
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilterChip(
+                onClick = { onNoiseChange("Quiet") },
+                label = { Text("Quiet") },
+                selected = noise == "Quiet"
+            )
+            FilterChip(
+                onClick = { onNoiseChange("Moderate") },
+                label = { Text("Moderate") },
+                selected = noise == "Moderate"
+            )
+            FilterChip(
+                onClick = { onNoiseChange("Loud") },
+                label = { Text("Loud") },
+                selected = noise == "Loud"
+            )
+        }
+    }
+    
+    Column {
+        Text(
+            text = "Profession:",
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilterChip(
+                onClick = { onProfessionChange("Student") },
+                label = { Text("Student") },
+                selected = profession == "Student"
+            )
+            FilterChip(
+                onClick = { onProfessionChange("Worker") },
+                label = { Text("Worker") },
+                selected = profession == "Worker"
+            )
+            FilterChip(
+                onClick = { onProfessionChange("Unemployed") },
+                label = { Text("Unemployed") },
+                selected = profession == "Unemployed"
+            )
         }
     }
 }
