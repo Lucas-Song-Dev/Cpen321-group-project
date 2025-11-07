@@ -518,18 +518,18 @@ The frontend tests run automatically on every pull request via GitHub Actions.
 ## 5. Automated code review results
 
 ### 5.1. Commit Hash Where Codacy Ran
-5c4748f4d814e57b6dacfdbd75dbb9ee63a6f4d9 (Latest commit on main branch)
+1e1c12167ceb7d85211d9c621b7d646f413efc67 (Latest commit on main branch)
 
 
 ### 5.2. Unfixed Issues per Codacy Category
 Currently zero unfixed issues in the main branch.
-For verification,  please check: https://app.codacy.com/gh/Lucas-Song-Dev/Cpen321-group-project/dashboard
+- For verification,  please check: https://app.codacy.com/gh/Lucas-Song-Dev/Cpen321-group-project/dashboard
 ![Codacy2](./images/5.2Screenshot.png)
 
 
 ### 5.3. Unfixed Issues per Codacy Code Patterns
 Currently zero unfixed issues in the main branch.
-For verification, please check: https://app.codacy.com/gh/Lucas-Song-Dev/Cpen321-group-project/issues/current
+- For verification, please check: https://app.codacy.com/gh/Lucas-Song-Dev/Cpen321-group-project/issues/current
 ![Codacy3](./images/5.3Screenshot.png)
 
 
