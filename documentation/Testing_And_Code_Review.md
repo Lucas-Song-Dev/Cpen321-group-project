@@ -515,34 +515,23 @@ These test tags enable precise UI element selection in automated tests without r
 The frontend tests run automatically on every pull request via GitHub Actions.
 
 ---
+## 5. Automated code review results
 
-@@ -263,6 +284,8 @@ The frontend tests run automatically on every pull request via GitHub Actions.
+### 5.1. Commit Hash Where Codacy Ran
+5c4748f4d814e57b6dacfdbd75dbb9ee63a6f4d9 (Latest commit on main branch)
 
-`[Insert Commit SHA here]`
-
-**Note:** Codacy or similar automated code review tool needs to be configured and run on the codebase.
 
 ### 5.2. Unfixed Issues per Codacy Category
+Currently zero unfixed issues in the main branch.
+For verification,  please check: https://app.codacy.com/gh/Lucas-Song-Dev/Cpen321-group-project/dashboard
+![Codacy2](./images/5.2Screenshot.png)
 
-_(Placeholder for screenshots of Codacy's Category Breakdown table in Overview)_
-@@ -273,13 +296,14 @@ _(Placeholder for screenshots of Codacy's Issues page)_
+
+### 5.3. Unfixed Issues per Codacy Code Patterns
+Currently zero unfixed issues in the main branch.
+For verification, please check: https://app.codacy.com/gh/Lucas-Song-Dev/Cpen321-group-project/issues/current
+![Codacy3](./images/5.3Screenshot.png)
+
 
 ### 5.4. Justifications for Unfixed Issues
-
-- **Code Pattern: [Usage of Deprecated Modules](#)**
-_(Placeholder for justifications)_
-
-  1. **Issue**
-**Format for each issue:**
-
-     - **Location in Git:** [`src/services/chatService.js#L31`](#)
-     - **Justification:** ...
-- **Code Pattern: [Pattern Name]**
-
-  2. ...
-  1. **Issue**
-     - **Location in Git:** `[file path]#L[line number]`
-     - **Justification:** [Explanation of why this issue is not fixed or is acceptable]
-
-- ...
-  2. ...
+No unfixed issues on the main branch. All issues have been addressed and therefore, no justifications for unfixed issues.
