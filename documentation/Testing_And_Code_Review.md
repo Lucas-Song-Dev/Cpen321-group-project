@@ -306,7 +306,9 @@ Task (99.41%): The random function meant to slightly randomize who does which ta
 **Test Device:** Pixel 7 (AVD) - Android 13  
 **Test Execution Time:** ~2m 57s
 
-### 4.2. Tests for Use Case 9: Create Group
+### 4.2. Tests for Use Cases
+
+***Use Case 9: Create Group***
 
 **Use Case Description:** Non-Group Member establishes a new roommate group and receives invitation code to share with potential roommates.
 
@@ -314,13 +316,19 @@ Task (99.41%): The random function meant to slightly randomize who does which ta
 
 | **Scenario Steps** | **Test Case Steps** |
 | ------------------ | ------------------- |
-| 1. User navigates to group creation page | Open "Create Group" screen using ComposeTestRule |
-| 2. The app shows text field and "Create Group" button disabled | Check that "Enter Group Name:" title is displayed<br>Check that text field with testTag="groupNameInput" exists<br>Check that button with testTag="createGroupButton" exists<br>Check that "Create Group" button is disabled |
-| 2a. Group name is left empty | Check that "Create Group" button remains disabled |
-| 2a. User enters whitespace-only name "   " | Input "   " in text field<br>Check that "Create Group" button is disabled |
-| 3. User enters valid group name "Test Group" | Input "Test Group" in text field<br>Check that "Create Group" button is enabled |
-| 3. User enters group name with special characters | Input "My Group! @#$"<br>Check that button is enabled (special chars accepted) |
-| 3. User enters 100-character group name | Input 100-character string<br>Check that button is enabled (max length accepted) |
+| 1. User navigates to group creation page | Open "Create Group" screen |
+| 2. The app shows input text field for group name and a "Create Group" button (disabled) | Check that text field with testTag="groupNameInput" exists<br>Check that button with testTag="createGroupButton" exists<br>Check that "createGroupButton" is disabled |
+| 3. User enters group name "Test Group" | Input "Test Group" in text field<br>Check that "createGroupButton" becomes enabled |
+| 3. User enters group name with special characters "My Group! @#!" | Input "My Group! @#!" in text field<br>Check that "createGroupButton" is enabled (special characters accepted) |
+| 3a. Group name is left empty | Leave text field empty<br>Check that "createGroupButton" remains disabled |
+| 3a. User enters whitespace-only name "   " | Input "   " (whitespace only)<br>Wait for UI to process<br>Check that "createGroupButton" remains disabled |
+| 3b. User enters 100-character group name | Input "A" repeated 100 times into text field<br>Wait for UI update<br>Check that "createGroupButton" becomes enabled |
+| 4. User clicks "Create Group" | Click button labeled "Create Group" |
+| 4a. User already belongs to a group | Not applicable (screen navigation prevents this scenario; tested in backend) |
+| 5. System generates and displays invitation code | After clicking "Create Group", verify that a 4-character alphanumeric code is displayed (tested in backend) |
+| 6. System creates a group with the user as group owner | Verify dialog appears with text "Group created successfully!" |
+| 7. System displays group name and invitation code | Check message "Share this code with your roommates" is displayed<br>Check that 4-digit group code is visible |
+| 8. Dashboard displays group name | Open "Dashboard" screen<br>Verify that dashboard displays "Welcome groupname" |
 
 **Test Logs:**
 ```
@@ -333,7 +341,49 @@ CreateGroupE2ETest > test_UC9_MaxLength100Characters_Accepted PASSED
 BasicUITests > (5 additional UI validation tests) PASSED
 ```
 
-### 4.3. Tests for Use Case 19-20: Rate Roommate and Write Testimonial
+***Use Case 15: Add tasks***
+
+**Use Case Description:** A household task that will be equally distributed among all roommates is created. The system assigns tasks to group members using a fair allocation algorithm
+
+**Expected Behaviors:**
+
+| **Scenario Steps** | **Test Case Steps** |
+| ------------------ | ------------------- |
+| 1. User clicks "Create Task" | Open "Create New Task" dialog<br>Check that "Create New Task" title is displayed<br>Check that task name input field is displayed<br>Check that description input field is displayed<br>Check that "Create Task" button exists<br>Check that "Create Task" button is disabled |
+| 1a. User exits the "Create Task" dialog by clicking "Cancel" | Click "Cancel" button |
+| 1a1. Closes "Create Task" dialog and remains on task screen | Verify dialog is dismissed (onDismiss callback called)<br>Verify user remains on task screen |
+| 2. User enters task name, description, recurrence, difficulty, and number of people | Input "Wash Dishes" in taskNameInput<br>Input "Clean all dishes in sink" in taskDescriptionInput<br>Click "4" for Difficulty<br>Click "Daily" for Recurrence<br>Click "1" for People Required<br>Verify "Create Task" button is enabled |
+| 2a. Task name, recurrence, or difficulty not filled or invalid | System does not allow pressing "Create Task" button without all valid fields |
+| 2a - Case 1: Task name left blank | Click "Weekly" for Recurrence<br>Click "2" for Difficulty<br>Click "3" for People Required<br>Verify "Create Task" button is disabled |
+| 2a - Case 1b: Task name is whitespace only | Enter " " in Task Name field<br>Verify "Create Task" button is disabled |
+| 2a - Case 2: Difficulty defaults to 1 | Enter "Has Default Difficulty" in Task Name<br>Click "Weekly" for Recurrence<br>Verify "Create Task" button is enabled |
+| 2a - Case 3: Recurrence not selected | Enter "No Recurrence Task" in Task Name<br>Click "2" for Difficulty<br>Click "3" for People Required<br>Verify "Create Task" button is disabled |
+| 2a - Case 4: People required defaults to 1 | Enter "Has Default People" in Task Name<br>Click "Weekly" for Recurrence<br>Click "2" for Difficulty<br>Verify "Create Task" button is enabled |
+| 2b. User selects "One-time" recurrence | Enter "Pay Rent" in Task Name<br>Click "One time" for Recurrence |
+| 2b1. Deadline field appears and user chooses a date | Verify "Deadline" field is visible<br>Verify "Create Task" button is disabled until date is set |
+| 3. User clicks "Create Task" (general task) | Input "Wash Dishes" in Task Name<br>Input "Clean all dishes in sink" in Description<br>Click "4" for Difficulty<br>Click "Daily" for Recurrence<br>Click "1" for People Required<br>Verify "Create Task" button is enabled<br>Click "Create Task" button<br>Verify task is created with same parameters |
+| 3. User clicks "Create Task" (one-time task with deadline) | Input "Pay Rent" in Task Name<br>Click "One time" for Recurrence<br>Select deadline (e.g., tomorrow)<br>Verify "Create Task" button is enabled<br>Click "Create Task" button<br>Verify deadline is not null |
+| 4. System distributes tasks equally among roommates | Backend testing — verified in backend test files |
+| 4a. Algorithm fails to distribute tasks fairly | Backend testing — verified in backend test files |
+| 5. Each user can view assigned tasks | Simulate User A creating a task:<br>Input "Take Out Trash" in Task Name<br>Click "Weekly" for Recurrence<br>Click "2" for Difficulty<br>Click "Create Task" button<br><br>Simulate User B viewing task list<br>Verify User B sees "Take Out Trash" listed |
+
+**Test Logs:**
+```
+AddTaskE2ETest > test_Step1_CreateDialog_DisplaysAllFields PASSED
+AddTaskE2ETest > test_Step1a_CancelButton_ClosesDialog PASSED
+AddTaskE2ETest > test_Step2_ValidInputs_TaskCreatedSuccessfully PASSED
+AddTaskE2ETest > test_Step2a_InvalidFields_TaskName_DisableCreateTask PASSED
+AddTaskE2ETest > test_Step2a_InvalidFields_Difficulty_DefaultsToOne_Enabled PASSED
+AddTaskE2ETest > test_Step2a_InvalidFields_Recurrence_DisableCreateTask PASSED
+AddTaskE2ETest > test_Step2a_InvalidFields_People_DefaultsToOne_Enabled PASSED
+AddTaskE2ETest > test_Step2b_OneTimeTask_DeadlineRequired PASSED
+AddTaskE2ETest > test_Step3_CreateDifferentTask_ValidValues PASSED
+AddTaskE2ETest > test_Step3_OneTimeTask_DeadlineRequired_BypassPicker PASSED
+AddTaskE2ETest > test_Step5_TaskVisibility_SharedBetweenUsers PASSED
+BasicUITests > (5 additional UI validation tests) PASSED
+```
+
+***Use Case 19-20: Rate Roommate and Write Testimonial***
 
 **Use Case Description:** Group members provide numerical rating and optional written feedback on roommate performance after living together for a minimum of 30 days.
 
@@ -341,21 +391,19 @@ BasicUITests > (5 additional UI validation tests) PASSED
 
 | **Scenario Steps** | **Test Case Steps** |
 | ------------------ | ------------------- |
-| 5. Rating dialog opens showing member's name | Set up Rating dialog with member name<br>Check that "Rate [Member Name]" title is displayed |
-| 5. Dialog shows rating interface | Check that "Select Rating" header is displayed<br>Check that 5 star buttons exist |
-| 7. Dialog shows testimonial field | Check that "Review (Optional)" label exists<br>Check that testimonial input field exists |
-| 7. Character counter shows 0/500 | Check that "0/500" is displayed |
-| 8. 30-day requirement notice is displayed | Check that 30-day notice text is displayed |
-| 9. Submit button is disabled (no rating) | Check that "Submit Rating" button is disabled initially |
-| 9. Cancel button exists | Check that "Cancel" button is displayed |
-| 6. User selects 5-star rating | Click on 5th star button |
-| 9. Submit button becomes enabled | Check that "Submit Rating" button is enabled<br>Click "Submit Rating" button<br>Verify rating=5 was submitted |
-| 6-7-9. User selects 4 stars and writes testimonial | Click on 4th star<br>Input "Great roommate! Very clean." in testimonial field<br>Check character counter shows "27/500"<br>Click "Submit Rating"<br>Verify rating=4 and testimonial were submitted |
-| 9a. User does not select rating | Do NOT select any star<br>Input testimonial text<br>Check that "Submit Rating" button remains disabled |
-| Boundary: 1-star minimum rating | Click on 1st star<br>Submit and verify rating=1 |
-| Boundary: 5-star maximum rating | Click on 5th star<br>Submit and verify rating=5 |
-| Boundary: 500-character testimonial | Select rating<br>Input exactly 500 characters<br>Submit and verify 500 characters accepted |
-| Cancel dismisses dialog | Click "Cancel" button<br>Verify onDismiss callback was called |
+| 1. User selects a specific roommate within the same group to rate | Open "Group Details" screen<br>Verify list of group members is displayed<br>Check that "Select Rating" header is visible<br>Verify 5-star rating buttons exist<br>Check that "Review (Optional)" label is displayed<br>Check character counter shows "0/500"<br>Check that 30-day notice is displayed<br>Verify "Submit Rating" button exists and is disabled<br>Check that "Cancel" button exists |
+| 1a. User exits the rating dialog | Click "Cancel" button |
+| 1a1. Closes "Rate" dialog and remains in "Group Details" screen | Verify dialog is dismissed<br>Verify user remains on "Group Details" screen |
+| 2. System verifies user has lived with roommate for at least 30 days | Logic handled via backend testing |
+| 2a. Minimum cohabitation period not met | User with less than 30 days cohabitation selects 5-star rating<br>Verify "Submit" button remains disabled |
+| 2b. User attempts to rate same roommate multiple times | Select 5-star rating by clicking star icons<br>Verify "Submit" button is enabled<br>Click "Submit" button<br>Verify system updates existing rating instead of duplicating |
+| 3. User enters numerical rating (1–5 stars) | Select 5-star rating<br>Verify "Submit" button becomes enabled<br>Click "Submit" button<br>Verify rating is successfully submitted |
+| 3a. User doesn’t select any rating | Leave all stars unselected<br>Input testimonial "Good person"<br>Verify "Submit" button remains disabled |
+| 3a1. Unable to submit without rating | Confirm "Submit" button is disabled |
+| 4. User writes optional testimonial/comment | Select 4-star rating<br>Input "Great roommate! Very clean." in testimonial field<br>Verify testimonial length is < 500 characters<br>Check "Submit" button is enabled<br>Click "Submit" button<br>Verify rating and testimonial are successfully submitted |
+| 4a. Testimonial exceeds 500 characters | Select 3-star rating<br>Input "A" repeated 500 times in testimonial field<br>Click "Submit" button<br>Verify system displays error: "Testimonial must be under 500 characters" |
+| 5. User presses "Submit" | Click "Submit" button |
+| 6. Rating is added to roommate's profile | Verify rating submission is successful and displayed on roommate’s profile |
 
 **Test Logs:**
 ```
