@@ -7,6 +7,7 @@
 | September 26, 2025 | Initial Plan | First milestone submission (M2) |
 | October 10, 2025 | Section 3.2, 3.7  | Fixed use case diagram according to feedback in M2 and non-function requirements section with concrete research to back up requirements |
 | October 28, 2025 | Added section 4.4, 4.6, 4.7, Modified section 3.1, 4.1, 4.2, 4.3, 4.5 | Implemented M3 Requirements, fixed document according to app implementation and made further M2 feedback changes |
+| November 9, 2025 | Section 3.4, 4.1 | Added missing endpoints (health check, transfer ownership, get profile, get tasks by date), corrected API endpoint paths and parameters, added transfer ownership use case |
 
 ---
 
@@ -101,6 +102,7 @@ The application targets university students, young professionals, and anyone see
 11. **View group** – View members of the group, group name, and member join dates
 12. **Leave group** – Group members can leave a group they are a part of (owner leaving transfers to oldest member; if alone, deletes group)
 13. **Remove group member** – Group owner can remove group members
+14. **Transfer group ownership** – Group owner can transfer ownership to another group member
 
 #### **Use cases for Group Communication**
 14. **Send message** – Real-time messaging system for communication between all group members  
@@ -307,6 +309,10 @@ The application targets university students, young professionals, and anyone see
 1. **Front-End Mobile Application (Android/Kotlin)**
    - **Purpose**: Provides the user interface and handles all user interactions. It enables authentication, profile management, group management, messaging, task management, and roommate rating.
    - **Interfaces**: The front-end communicates with the back-end via HTTP/REST endpoints.
+     0. **Health Check Interface**
+        - GET /api/health(): HealthResponse
+          - Purpose: Checks backend server and database connection status
+          - Returns: Server status, database connection status, timestamp, and version information
      1. **Authentication Interface**
         - POST /api/auth/signup(token: String): AuthResponse
           - Purpose: Creates a new user account using Google OAuth token
@@ -340,6 +346,10 @@ The application targets university students, young professionals, and anyone see
         - GET /api/group(): GroupResponse
           - Purpose: Retrieves current user's group information
           - Returns: Group data with member details and ratings
+        - PUT /api/group/transfer-ownership/:newOwnerId(): GroupResponse
+          - Purpose: Transfers group ownership to another member (owner only)
+          - Parameters: User ID of new owner
+          - Returns: Updated group data with new owner
         - DELETE /api/group/member/:memberId(): GroupResponse
           - Purpose: Removes a member from group (owner only)
           - Parameters: User ID of member to remove
@@ -379,6 +389,14 @@ The application targets university students, young professionals, and anyone see
         - GET /api/task/my-tasks(): TaskListResponse
           - Purpose: Retrieves tasks assigned to current user for current week
           - Returns: Array of assigned tasks
+        - GET /api/task/date/:date(): TaskListResponse
+          - Purpose: Retrieves tasks for a specific date (for calendar view)
+          - Parameters: Date string (ISO format)
+          - Returns: Tasks with assignments for that date
+        - GET /api/task/week/:weekStart(): TaskListResponse
+          - Purpose: Retrieves tasks for a specific week
+          - Parameters: Week start date
+          - Returns: Tasks with assignments for that week
         - PUT /api/task/:id/status(status: String): TaskResponse
           - Purpose: Updates status of assigned task
           - Parameters: Task status (incomplete, in-progress, completed)
@@ -638,7 +656,7 @@ The following sequence diagrams illustrate how the components and interfaces def
 ![Use Case Diagram](./images/sequence2.png)
 
 
-3. [**Use Case 14: Send Message**](#uc14)
+3. [**Use Case 15: Send Message**](#uc15)
 ```mermaid
 sequenceDiagram
     actor User
@@ -681,7 +699,7 @@ sequenceDiagram
     end
 ```
 
-4. [**Use Case 16: Add Task**](#uc16)
+4. [**Use Case 17: Add Task**](#uc17)
 ```mermaid
 sequenceDiagram
     actor User
