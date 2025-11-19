@@ -649,7 +649,7 @@ Frameworks and libraries are software packages that provide reusable functionali
 The following sequence diagrams illustrate how the components and interfaces defined in the high-level design interact to realize the five most critical use cases of the RoomSync application.
 
 
-1. [**Use Case 1: Create Account**](#uc1)
+1. [**Use Case 1: Login Account**](#uc1)
 ![Use Case Diagram](./images/sequence1.png)
 
 2. [**Use Case 9: Create Group**](#uc9)
