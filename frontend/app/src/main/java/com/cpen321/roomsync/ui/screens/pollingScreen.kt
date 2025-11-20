@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -28,6 +29,8 @@ import com.cpen321.roomsync.ui.viewmodels.ViewModelPollItem
 import com.cpen321.roomsync.ui.viewmodels.ViewModelPollStatus
 import com.cpen321.roomsync.ui.viewmodels.ViewModelPollType
 import com.cpen321.roomsync.ui.viewmodels.ViewModelPollOption
+import com.cpen321.roomsync.ui.theme.GlassGradients
+import com.cpen321.roomsync.ui.theme.GlassColors
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -98,32 +101,41 @@ fun PollingScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(brush = GlassGradients.MainBackground)
     ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
         // Top App Bar with extra padding
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
+            color = GlassColors.GradientMiddle.copy(alpha = 0.8f),
             shadowElevation = 4.dp
         ) {
             Column(
                 modifier = Modifier.padding(top = 16.dp)
             ) {
                 TopAppBar(
-                    title = { Text(groupName) },
+                    title = { Text(groupName, color = Color.White) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                         }
                     },
                     actions = {
                         IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                            Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = Color.White)
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = GlassColors.GradientMiddle.copy(alpha = 0.8f),
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White,
+                        actionIconContentColor = Color.White
+                    )
                 )
             }
         }
@@ -187,7 +199,8 @@ fun PollingScreen(
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+                        containerColor = GlassColors.GradientMiddle.copy(alpha = 0.7f),
+                        contentColor = Color.White
                     )
                 ) {
                     Icon(
@@ -221,12 +234,12 @@ fun PollingScreen(
                         text = "No polls yet",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White.copy(alpha = 0.8f)
                     )
                     Text(
                         text = "Create the first poll to get started",
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color.White.copy(alpha = 0.8f),
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -253,6 +266,7 @@ fun PollingScreen(
                 }
             }
         }
+        }
     }
 
     // Create Poll Dialog
@@ -277,7 +291,10 @@ fun PollCard(
     
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = GlassColors.GradientMiddle.copy(alpha = 0.7f)
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -293,18 +310,18 @@ fun PollCard(
                         text = poll.question,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.White
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Created by ${poll.createdBy}",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White.copy(alpha = 0.8f)
                     )
                     Text(
                         text = "Expires: ${dateFormat.format(poll.expiresAt)}",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White.copy(alpha = 0.8f)
                     )
                 }
                 
@@ -357,7 +374,7 @@ fun PollCard(
                 Text(
                     text = "${poll.totalVotes} votes",
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White.copy(alpha = 0.8f)
                 )
                 
                 if (poll.status == PollStatus.ACTIVE) {
@@ -379,7 +396,8 @@ fun PollOptionButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = GlassColors.GradientMiddle.copy(alpha = 0.7f),
+            contentColor = Color.White
         )
     ) {
         Text(
@@ -412,7 +430,7 @@ fun PollResultBar(
             Text(
                 text = "${option.votes} (${String.format("%.1f", option.percentage)}%)",
                 fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White.copy(alpha = 0.8f)
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
@@ -421,7 +439,7 @@ fun PollResultBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp),
-            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+            color = if (isSelected) GlassColors.GradientMiddle else GlassColors.GradientMiddle.copy(alpha = 0.5f),
             trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }

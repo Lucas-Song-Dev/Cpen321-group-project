@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +35,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.DatePickerDialog
+import com.cpen321.roomsync.ui.theme.GlassGradients
+import com.cpen321.roomsync.ui.theme.GlassColors
 
 data class TaskItem(
     val id: String,
@@ -101,6 +104,7 @@ fun CalendarView(
             text = "${monthNames[currentMonth]} $currentYear",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
+            color = Color.White,
             modifier = Modifier.padding(16.dp)
         )
         
@@ -115,6 +119,7 @@ fun CalendarView(
                     text = dayName,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
+                    color = Color.White,
                     modifier = Modifier.weight(1f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
@@ -163,8 +168,8 @@ fun CalendarView(
                             .clip(CircleShape)
                             .background(
                                 when {
-                                    isSelected -> MaterialTheme.colorScheme.primary
-                                    isToday -> MaterialTheme.colorScheme.primaryContainer
+                                    isSelected -> Color.White.copy(alpha = 0.3f)
+                                    isToday -> Color.White.copy(alpha = 0.2f)
                                     else -> Color.Transparent
                                 }
                             )
@@ -176,11 +181,7 @@ fun CalendarView(
                         if (isCurrentMonth) {
                             Text(
                                 text = dayNumber.toString(),
-                                color = when {
-                                    isSelected -> MaterialTheme.colorScheme.onPrimary
-                                    isToday -> MaterialTheme.colorScheme.onPrimaryContainer
-                                    else -> MaterialTheme.colorScheme.onSurface
-                                },
+                                color = Color.White,
                                 fontSize = 14.sp,
                                 fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal
                             )
@@ -229,65 +230,73 @@ fun TaskScreen(
         viewModel.loadGroupMembers()
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(brush = GlassGradients.MainBackground)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Top App Bar with extra padding
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 4.dp
-            ) {
-                Column(
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = groupName,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = onBack) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                            }
-                        },
-                        actions = {
-                            IconButton(onClick = { showAddTaskDialog = true }) {
-                                Icon(Icons.Default.Add, contentDescription = "Add Task")
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
+            // Top App Bar with glass effect (like home screen)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color(0x30FFFFFF),
+                        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
                     )
+                    .border(
+                        width = 1.dp,
+                        color = Color(0x40FFFFFF),
+                        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                    )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 40.dp, bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Text(
+                        text = groupName,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    IconButton(onClick = { showAddTaskDialog = true }) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Add Task",
+                            tint = Color.White
+                        )
+                    }
                 }
             }
 
             // Calendar View
             if (showCalendar) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                ) {
-                    CalendarView(
-                        selectedDate = selectedDate,
-                        onDateSelected = { date ->
-                            selectedDate = date
-                            viewModel.loadTasksForDate(date)
-                        }
-                    )
-                }
+                CalendarView(
+                    selectedDate = selectedDate,
+                    onDateSelected = { date ->
+                        selectedDate = date
+                        viewModel.loadTasksForDate(date)
+                    },
+                    modifier = Modifier.padding(16.dp)
+                )
             }
 
             // Weekly View Header
@@ -295,9 +304,15 @@ fun TaskScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .border(
+                            width = 1.dp,
+                            color = Color.White,
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = Color.Transparent
                     )
                 ) {
                     Column(
@@ -312,7 +327,7 @@ fun TaskScreen(
                                 text = "Weekly Tasks",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = Color.White
                             )
                             
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -320,13 +335,13 @@ fun TaskScreen(
                                     onClick = { viewModel.changeWeek(-1) },
                                     enabled = !uiState.isLoading
                                 ) {
-                                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous Week")
+                                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous Week", tint = Color.White)
                                 }
                                 
                                 Text(
                                     text = viewModel.getWeekDisplayText(),
                                     fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    color = Color.White,
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
                                 
@@ -334,7 +349,7 @@ fun TaskScreen(
                                     onClick = { viewModel.changeWeek(1) },
                                     enabled = !uiState.isLoading
                                 ) {
-                                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next Week")
+                                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next Week", tint = Color.White)
                                 }
                             }
                         }
@@ -348,14 +363,20 @@ fun TaskScreen(
                             Button(
                                 onClick = { viewModel.assignWeeklyTasks() },
                                 enabled = !uiState.isAssigningWeekly && !uiState.isLoading,
+                                modifier = Modifier.border(
+                                    width = 1.dp,
+                                    color = Color.White,
+                                    shape = RoundedCornerShape(8.dp)
+                                ),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
+                                    containerColor = Color.Transparent,
+                                    contentColor = Color.White
                                 )
                             ) {
                                 if (uiState.isAssigningWeekly) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(16.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary
+                                        color = Color.White
                                     )
                                 } else {
                                     Icon(Icons.Default.Settings, contentDescription = null)
@@ -367,7 +388,7 @@ fun TaskScreen(
                             IconButton(
                                 onClick = { showAddTaskDialog = true }
                             ) {
-                                Icon(Icons.Default.Add, contentDescription = "Add Task")
+                                Icon(Icons.Default.Add, contentDescription = "Add Task", tint = Color.White)
                             }
                         }
                     }
@@ -375,14 +396,32 @@ fun TaskScreen(
             }
 
             // Tab Row
-            TabRow(selectedTabIndex = currentTab) {
+            TabRow(
+                selectedTabIndex = currentTab,
+                containerColor = Color.Transparent,
+                contentColor = Color.White,
+                indicator = { },
+                divider = { },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
                 Tab(
                     selected = currentTab == 0,
                     onClick = { 
                         currentTab = 0
                         showCalendar = true
                     },
-                    text = { Text("Calendar View") }
+                    text = { Text("Calendar View", color = Color.White) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp)
+                        .border(
+                            width = if (currentTab == 0) 2.dp else 1.dp,
+                            color = Color.White,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
                 )
                 Tab(
                     selected = currentTab == 1,
@@ -390,7 +429,16 @@ fun TaskScreen(
                         currentTab = 1
                         showCalendar = false
                     },
-                    text = { Text("Weekly View") }
+                    text = { Text("Weekly View", color = Color.White) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp)
+                        .border(
+                            width = if (currentTab == 1) 2.dp else 1.dp,
+                            color = Color.White,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
                 )
                 Tab(
                     selected = currentTab == 2,
@@ -398,7 +446,16 @@ fun TaskScreen(
                         currentTab = 2
                         showCalendar = false
                     },
-                    text = { Text("My Tasks") }
+                    text = { Text("My Tasks", color = Color.White) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp)
+                        .border(
+                            width = if (currentTab == 2) 2.dp else 1.dp,
+                            color = Color.White,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
                 )
             }
 
@@ -428,14 +485,25 @@ fun TaskScreen(
                                             Icons.Default.Add,
                                             contentDescription = null,
                                             modifier = Modifier.size(64.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            tint = Color.White
                                         )
                                         Text(
                                             text = "No tasks for ${SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(selectedDate)}",
                                             fontSize = 16.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = Color.White
                                         )
-                                        Button(onClick = { viewModel.assignWeeklyTasks() }) {
+                                        Button(
+                                            onClick = { viewModel.assignWeeklyTasks() },
+                                            modifier = Modifier.border(
+                                                width = 1.dp,
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color.Transparent,
+                                                contentColor = Color.White
+                                            )
+                                        ) {
                                             Text("Auto-Assign Tasks")
                                         }
                                     }
@@ -483,14 +551,25 @@ fun TaskScreen(
                                             Icons.Default.Add,
                                             contentDescription = null,
                                             modifier = Modifier.size(64.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            tint = Color.White
                                         )
                                         Text(
                                             text = "No tasks assigned for this week",
                                             fontSize = 16.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = Color.White
                                         )
-                                        Button(onClick = { viewModel.assignWeeklyTasks() }) {
+                                        Button(
+                                            onClick = { viewModel.assignWeeklyTasks() },
+                                            modifier = Modifier.border(
+                                                width = 1.dp,
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color.Transparent,
+                                                contentColor = Color.White
+                                            )
+                                        ) {
                                             Text("Auto-Assign Week")
                                         }
                                     }
@@ -503,16 +582,22 @@ fun TaskScreen(
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(vertical = 4.dp),
+                                            .padding(vertical = 4.dp)
+                                            .border(
+                                                width = 1.dp,
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                                         colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                                            containerColor = Color.Transparent
                                         )
                                     ) {
                                         Text(
                                             text = dayName,
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                            color = Color.White,
                                             modifier = Modifier.padding(12.dp)
                                         )
                                     }
@@ -561,14 +646,25 @@ fun TaskScreen(
                                             Icons.Default.Add,
                                             contentDescription = null,
                                             modifier = Modifier.size(64.dp),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            tint = Color.White
                                         )
                                         Text(
                                             text = "No tasks assigned to you",
                                             fontSize = 16.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = Color.White
                                         )
-                                        Button(onClick = { showAddTaskDialog = true }) {
+                                        Button(
+                                            onClick = { showAddTaskDialog = true },
+                                            modifier = Modifier.border(
+                                                width = 1.dp,
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color.Transparent,
+                                                contentColor = Color.White
+                                            )
+                                        ) {
                                             Text("Create First Task")
                                         }
                                     }
@@ -581,16 +677,22 @@ fun TaskScreen(
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(vertical = 4.dp),
+                                            .padding(vertical = 4.dp)
+                                            .border(
+                                                width = 1.dp,
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                                         colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                            containerColor = Color.Transparent
                                         )
                                     ) {
                                         Text(
                                             text = dayName,
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            color = Color.White,
                                             modifier = Modifier.padding(12.dp)
                                         )
                                     }
@@ -710,8 +812,17 @@ fun TaskCard(
     var showMenu by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = Color.White,
+                shape = RoundedCornerShape(12.dp)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -727,9 +838,9 @@ fun TaskCard(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = if (task.status == TaskStatus.COMPLETED) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                        Color.White.copy(alpha = 0.7f)
                     } else {
-                        MaterialTheme.colorScheme.onSurface
+                        Color.White
                     },
                     textDecoration = if (task.status == TaskStatus.COMPLETED) {
                         TextDecoration.LineThrough
@@ -781,7 +892,7 @@ fun TaskCard(
                 Text(
                     text = task.description,
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color.White
                 )
             }
 
@@ -800,23 +911,23 @@ fun TaskCard(
                     Text(
                         text = "Difficulty:",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    repeat(task.difficulty) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary)
-                        )
+                    val difficultyColor = when {
+                        task.difficulty <= 2 -> Color(0xFF4CAF50) // Green for 1-2
+                        task.difficulty == 3 -> Color(0xFFFFC107) // Yellow for 3
+                        else -> Color(0xFFF44336) // Red for 4-5
                     }
-                    repeat(5 - task.difficulty) {
+                    repeat(5) { index ->
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                                .background(
+                                    if (index < task.difficulty) difficultyColor 
+                                    else Color.White.copy(alpha = 0.3f)
+                                )
                         )
                     }
                 }
@@ -845,13 +956,13 @@ fun TaskCard(
                         Icons.Default.Person,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = Color.White
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "Assigned to: ${task.assignedTo.joinToString(", ")}",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White
                     )
                 }
             }
@@ -874,13 +985,13 @@ fun TaskCard(
                         Icons.Default.DateRange,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = Color.White
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "Deadline: ${SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(task.deadline)}",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color.White
                     )
                 }
             }
@@ -894,21 +1005,23 @@ fun TaskStatusChip(
     onClick: () -> Unit
 ) {
     val (text, color, icon) = when (status) {
-        TaskStatus.INCOMPLETE -> Triple("Incomplete", MaterialTheme.colorScheme.error, Icons.Default.Close)
+        TaskStatus.INCOMPLETE -> Triple("Incomplete", Color(0xFFFF6B6B), Icons.Default.Close)
         TaskStatus.IN_PROGRESS -> Triple("In Progress", MaterialTheme.colorScheme.primary, Icons.Default.PlayArrow)
-        TaskStatus.COMPLETED -> Triple("Completed", Color(0xFF4CAF50), Icons.Default.CheckCircle)
+        TaskStatus.COMPLETED -> Triple("Complete", Color(0xFF4CAF50), Icons.Default.CheckCircle)
     }
 
     FilterChip(
         onClick = onClick,
-        label = { Text(text) },
+        label = { Text(text, color = Color.White) },
         leadingIcon = {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+            Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
         },
         selected = status == TaskStatus.COMPLETED,
         colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = color.copy(alpha = 0.2f),
-            selectedLabelColor = color
+            containerColor = if (status == TaskStatus.COMPLETED) Color(0xFF4CAF50).copy(alpha = 0.5f) else color.copy(alpha = 0.3f),
+            selectedContainerColor = Color(0xFF4CAF50).copy(alpha = 0.5f),
+            labelColor = Color.White,
+            selectedLabelColor = Color.White
         )
     )
 }
@@ -979,7 +1092,7 @@ fun AddTaskDialog(
                         ) {
                             Text(
                                 text = "${index + 1}",
-                                color = if (index < difficulty) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = if (index < difficulty) Color.White else Color.White.copy(alpha = 0.5f),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -1071,7 +1184,7 @@ fun AddTaskDialog(
                         ) {
                             Text(
                                 text = peopleCount.toString(),
-                                color = if (requiredPeople == peopleCount) Color.White else MaterialTheme.colorScheme.onSurface,
+                                color = if (requiredPeople == peopleCount) Color.White else Color.White.copy(alpha = 0.7f),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -1182,7 +1295,17 @@ fun AddTaskDialog(
                     }
                 },
                 enabled = name.trim().isNotEmpty() && (recurrence != "one-time" || deadline != null),
-                modifier = Modifier.testTag("createTaskButton")
+                modifier = Modifier
+                    .testTag("createTaskButton")
+                    .border(
+                        width = 1.dp,
+                        color = Color.White,
+                        shape = RoundedCornerShape(8.dp)
+                    ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.White
+                )
             ) {
                 Text("Create Task")
             }
