@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -33,6 +34,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.cpen321.roomsync.data.models.ReportUserRequest
+import com.cpen321.roomsync.ui.theme.GlassGradients
 import com.cpen321.roomsync.data.network.RetrofitInstance
 import androidx.compose.material3.CircularProgressIndicator
 
@@ -53,9 +55,10 @@ fun GroupDetailsScreen(
     var memberToKick by remember { mutableStateOf<ViewModelGroupMember?>(null) }
     var showKickConfirmation by remember { mutableStateOf(false) }
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(brush = GlassGradients.MainBackground)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
