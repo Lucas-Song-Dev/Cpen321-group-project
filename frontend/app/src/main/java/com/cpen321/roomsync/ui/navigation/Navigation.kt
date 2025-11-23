@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material3.CircularProgressIndicator
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModelFactory
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModel
+import com.cpen321.roomsync.ui.viewmodels.OptionalProfileState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.Column
 import com.cpen321.roomsync.ui.viewmodels.ProfileSetState
@@ -286,6 +287,17 @@ fun AppNavigation() {
                     val factory = OptionalProfileViewModelFactory(RetrofitInstance.api)
                     val profileViewModel: OptionalProfileViewModel = viewModel(factory = factory)
                     val user = authResponse?.user
+                    val optionalProfileState by profileViewModel.optionalProfileState.collectAsState()
+
+                    // Update auth state when profile is successfully updated
+                    LaunchedEffect(optionalProfileState) {
+                        val state = optionalProfileState
+                        if (state is OptionalProfileState.Success) {
+                            // Update the auth state with the new user data to persist changes
+                            val updatedUser = state.user
+                            authViewModel.updateUserData(updatedUser)
+                        }
+                    }
                     
                     if (user != null) {
                         ProfileScreen(
