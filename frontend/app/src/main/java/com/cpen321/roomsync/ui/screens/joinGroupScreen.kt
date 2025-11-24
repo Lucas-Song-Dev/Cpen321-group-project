@@ -1,6 +1,7 @@
 package com.cpen321.roomsync.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cpen321.roomsync.ui.theme.GlassGradients
 import com.cpen321.roomsync.ui.viewmodels.GroupViewModel
+import androidx.compose.ui.graphics.Color as ComposeColor
 
 @Composable
 fun JoinGroupScreen(
@@ -57,7 +59,8 @@ fun JoinGroupScreen(
                 IconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back"
+                        contentDescription = "Back",
+                        tint = ComposeColor.White
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -65,7 +68,7 @@ fun JoinGroupScreen(
                     text = "Join Group",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = ComposeColor.White
                 )
             }
 
@@ -81,7 +84,7 @@ fun JoinGroupScreen(
                     text = "Enter Group Code",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = ComposeColor.White,
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
 
@@ -94,8 +97,8 @@ fun JoinGroupScreen(
                             groupCode = it.uppercase()
                         }
                     },
-                    label = { Text("Group Code") },
-                    placeholder = { Text("ABCD") },
+                    label = { Text("Group Code", color = ComposeColor.White) },
+                    placeholder = { Text("ABCD", color = ComposeColor.White.copy(alpha = 0.6f)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 24.dp),
@@ -105,14 +108,23 @@ fun JoinGroupScreen(
                         keyboardType = KeyboardType.Text
                     ),
                     singleLine = true,
-                    isError = uiState.error != null
+                    isError = uiState.error != null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = ComposeColor.White,
+                        unfocusedTextColor = ComposeColor.White,
+                        focusedLabelColor = ComposeColor.White,
+                        unfocusedLabelColor = ComposeColor.White.copy(alpha = 0.7f),
+                        focusedBorderColor = ComposeColor.White,
+                        unfocusedBorderColor = ComposeColor.White.copy(alpha = 0.7f),
+                        cursorColor = ComposeColor.White
+                    )
                 )
 
                 // Error message
                 if (uiState.error != null) {
                     Text(
                         text = uiState.error!!,
-                        color = MaterialTheme.colorScheme.error,
+                        color = ComposeColor(0xFFFF6B6B),
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
@@ -127,20 +139,32 @@ fun JoinGroupScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(56.dp)
+                        .border(
+                            width = 1.dp,
+                            color = ComposeColor.White,
+                            shape = RoundedCornerShape(12.dp)
+                        ),
                     shape = RoundedCornerShape(12.dp),
-                    enabled = groupCode.length == 4 && !uiState.isLoading
+                    enabled = groupCode.length == 4 && !uiState.isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ComposeColor.Transparent,
+                        contentColor = ComposeColor.White,
+                        disabledContainerColor = ComposeColor.Transparent.copy(alpha = 0.5f),
+                        disabledContentColor = ComposeColor.White.copy(alpha = 0.5f)
+                    )
                 ) {
                     if (uiState.isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = ComposeColor.White
                         )
                     } else {
                         Text(
                             text = "Join Group",
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = ComposeColor.White
                         )
                     }
                 }
@@ -151,7 +175,7 @@ fun JoinGroupScreen(
                 Text(
                     text = "Ask your group leader for the 4-character code",
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = ComposeColor.White.copy(alpha = 0.7f),
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }

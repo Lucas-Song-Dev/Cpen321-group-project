@@ -32,6 +32,7 @@ import com.cpen321.roomsync.ui.viewmodels.ViewModelGroupMember
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.DatePickerDialog
@@ -481,31 +482,22 @@ fun TaskScreen(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(16.dp)
                                     ) {
-                                        Icon(
-                                            Icons.Default.Add,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(64.dp),
-                                            tint = Color.White
-                                        )
+                                        IconButton(
+                                            onClick = { showAddTaskDialog = true },
+                                            modifier = Modifier.size(64.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = "Add Task",
+                                                modifier = Modifier.size(64.dp),
+                                                tint = Color.White
+                                            )
+                                        }
                                         Text(
                                             text = "No tasks for ${SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(selectedDate)}",
                                             fontSize = 16.sp,
                                             color = Color.White
                                         )
-                                        Button(
-                                            onClick = { viewModel.assignWeeklyTasks() },
-                                            modifier = Modifier.border(
-                                                width = 1.dp,
-                                                color = Color.White,
-                                                shape = RoundedCornerShape(8.dp)
-                                            ),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color.Transparent,
-                                                contentColor = Color.White
-                                            )
-                                        ) {
-                                            Text("Auto-Assign Tasks")
-                                        }
                                     }
                                 }
                             }
@@ -547,31 +539,22 @@ fun TaskScreen(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         verticalArrangement = Arrangement.spacedBy(16.dp)
                                     ) {
-                                        Icon(
-                                            Icons.Default.Add,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(64.dp),
-                                            tint = Color.White
-                                        )
+                                        IconButton(
+                                            onClick = { showAddTaskDialog = true },
+                                            modifier = Modifier.size(64.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = "Add Task",
+                                                modifier = Modifier.size(64.dp),
+                                                tint = Color.White
+                                            )
+                                        }
                                         Text(
                                             text = "No tasks assigned for this week",
                                             fontSize = 16.sp,
                                             color = Color.White
                                         )
-                                        Button(
-                                            onClick = { viewModel.assignWeeklyTasks() },
-                                            modifier = Modifier.border(
-                                                width = 1.dp,
-                                                color = Color.White,
-                                                shape = RoundedCornerShape(8.dp)
-                                            ),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color.Transparent,
-                                                contentColor = Color.White
-                                            )
-                                        ) {
-                                            Text("Auto-Assign Week")
-                                        }
                                     }
                                 }
                             }
@@ -1047,7 +1030,9 @@ fun AddTaskDialog(
             Text("Create New Task")
         },
         text = {
+            val scrollState = rememberScrollState()
             Column(
+                modifier = Modifier.verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 OutlinedTextField(
@@ -1296,16 +1281,14 @@ fun AddTaskDialog(
                 },
                 enabled = name.trim().isNotEmpty() && (recurrence != "one-time" || deadline != null),
                 modifier = Modifier
-                    .testTag("createTaskButton")
-                    .border(
-                        width = 1.dp,
-                        color = Color.White,
-                        shape = RoundedCornerShape(8.dp)
-                    ),
+                    .testTag("createTaskButton"),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.White
-                )
+                    containerColor = Color(0xFF2196F3),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.Gray.copy(alpha = 0.3f),
+                    disabledContentColor = Color.Gray.copy(alpha = 0.7f)
+                ),
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text("Create Task")
             }
