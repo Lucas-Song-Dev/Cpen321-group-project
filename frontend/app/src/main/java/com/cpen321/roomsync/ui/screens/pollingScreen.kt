@@ -2,6 +2,7 @@ package com.cpen321.roomsync.ui.screens
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import com.cpen321.roomsync.ui.theme.GlassGradients
 import com.cpen321.roomsync.ui.theme.GlassColors
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.graphics.Color as ComposeColor
 
 // Data classes for UI
 data class PollItem(
@@ -180,11 +182,21 @@ fun PollingScreen(
             ) {
                 Button(
                     onClick = { showCreatePollDialog = true },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .border(
+                            width = 1.dp,
+                            color = ComposeColor.White,
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ComposeColor.Transparent,
+                        contentColor = ComposeColor.White
+                    )
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
+                    Icon(Icons.Default.Add, contentDescription = null, tint = ComposeColor.White)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Create Poll")
+                    Text("Create Poll", color = ComposeColor.White)
                 }
                 
                 Button(
@@ -197,19 +209,26 @@ fun PollingScreen(
                             isRefreshing = false
                         }
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .border(
+                            width = 1.dp,
+                            color = ComposeColor.White,
+                            shape = RoundedCornerShape(8.dp)
+                        ),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = GlassColors.GradientMiddle.copy(alpha = 0.7f),
-                        contentColor = Color.White
+                        containerColor = ComposeColor.Transparent,
+                        contentColor = ComposeColor.White
                     )
                 ) {
                     Icon(
                         Icons.Default.Refresh, 
                         contentDescription = null,
+                        tint = ComposeColor.White,
                         modifier = if (isRefreshing) Modifier.rotate(rotation) else Modifier
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Refresh")
+                    Text("Refresh", color = ComposeColor.White)
                 }
             }
 
@@ -243,8 +262,19 @@ fun PollingScreen(
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { showCreatePollDialog = true }) {
-                        Text("Create Poll")
+                    Button(
+                        onClick = { showCreatePollDialog = true },
+                        modifier = Modifier.border(
+                            width = 1.dp,
+                            color = ComposeColor.White,
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ComposeColor.Transparent,
+                            contentColor = ComposeColor.White
+                        )
+                    ) {
+                        Text("Create Poll", color = ComposeColor.White)
                     }
                 }
             } else {
@@ -378,8 +408,13 @@ fun PollCard(
                 )
                 
                 if (poll.status == PollStatus.ACTIVE) {
-                    TextButton(onClick = onClosePoll) {
-                        Text("Close Poll")
+                    TextButton(
+                        onClick = onClosePoll,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = ComposeColor.White
+                        )
+                    ) {
+                        Text("Close Poll", color = ComposeColor.White)
                     }
                 }
             }
@@ -394,10 +429,16 @@ fun PollOptionButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = ComposeColor.White,
+                shape = RoundedCornerShape(8.dp)
+            ),
         colors = ButtonDefaults.buttonColors(
-            containerColor = GlassColors.GradientMiddle.copy(alpha = 0.7f),
-            contentColor = Color.White
+            containerColor = ComposeColor.Transparent,
+            contentColor = ComposeColor.White
         )
     ) {
         Text(
@@ -619,14 +660,30 @@ fun CreatePollDialog(
                 },
                 enabled = question.isNotBlank() && 
                          option1.isNotBlank() && 
-                         option2.isNotBlank()
+                         option2.isNotBlank(),
+                modifier = Modifier.border(
+                    width = 1.dp,
+                    color = ComposeColor.White,
+                    shape = RoundedCornerShape(8.dp)
+                ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ComposeColor.Transparent,
+                    contentColor = ComposeColor.White,
+                    disabledContainerColor = ComposeColor.Transparent.copy(alpha = 0.5f),
+                    disabledContentColor = ComposeColor.White.copy(alpha = 0.5f)
+                )
             ) {
-                Text("Create Poll")
+                Text("Create Poll", color = ComposeColor.White)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = ComposeColor.White
+                )
+            ) {
+                Text("Cancel", color = ComposeColor.White)
             }
         }
     )

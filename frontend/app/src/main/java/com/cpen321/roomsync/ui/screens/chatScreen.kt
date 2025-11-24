@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -109,7 +110,7 @@ fun MessageBubble(
                 Text(
                     text = message.senderName,
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = ComposeColor.White.copy(alpha = 0.8f),
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(2.dp))
@@ -129,7 +130,7 @@ fun MessageBubble(
             Text(
                 text = timeFormat.format(message.timestamp),
                 fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = ComposeColor.White.copy(alpha = 0.7f),
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
         }
@@ -288,8 +289,16 @@ fun MessageInput(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(16.dp)
+            .border(
+                width = 1.dp,
+                color = ComposeColor.White,
+                shape = RoundedCornerShape(12.dp)
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = ComposeColor.Transparent
+        )
     ) {
         Row(
             modifier = Modifier
@@ -301,8 +310,17 @@ fun MessageInput(
                 value = messageText,
                 onValueChange = onMessageTextChange,
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Type a message...") },
+                placeholder = { Text("Type a message...", color = ComposeColor.White.copy(alpha = 0.6f)) },
                 maxLines = 4,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = ComposeColor.White,
+                    unfocusedTextColor = ComposeColor.White,
+                    focusedLabelColor = ComposeColor.White,
+                    unfocusedLabelColor = ComposeColor.White.copy(alpha = 0.7f),
+                    focusedBorderColor = ComposeColor.White,
+                    unfocusedBorderColor = ComposeColor.White.copy(alpha = 0.7f),
+                    cursorColor = ComposeColor.White
+                ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Send
@@ -318,12 +336,18 @@ fun MessageInput(
             // Poll button
             IconButton(
                 onClick = onShowPollDialog,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier
+                    .size(48.dp)
+                    .border(
+                        width = 1.dp,
+                        color = ComposeColor.White,
+                        shape = CircleShape
+                    )
             ) {
                 Icon(
                     Icons.Default.Add,
                     contentDescription = "Create Poll",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = ComposeColor.White
                 )
             }
             
@@ -331,13 +355,19 @@ fun MessageInput(
             
             FloatingActionButton(
                 onClick = onSendMessage,
-                modifier = Modifier.size(48.dp),
-                containerColor = MaterialTheme.colorScheme.primary
+                modifier = Modifier
+                    .size(48.dp)
+                    .border(
+                        width = 1.dp,
+                        color = ComposeColor.White,
+                        shape = CircleShape
+                    ),
+                containerColor = ComposeColor.Transparent
             ) {
                 Icon(
                     Icons.Default.Send,
                     contentDescription = "Send",
-                    tint = Color.White
+                    tint = ComposeColor.White
                 )
             }
         }
@@ -380,14 +410,30 @@ fun CreatePollDialog(
                     }
                 },
                 enabled = question.trim().isNotEmpty() && 
-                         options.filter { it.trim().isNotEmpty() }.size >= 2
+                         options.filter { it.trim().isNotEmpty() }.size >= 2,
+                modifier = Modifier.border(
+                    width = 1.dp,
+                    color = ComposeColor.White,
+                    shape = RoundedCornerShape(8.dp)
+                ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ComposeColor.Transparent,
+                    contentColor = ComposeColor.White,
+                    disabledContainerColor = ComposeColor.Transparent.copy(alpha = 0.5f),
+                    disabledContentColor = ComposeColor.White.copy(alpha = 0.5f)
+                )
             ) {
-                Text("Create Poll")
+                Text("Create Poll", color = ComposeColor.White)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = ComposeColor.White
+                )
+            ) {
+                Text("Cancel", color = ComposeColor.White)
             }
         }
     )
@@ -436,9 +482,19 @@ private fun CreatePollDialogPart2(
             onClick = {
                 onOptionsChange(options + "")
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = ComposeColor.White,
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ComposeColor.Transparent,
+                contentColor = ComposeColor.White
+            )
         ) {
-            Text("Add Option")
+            Text("Add Option", color = ComposeColor.White)
         }
     }
 }
@@ -608,7 +664,6 @@ fun ChatScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChatScreenPart2(
     groupName: String,
@@ -616,46 +671,67 @@ private fun ChatScreenPart2(
     onShowPollDialog: () -> Unit,
     onShowMenu: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 4.dp
-    ) {
-        Column(
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = groupName,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Group Chat",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onShowPollDialog) {
-                        Icon(Icons.Default.Add, contentDescription = "Create Poll")
-                    }
-                    IconButton(onClick = onShowMenu) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+    // Top App Bar with glass effect (like task screen)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = ComposeColor(0x30FFFFFF),
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
+            .border(
+                width = 1.dp,
+                color = ComposeColor(0x40FFFFFF),
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+            )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 40.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = ComposeColor.White
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                Text(
+                    text = groupName,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ComposeColor.White
+                )
+                Text(
+                    text = "Group Chat",
+                    fontSize = 12.sp,
+                    color = ComposeColor.White.copy(alpha = 0.7f)
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            IconButton(onClick = onShowPollDialog) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Create Poll",
+                    tint = ComposeColor.White
+                )
+            }
+
+            IconButton(onClick = onShowMenu) {
+                Icon(
+                    Icons.Default.MoreVert,
+                    contentDescription = "More",
+                    tint = ComposeColor.White
+                )
+            }
         }
     }
 }

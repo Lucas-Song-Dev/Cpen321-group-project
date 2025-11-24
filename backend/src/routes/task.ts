@@ -423,7 +423,8 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
 router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) => {
   const { weekStart } = req.params;
   
-  // Parse week start date
+  // Parse week start date (expecting format like "2025-11-24")
+  // Use same approach as date endpoint to ensure consistency
   const weekStartDate = new Date(weekStart);
   if (isNaN(weekStartDate.getTime())) {
     return res.status(400).json({
@@ -431,6 +432,10 @@ router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) 
       message: 'Invalid week start date'
     });
   }
+
+  // Normalize week start to start of day (local time, same as how tasks are stored)
+  const normalizedWeekStart = new Date(weekStartDate);
+  normalizedWeekStart.setHours(0, 0, 0, 0);
 
   // Get user's current group
   const group = await Group.findOne({ 
@@ -444,14 +449,45 @@ router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) 
     });
   }
 
-  // Get tasks for the group with assignments for the specified week
+  // Calculate week end for date range checking (6 days after week start, at end of day)
+  const weekEndDate = new Date(normalizedWeekStart);
+  weekEndDate.setDate(weekEndDate.getDate() + 6);
+  weekEndDate.setHours(23, 59, 59, 999);
+
+  // Get tasks for the group - tasks that belong to this week
+  // Similar to date endpoint: return all recurring tasks (they can appear in any week)
+  // and one-time tasks with deadlines in this week
+  
+  // Log for debugging
+  console.log(`[Week Query] Week start: ${normalizedWeekStart.toISOString()}, Week end: ${weekEndDate.toISOString()}`);
+  
   const tasks = await Task.find({ 
     groupId: group._id,
-    'assignments.weekStart': weekStartDate
+    $or: [
+      // One-time tasks with deadline in this week
+      {
+        recurrence: 'one-time',
+        deadline: {
+          $gte: normalizedWeekStart,
+          $lte: weekEndDate
+        }
+      },
+      // All recurring tasks - they should appear regardless of assignments
+      // The frontend will filter assignments to show only those for this week
+      {
+        recurrence: { $ne: 'one-time' }
+      }
+    ]
   })
-    .populate('createdBy', 'name email')
-    .populate('assignments.userId', 'name email')
-    .sort({ createdAt: -1 });
+  .populate('createdBy', 'name email')
+  .populate('assignments.userId', 'name email')
+  .sort({ createdAt: -1 });
+
+  // Log tasks for debugging
+  console.log(`[Week Query] Found ${tasks.length} tasks`);
+  tasks.forEach((task, index) => {
+    console.log(`[Week Query] Task ${index + 1}: ${task.name}, recurrence: ${task.recurrence}, deadline: ${task.deadline?.toISOString() || 'N/A'}`);
+  });
 
   res.status(200).json({
     success: true,
@@ -537,6 +573,17 @@ router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
   endOfDay.setHours(23, 59, 59, 999);
 
   // Find tasks that should appear on this date
+  // Calculate week start (Monday) for this date
+  const weekStartDate = new Date(startOfDay);
+  const dayOfWeek = weekStartDate.getDay();
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday (0) to 6, others to 0-4
+  weekStartDate.setDate(weekStartDate.getDate() - daysToMonday);
+  weekStartDate.setHours(0, 0, 0, 0);
+  
+  const weekEndDate = new Date(weekStartDate);
+  weekEndDate.setDate(weekEndDate.getDate() + 6);
+  weekEndDate.setHours(23, 59, 59, 999);
+
   const tasks = await Task.find({
     groupId: group._id,
     $or: [
@@ -548,13 +595,9 @@ router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
           $lte: endOfDay
         }
       },
-      // Recurring tasks that have assignments for this week
+      // All recurring tasks - they should appear regardless of assignments
       {
-        recurrence: { $ne: 'one-time' },
-        'assignments.weekStart': {
-          $gte: new Date(startOfDay.getTime() - startOfDay.getDay() * 24 * 60 * 60 * 1000),
-          $lt: new Date(startOfDay.getTime() + (7 - startOfDay.getDay()) * 24 * 60 * 60 * 1000)
-        }
+        recurrence: { $ne: 'one-time' }
       }
     ]
   })

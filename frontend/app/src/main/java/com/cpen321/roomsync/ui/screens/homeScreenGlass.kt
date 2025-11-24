@@ -266,27 +266,38 @@ fun HomeScreenGlass(
                     onDismissRequest = {
                         showLeaveGroupDialog = false
                     },
-                    title = { Text("Leave Group", fontWeight = FontWeight.Bold) },
-                    text = { Text("Are you sure you want to leave this group? You can join another group later.") },
+                    title = { Text("Leave Group", fontWeight = FontWeight.Bold, color = Color.White) },
+                    text = { Text("Are you sure you want to leave this group? You can join another group later.", color = Color.White) },
                     confirmButton = {
                         Button(
                             onClick = {
                                 showLeaveGroupDialog = false
                                 onLeaveGroup()
                             },
+                            modifier = Modifier.border(
+                                width = 1.dp,
+                                color = Color(0xFFFF6B6B),
+                                shape = RoundedCornerShape(8.dp)
+                            ),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFEF4444)
+                                containerColor = Color.Transparent,
+                                contentColor = Color(0xFFFF6B6B)
                             )
                         ) {
-                            Text("Leave")
+                            Text("Leave", color = Color(0xFFFF6B6B))
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showLeaveGroupDialog = false }) {
-                            Text("Cancel")
+                        TextButton(
+                            onClick = { showLeaveGroupDialog = false },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("Cancel", color = Color.White)
                         }
                     },
-                    containerColor = Color.White,
+                    containerColor = Color(0x30000000),
                     shape = RoundedCornerShape(20.dp)
                 )
             }
@@ -295,27 +306,38 @@ fun HomeScreenGlass(
             if (showDeleteDialog) {
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },
-                    title = { Text("Delete Account", fontWeight = FontWeight.Bold) },
-                    text = { Text("Are you sure you want to delete your account? This action cannot be undone.") },
+                    title = { Text("Delete Account", fontWeight = FontWeight.Bold, color = Color.White) },
+                    text = { Text("Are you sure you want to delete your account? This action cannot be undone.", color = Color.White) },
                     confirmButton = {
                         Button(
                             onClick = {
                                 showDeleteDialog = false
                                 onDeleteAccount()
                             },
+                            modifier = Modifier.border(
+                                width = 1.dp,
+                                color = Color(0xFFFF6B6B),
+                                shape = RoundedCornerShape(8.dp)
+                            ),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFEF4444)
+                                containerColor = Color.Transparent,
+                                contentColor = Color(0xFFFF6B6B)
                             )
                         ) {
-                            Text("Delete")
+                            Text("Delete", color = Color(0xFFFF6B6B))
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showDeleteDialog = false }) {
-                            Text("Cancel")
+                        TextButton(
+                            onClick = { showDeleteDialog = false },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("Cancel", color = Color.White)
                         }
                     },
-                    containerColor = Color.White,
+                    containerColor = Color(0x30000000),
                     shape = RoundedCornerShape(20.dp)
                 )
             }

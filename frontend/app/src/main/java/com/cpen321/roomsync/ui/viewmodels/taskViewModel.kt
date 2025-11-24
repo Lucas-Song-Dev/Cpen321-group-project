@@ -35,6 +35,7 @@ data class TaskUiState(
     val tasks: List<TaskItem> = emptyList(),
     val myTasks: List<TaskItem> = emptyList(),
     val dailyTasks: List<TaskItem> = emptyList(),
+    val selectedDate: Date? = null, // Track the currently selected date for calendar view
     val groupMembers: List<ViewModelGroupMember> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -95,6 +96,83 @@ fun groupTasksByDay(tasks: List<TaskItem>): Map<String, List<TaskItem>> {
     return groupedByDate.toList().sortedBy { (dateString, _) ->
         calendar.time = dateFormatter.parse(dateString) ?: Date()
         calendar.time
+    }.toMap().mapKeys { (dateString, _) ->
+        calendar.time = dateFormatter.parse(dateString) ?: Date()
+        displayFormatter.format(calendar.time)
+    }
+}
+
+// Helper function to group tasks by day for a specific week
+fun groupTasksByDayForWeek(tasks: List<TaskItem>, weekStart: Date): Map<String, List<TaskItem>> {
+    val calendar = Calendar.getInstance()
+    val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val displayFormatter = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault())
+    
+    // Normalize weekStart to start of day
+    calendar.time = weekStart
+    calendar.set(Calendar.HOUR_OF_DAY, 0)
+    calendar.set(Calendar.MINUTE, 0)
+    calendar.set(Calendar.SECOND, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
+    val normalizedWeekStart = calendar.time
+    
+    // Calculate week end (6 days after week start)
+    calendar.time = normalizedWeekStart
+    calendar.add(Calendar.DAY_OF_MONTH, 6)
+    calendar.set(Calendar.HOUR_OF_DAY, 23)
+    calendar.set(Calendar.MINUTE, 59)
+    calendar.set(Calendar.SECOND, 59)
+    calendar.set(Calendar.MILLISECOND, 999)
+    val weekEnd = calendar.time
+    
+    // Group tasks by the day they appear on in this week
+    val groupedByDate = tasks.groupBy { task ->
+        val taskDate: Date = if (task.recurrence == "one-time" && task.deadline != null) {
+            // For one-time tasks, use the deadline date if it's within the week
+            val deadlineDate = task.deadline
+            // Normalize deadline to start of day for comparison
+            calendar.time = deadlineDate
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val normalizedDeadline = calendar.time
+            
+            // Check if deadline falls within the week range
+            if (normalizedDeadline >= normalizedWeekStart && normalizedDeadline <= weekEnd) {
+                normalizedDeadline
+            } else {
+                // If outside week, still use it (shouldn't happen if backend filters correctly)
+                normalizedDeadline
+            }
+        } else {
+            // For recurring tasks in weekly view, show them on Monday (weekStart) by default
+            normalizedWeekStart
+        }
+        
+        // Format the date as a string key
+        calendar.time = taskDate
+        dateFormatter.format(calendar.time)
+    }.mapValues { (_, dayTasks) ->
+        // Sort tasks within each day by deadline (earliest first, most urgent at top)
+        dayTasks.sortedWith(compareBy<TaskItem>(
+            { it.deadline ?: Date(Long.MAX_VALUE) }
+        ).thenBy { it.createdAt })
+    }
+    
+    // Filter to only include days within the week and sort chronologically
+    val filteredGrouped = groupedByDate.filterKeys { dateString ->
+        try {
+            val parsedDate = dateFormatter.parse(dateString)
+            parsedDate != null && parsedDate >= normalizedWeekStart && parsedDate <= weekEnd
+        } catch (e: Exception) {
+            false
+        }
+    }
+    
+    // Sort the days chronologically and convert to display format
+    return filteredGrouped.toList().sortedBy { (dateString, _) ->
+        dateFormatter.parse(dateString) ?: Date()
     }.toMap().mapKeys { (dateString, _) ->
         calendar.time = dateFormatter.parse(dateString) ?: Date()
         displayFormatter.format(calendar.time)
@@ -367,9 +445,39 @@ class TaskViewModel(
             try {
                 val response = taskRepository.deleteTask(taskId)
                 if (response.success) {
-                    // Refresh tasks after successful deletion
+                    // Remove task from local state immediately
+                    val currentState = _uiState.value
+                    val updatedTasks = currentState.tasks.filter { it.id != taskId }
+                    val updatedMyTasks = currentState.myTasks.filter { it.id != taskId }
+                    val updatedDailyTasks = currentState.dailyTasks.filter { it.id != taskId }
+                    val updatedWeeklyTasks = currentState.weeklyTasks.filter { it.id != taskId }
+                    
+                    // Update grouped tasks
+                    val updatedAllTasksGrouped = currentState.allTasksGroupedByDay.mapValues { (_, tasks) ->
+                        tasks.filter { it.id != taskId }
+                    }.filterValues { it.isNotEmpty() }
+                    
+                    val updatedMyTasksGrouped = currentState.myTasksGroupedByDay.mapValues { (_, tasks) ->
+                        tasks.filter { it.id != taskId }
+                    }.filterValues { it.isNotEmpty() }
+                    
+                    _uiState.value = currentState.copy(
+                        tasks = updatedTasks,
+                        myTasks = updatedMyTasks,
+                        dailyTasks = updatedDailyTasks,
+                        weeklyTasks = updatedWeeklyTasks,
+                        allTasksGroupedByDay = updatedAllTasksGrouped,
+                        myTasksGroupedByDay = updatedMyTasksGrouped
+                    )
+                    
+                    // Also refresh from server to ensure consistency
                     loadTasks()
                     loadMyTasks()
+                    loadWeeklyTasks()
+                    // Reload daily tasks for the currently selected date if we have one
+                    currentState.selectedDate?.let { date ->
+                        loadTasksForDate(date)
+                    }
                 } else {
                     _uiState.value = _uiState.value.copy(
                         error = response.message ?: "Failed to delete task"
@@ -484,10 +592,59 @@ class TaskViewModel(
     fun loadWeeklyTasks() {
         viewModelScope.launch {
             try {
-                // Load all tasks instead of just weekly tasks
-                val response = taskRepository.getTasks()
+                val weekStart = _uiState.value.currentWeekStart
+                // Normalize week start to beginning of day for comparison
+                val calendar = Calendar.getInstance()
+                calendar.time = weekStart
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                val normalizedWeekStart = calendar.time
+                val weekStartString = formatDateForApi(normalizedWeekStart)
+                
+                // Calculate week end
+                val weekEnd = Calendar.getInstance().apply {
+                    time = normalizedWeekStart
+                    add(Calendar.DAY_OF_WEEK, 6)
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
+                }.time
+                
+                // Load tasks specifically for this week
+                val response = taskRepository.getTasksForWeek(weekStartString)
+                println("TaskViewModel: Load weekly tasks - weekStart: $weekStartString, response success: ${response.success}, data count: ${response.data?.size ?: 0}")
                 if (response.success && response.data != null) {
-                    val allTasks = response.data.map { task ->
+                    println("TaskViewModel: Backend returned ${response.data.size} tasks for week")
+                    // Log all tasks returned by backend for debugging
+                    response.data.forEach { task ->
+                        println("TaskViewModel: Task from backend - name: ${task.name}, recurrence: ${task.recurrence}, deadline: ${task.deadline}")
+                    }
+                    // Backend already filters tasks for this week, so use all tasks returned
+                    // We just need to filter assignments to show only ones for this week
+                    val tasksForThisWeek = response.data.map { task ->
+                        // Get assignments for this week only
+                        val assignmentsThisWeek = task.assignments.filter { assignment ->
+                            try {
+                                val assignmentWeekStart = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(assignment.weekStart)
+                                if (assignmentWeekStart != null) {
+                                    val assignmentCalendar = Calendar.getInstance()
+                                    assignmentCalendar.time = assignmentWeekStart
+                                    assignmentCalendar.set(Calendar.HOUR_OF_DAY, 0)
+                                    assignmentCalendar.set(Calendar.MINUTE, 0)
+                                    assignmentCalendar.set(Calendar.SECOND, 0)
+                                    assignmentCalendar.set(Calendar.MILLISECOND, 0)
+                                    assignmentCalendar.time == normalizedWeekStart
+                                } else {
+                                    false
+                                }
+                            } catch (e: Exception) {
+                                false
+                            }
+                        }
+                        
                         TaskItem(
                             id = task._id,
                             name = task.name,
@@ -500,27 +657,28 @@ class TaskViewModel(
                             },
                             createdBy = task.createdBy.name ?: "Unknown",
                             createdById = task.createdBy._id,
-                            status = when (task.assignments.find { it.userId._id == currentUserId }?.status) {
+                            status = when (assignmentsThisWeek.find { it.userId._id == currentUserId }?.status) {
                                 "incomplete" -> TaskStatus.INCOMPLETE
                                 "in-progress" -> TaskStatus.IN_PROGRESS
                                 "completed" -> TaskStatus.COMPLETED
                                 else -> TaskStatus.INCOMPLETE
                             },
                             createdAt = Date(task.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
-                            completedAt = task.assignments.find { it.userId._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
-                            assignedTo = task.assignments.map { it.userId.name ?: "Unknown" }
+                            completedAt = assignmentsThisWeek.find { it.userId._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
+                            // Only show assignments for this week
+                            assignedTo = assignmentsThisWeek.map { it.userId.name ?: "Unknown" }
                         )
                     }
                     
-                    // Get tasks for current week
-                    val weeklyTasks = getTasksForCurrentWeek(allTasks, _uiState.value.currentWeekStart)
+                    println("TaskViewModel: Filtered tasks for week: ${tasksForThisWeek.size}")
                     
-                    // Group all tasks by day
-                    val allTasksGrouped = groupTasksByDay(allTasks)
+                    // Group tasks by day for this week only
+                    val allTasksGrouped = groupTasksByDayForWeek(tasksForThisWeek, normalizedWeekStart)
+                    
+                    println("TaskViewModel: Grouped tasks by day: ${allTasksGrouped.keys}")
                     
                     _uiState.value = _uiState.value.copy(
-                        tasks = allTasks,
-                        weeklyTasks = weeklyTasks,
+                        weeklyTasks = tasksForThisWeek,
                         allTasksGroupedByDay = allTasksGrouped
                     )
                 } else {
@@ -546,24 +704,31 @@ class TaskViewModel(
                 
                 if (response.success) {
                     println("TaskViewModel: Weekly assignment successful, refreshing all task lists")
-                    // Refresh all task lists after assignment
+                    // Refresh all task lists - loadWeeklyTasks updates allTasksGroupedByDay for weekly view
+                    val selectedDate = _uiState.value.selectedDate
+                    loadWeeklyTasks() // This updates allTasksGroupedByDay which is used in weekly view
                     loadTasks()
                     loadMyTasks()
-                    loadWeeklyTasks()
+                    // Reload daily tasks for the currently selected date if we have one
+                    selectedDate?.let { date ->
+                        loadTasksForDate(date)
+                    }
+                    // Set isAssigningWeekly to false after starting all refresh operations
+                    _uiState.value = _uiState.value.copy(isAssigningWeekly = false)
                 } else {
                     println("TaskViewModel: Weekly assignment failed: ${response.message}")
                     _uiState.value = _uiState.value.copy(
-                        error = response.message ?: "Failed to assign weekly tasks"
+                        error = response.message ?: "Failed to assign weekly tasks",
+                        isAssigningWeekly = false
                     )
                 }
             } catch (e: Exception) {
                 println("TaskViewModel: Exception during weekly assignment: ${e.message}")
                 e.printStackTrace()
                 _uiState.value = _uiState.value.copy(
-                    error = "Failed to assign weekly tasks: ${e.message}"
+                    error = "Failed to assign weekly tasks: ${e.message}",
+                    isAssigningWeekly = false
                 )
-            } finally {
-                _uiState.value = _uiState.value.copy(isAssigningWeekly = false)
             }
         }
     }
@@ -623,6 +788,7 @@ class TaskViewModel(
                     
                     _uiState.value = _uiState.value.copy(
                         dailyTasks = tasks,
+                        selectedDate = date,
                         isLoading = false
                     )
                 } else {
