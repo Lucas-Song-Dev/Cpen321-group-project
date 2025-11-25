@@ -1,6 +1,6 @@
 import express from "express";
-import { UserController } from '../controller/user';
-import { UserReporter } from '../controller/report';
+import { UserController } from '../controller/user.controller';
+import { ReportController } from '../controller/report.controller';
 import { authenticate } from '../middleware/auth';
 
 export const userRouter = express.Router();
@@ -14,4 +14,4 @@ userRouter.put('/users/optionalProfile', UserController.updateProfile);
 
 userRouter.delete('/users/me', authenticate, UserController.deleteUser);
 
-userRouter.put('/users/report', authenticate, UserReporter.report);
+userRouter.put('/users/report', authenticate, ReportController.report);

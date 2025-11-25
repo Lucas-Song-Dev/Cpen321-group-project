@@ -6,10 +6,10 @@
 
 import request from 'supertest';
 import express from 'express';
-import taskRouter from '../../routes/task';
-import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
-import Task from '../../models/Task';
+import taskRouter from '../../routes/task.routes';
+import { UserModel } from '../../models/user.models';
+import Group from '../../models/group.models';
+import Task from '../../models/task.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';
@@ -124,7 +124,7 @@ describe('Task API - No Mocking', () => {
         difficulty: 2,
         recurrence: 'weekly',
         requiredPeople: 1,
-        assignedUserIds: [otherUser._id.toString()]
+        assignedUserIds: [otherUser._id]
       });
 
     expect(response.status).toBe(201);
@@ -320,7 +320,7 @@ describe('Task API - No Mocking', () => {
     const response = await request(app)
       .post(`/api/task/${task._id}/assign`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ userIds: [otherUser._id.toString()] });
+      .send({ userIds: [otherUser._id] });
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -331,7 +331,7 @@ describe('Task API - No Mocking', () => {
       a.weekStart.getTime() === startOfWeek.getTime()
     );
     expect(currentWeekAssignments?.length).toBe(1);
-    expect(currentWeekAssignments?.[0].userId.toString()).toBe(otherUser._id.toString());
+    expect(currentWeekAssignments?.[0].userId.toString()).toBe(otherUser._id);
   });
 
   /**
@@ -375,7 +375,7 @@ describe('Task API - No Mocking', () => {
     const response = await request(app)
       .post(`/api/task/${task._id}/assign`)
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ userIds: [otherUser._id.toString()] });
+      .send({ userIds: [otherUser._id] });
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -386,7 +386,7 @@ describe('Task API - No Mocking', () => {
       a.weekStart.getTime() === startOfWeek.getTime()
     );
     expect(currentWeekAssignments?.length).toBe(1);
-    expect(currentWeekAssignments?.[0].userId.toString()).toBe(otherUser._id.toString());
+    expect(currentWeekAssignments?.[0].userId.toString()).toBe(otherUser._id);
   });
 
   /**

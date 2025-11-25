@@ -6,10 +6,10 @@
 
 import request from 'supertest';
 import express from 'express';
-import ratingRouter from '../../routes/rating';
-import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
-import Rating from '../../models/Rating';
+import ratingRouter from '../../routes/rating.routes';
+import { UserModel } from '../../models/user.models';
+import Group from '../../models/group.models';
+import Rating from '../../models/rating.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';

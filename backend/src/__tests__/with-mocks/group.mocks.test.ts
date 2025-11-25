@@ -7,10 +7,12 @@
 
 import request from 'supertest';
 import express from 'express';
-import groupRouter from '../../routes/group';
+import groupRouter from '../../routes/group.routes';
+// import groupService from '../../services/group.service';
+// import groupController from '../../controller/group.controller';
 import { errorHandler } from '../../middleware/errorHandler';
-import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
+import { UserModel } from '../../models/user.models';
+import Group from '../../models/group.models'
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';
@@ -253,16 +255,16 @@ describe('Group API Tests - With Mocking', () => {
       // Mock the existingGroup check to return null (user not in any group)
       const findOneExistingGroupSpy = jest.spyOn(Group, 'findOne')
         .mockImplementation((query: any) => {
-          // If query is checking for existing group membership, return null
-          if (query && query['members.userId']) {
-            return Promise.resolve(null);
-          }
-          // Otherwise return the group for groupCode lookup
-          if (query && query.groupCode === 'ABCD') {
-            return Promise.resolve(group);
-          }
-          return Promise.resolve(null);
-        });
+        if (query && query['members.userId']) {
+          return { exec: () => Promise.resolve(null) } as any;
+        }
+
+        if (query && query.groupCode === 'ABCD') {
+          return { exec: () => Promise.resolve(group) } as any;
+        }
+
+        return { exec: () => Promise.resolve(null) } as any;
+      });
 
       // Mock group.save to throw an error AFTER the user is added to members
       const mockGroup = await Group.findById(group._id);
@@ -273,12 +275,12 @@ describe('Group API Tests - With Mocking', () => {
         // Override findOne to return our mockGroup when looking up by groupCode
         findOneExistingGroupSpy.mockImplementation((query: any) => {
           if (query && query['members.userId']) {
-            return Promise.resolve(null);
+            return  { exec: () => Promise.resolve(null) } as any;
           }
           if (query && query.groupCode === 'ABCD') {
-            return Promise.resolve(mockGroup);
+            return  { exec: () => Promise.resolve(mockGroup) } as any;
           }
-          return Promise.resolve(null);
+          return  { exec: () => Promise.resolve(null) } as any;
         });
 
         const response = await request(app)
@@ -395,7 +397,7 @@ describe('Group API Tests - With Mocking', () => {
             throw new Error('Populate failed');
           }
           // Subsequent calls use original
-          return originalPopulate.apply(mockGroup, args);
+          return (originalPopulate as any).apply(mockGroup, args as any);
         });
 
         // Mock Group.findOne to return our mock group
@@ -458,7 +460,7 @@ describe('Group API Tests - With Mocking', () => {
             throw new Error('Save failed during transfer');
           }
           // Subsequent calls use original
-          return originalSave.apply(this, args);
+          return (originalSave as any).apply(mockGroup, args as any);
         });
 
         // Mock Group.findOne to return our mock group
@@ -991,7 +993,7 @@ describe('Group API Tests - With Mocking', () => {
             return this;
           }
           // Second populate (after ownership transfer) uses original
-          return originalPopulate.apply(this, args);
+          return (originalPopulate as any).apply(mockGroup, args as any);
         });
 
         const findOneSpy = jest.spyOn(Group, 'findOne').mockResolvedValue(mockGroup);
@@ -1049,7 +1051,7 @@ describe('Group API Tests - With Mocking', () => {
             throw new Error('Retry populate failed');
           }
           // Subsequent calls use original
-          return originalPopulate.apply(this, args);
+          return (originalPopulate as any).apply(mockGroup, args as any);
         });
 
         const findOneSpy = jest.spyOn(Group, 'findOne').mockResolvedValue(mockGroup);
@@ -1116,7 +1118,7 @@ describe('Group API Tests - With Mocking', () => {
             ];
             throw new Error('Members populate failed');
           }
-          return originalPopulate.apply(this, args);
+          return (originalPopulate as any).apply(mockGroup, args as any);
         });
 
         const findOneSpy = jest.spyOn(Group, 'findOne').mockResolvedValue(mockGroup);

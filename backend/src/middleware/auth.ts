@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { config } from "../config";
-import { UserModel } from "../models/User";
+import { UserModel } from "../models/user.models";
 
 // Request interface is already defined in types/express.d.ts
 

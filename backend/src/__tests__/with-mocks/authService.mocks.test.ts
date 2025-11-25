@@ -5,7 +5,10 @@
  */
 
 import { verifyGoogleToken, generateTokens, findOrCreateUser, verifyJWT, getUserFromToken, GoogleTokenPayload } from '../../services/authService';
-import { User } from '../../models';
+import { UserModel } from '../../models/user.models';
+
+
+
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../../middleware/errorHandler';
@@ -45,7 +48,7 @@ describe('AuthService - With Mocking', () => {
     try {
       for (const user of createdUsers) {
         if (user && user._id) {
-          await User.findByIdAndDelete(user._id).catch(() => {});
+          await UserModel.findByIdAndDelete(user._id).catch(() => {});
         }
       }
       createdUsers = [];
@@ -206,7 +209,7 @@ describe('AuthService - With Mocking', () => {
   // ===================================================================
   describe('findOrCreateUser - with mocking', () => {
     test('should return existing user by Google ID', async () => {
-      const existingUser = await User.create({
+      const existingUser = await UserModel.create({
         googleId: 'google-user-id-123',
         email: 'existing@example.com',
         name: 'Existing User',
@@ -225,12 +228,12 @@ describe('AuthService - With Mocking', () => {
 
       const result = await findOrCreateUser(payload);
 
-      expect(result._id.toString()).toBe(existingUser._id.toString());
+      expect(result._id.toString()).toBe(existingUser._id);
       expect(result.googleId).toBe('google-user-id-123');
     });
 
     test('should update email if it changed for existing user', async () => {
-      const existingUser = await User.create({
+      const existingUser = await UserModel.create({
         googleId: 'google-user-id-123',
         email: 'old@example.com',
         name: 'Existing User',
@@ -250,12 +253,12 @@ describe('AuthService - With Mocking', () => {
       const result = await findOrCreateUser(payload);
 
       expect(result.email).toBe('new@example.com');
-      const updatedUser = await User.findById(existingUser._id);
+      const updatedUser = await UserModel.findById(existingUser._id);
       expect(updatedUser?.email).toBe('new@example.com');
     });
 
     test('should link Google account to existing user by email', async () => {
-      const existingUser = await User.create({
+      const existingUser = await UserModel.create({
         email: 'existing@example.com',
         name: 'Existing User',
         profileComplete: true
@@ -273,9 +276,9 @@ describe('AuthService - With Mocking', () => {
 
       const result = await findOrCreateUser(payload);
 
-      expect(result._id.toString()).toBe(existingUser._id.toString());
+      expect(result._id.toString()).toBe(existingUser._id);
       expect(result.googleId).toBe('new-google-id-456');
-      const updatedUser = await User.findById(existingUser._id);
+      const updatedUser = await UserModel.findById(existingUser._id);
       expect(updatedUser?.googleId).toBe('new-google-id-456');
     });
 
@@ -317,7 +320,7 @@ describe('AuthService - With Mocking', () => {
     });
 
     test('should throw AppError when database operation fails', async () => {
-      const findOneSpy = jest.spyOn(User, 'findOne').mockRejectedValue(new Error('Database error'));
+      const findOneSpy = jest.spyOn(UserModel, 'findOne').mockRejectedValue(new Error('Database error'));
 
       const payload: GoogleTokenPayload = {
         sub: 'google-id-error',
@@ -377,7 +380,7 @@ describe('AuthService - With Mocking', () => {
   // ===================================================================
   describe('getUserFromToken - with mocking', () => {
     test('should return user when token is valid and user exists', async () => {
-      const testUser = await User.create({
+      const testUser = await UserModel.create({
         email: 'test@example.com',
         name: 'Test User',
         googleId: 'google-123',
@@ -386,7 +389,7 @@ describe('AuthService - With Mocking', () => {
       createdUsers.push(testUser);
 
       const mockDecoded = {
-        userId: testUser._id.toString(),
+        userId: testUser._id,
         email: 'test@example.com',
         name: 'Test User'
       };
@@ -396,7 +399,7 @@ describe('AuthService - With Mocking', () => {
       const result = await getUserFromToken('valid-token');
 
       expect(result).not.toBeNull();
-      expect(result?._id.toString()).toBe(testUser._id.toString());
+      expect(result?._id.toString()).toBe(testUser._id);
     });
 
     test('should return null when token is invalid', async () => {

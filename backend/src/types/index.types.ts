@@ -38,6 +38,9 @@ export interface IGroup extends Document {
   }>;
   createdAt: Date;
   updatedAt: Date;
+
+  memberCount: number;
+  isFull: boolean;
 }
 
 // Task related types
@@ -79,6 +82,13 @@ export interface IMessage extends Document {
     expiresAt: Date;
   };
   createdAt: Date;
+
+  addVote(userId: string, option: string): void;
+  hasUserVoted(userId: string): boolean;
+
+  isPollExpired: boolean;
+  totalPollVotes: number;
+  pollResults: Record<string, number> | null;
 }
 
 // Rating related types

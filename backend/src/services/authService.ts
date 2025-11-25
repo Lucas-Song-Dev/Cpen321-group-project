@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
-import { User  } from '../models';
-import { IUser } from '../types';
+import { User  } from '../models/index.models';
+import { IUser } from '../types/index.types';
 import { asyncHandler, AppError } from '../middleware/errorHandler';
 
 // Initialize Google OAuth client

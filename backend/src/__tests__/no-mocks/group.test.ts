@@ -6,9 +6,9 @@
 
 import request from 'supertest';
 import express from 'express';
-import groupRouter from '../../routes/group';
-import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
+import groupRouter from '../../routes/group.routes';
+import { UserModel } from '../../models/user.models';
+import Group from '../../models/group.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';
@@ -825,7 +825,7 @@ describe('Group API - No Mocking', () => {
     const response = await request(app)
       .get('/api/group')
       .set('Authorization', jwt.sign(
-        { email: member1.email, id: member1._id.toString() },
+        { email: member1.email, id: member1._id },
         config.JWT_SECRET,
         { expiresIn: '1h' }
       ));
@@ -873,8 +873,11 @@ describe('Group API - No Mocking', () => {
       await mockGroup.populate('members.userId', 'name email bio averageRating');
       
       let populateCallCount = 0;
-      const originalPopulate = mockGroup.populate.bind(mockGroup);
-      const originalSave = mockGroup.save.bind(mockGroup);
+      // const originalPopulate = mockGroup.populate.bind(mockGroup);
+      // const originalSave = mockGroup.save.bind(mockGroup);
+      const originalPopulate = mockGroup.populate;
+      const originalSave = mockGroup.save;
+
       
       mockGroup.populate = jest.fn().mockImplementation(async function(...args: any[]) {
         populateCallCount++;
@@ -891,15 +894,14 @@ describe('Group API - No Mocking', () => {
           }
         } else if (path === 'members.userId') {
           // Members populate - already populated, just return
-          return this;
+          return mockGroup;
         }
-        
-        return originalPopulate.apply(this, args);
+          return (originalPopulate as any).apply(mockGroup, args as any);
       });
 
       mockGroup.save = jest.fn().mockImplementation(async function(...args: any[]) {
         // Save succeeds during ownership transfer (line 219)
-        return originalSave.apply(this, args);
+        return (originalSave as any).apply(mockGroup, args as any);
       });
 
       const originalFindOne = Group.findOne;
@@ -908,7 +910,7 @@ describe('Group API - No Mocking', () => {
       const response = await request(app)
         .get('/api/group')
         .set('Authorization', jwt.sign(
-          { email: memberUser.email, id: memberUser._id.toString() },
+          { email: memberUser.email, id: memberUser._id},
           config.JWT_SECRET,
           { expiresIn: '1h' }
         ));

@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { IMessage } from '../types';
+import { IMessage } from '../types/index.types';
 
 const MessageSchema = new Schema<IMessage>({
   groupId: {
@@ -134,5 +134,4 @@ MessageSchema.methods.hasUserVoted = function(userId: string) {
 };
 
 const Message = mongoose.model<IMessage>('Message', MessageSchema);
-
 export default Message;

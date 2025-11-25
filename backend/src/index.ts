@@ -4,13 +4,13 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import mongoose, { ConnectionStates } from "mongoose";
 import { createServer } from "http";
-import { authRouter } from "./routes/auth";
-import { userRouter } from "./routes/user";
+import { authRouter } from "./routes/auth.routes";
+import { userRouter } from "./routes/user.routes";
 import { authenticate } from "./middleware/auth";
-import groupRouter from "./routes/group";
-import taskRouter from "./routes/task";
-import chatRouter from "./routes/chat";
-import ratingRouter from "./routes/rating";
+import groupRouter from "./routes/group.routes";
+import taskRouter from "./routes/task.routes";
+import chatRouter from "./routes/chat.routes";
+import ratingRouter from "./routes/rating.routes";
 import { SocketHandler } from "./socket/socketHandler";
 
 

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { OAuth2Client } from "google-auth-library";
-import { AuthService } from "../services/auth";
+import { AuthService } from "../services/auth.service";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 

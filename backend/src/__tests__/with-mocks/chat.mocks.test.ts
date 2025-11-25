@@ -7,9 +7,9 @@
 
 import request from 'supertest';
 import express from 'express';
-import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
-import Message from '../../models/Message';
+import { UserModel } from '../../models/user.models';
+import Group from '../../models/group.models';
+import Message from '../../models/chat.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';
@@ -30,7 +30,7 @@ jest.mock('../../index', () => ({
   }
 }));
 
-import chatRouter from '../../routes/chat';
+import chatRouter from '../../routes/chat.routes';
 import { errorHandler } from '../../middleware/errorHandler';
 
 const app = express();

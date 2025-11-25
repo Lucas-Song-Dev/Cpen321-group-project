@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { IGroup } from '../types';
+import { IGroup } from '../types/index.types';
 
 const GroupSchema = new Schema<IGroup>({
   name: {
@@ -83,5 +83,4 @@ GroupSchema.pre('save', async function(next) {
 });
 
 const Group = mongoose.model<IGroup>('Group', GroupSchema);
-
 export default Group;

@@ -4,8 +4,8 @@
  * These tests verify service layer functions without mocking.
  */
 
-import { AuthService } from '../../services/auth';
-import { UserModel } from '../../models/User';
+import { AuthService } from '../../services/auth.service';
+import { UserModel } from '../../models/user.models';
 import mongoose from 'mongoose';
 
 describe('AuthService - No Mocking', () => {

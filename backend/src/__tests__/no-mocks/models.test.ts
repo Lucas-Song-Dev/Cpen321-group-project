@@ -6,11 +6,12 @@
  */
 
 import mongoose from 'mongoose';
-import Group from '../../models/Group';
-import Task from '../../models/Task';
-import Message from '../../models/Message';
-import Rating from '../../models/Rating';
-import { UserModel } from '../../models/User';
+import Group from '../../models/group.models';
+import Task from '../../models/task.models';
+import Message from '../../models/chat.models';
+import Rating from '../../models/rating.models';
+import { UserModel } from '../../models/user.models';
+
 
 describe('Model Tests - No Mocking', () => {
   beforeEach(async () => {
@@ -227,11 +228,11 @@ describe('Model Tests - No Mocking', () => {
         profileComplete: true
       });
 
-      testTask.assignToWeek(startOfWeek, [testUser._id.toString(), otherUser._id.toString()]);
+      testTask.assignToWeek(startOfWeek, [testUser._id.toString(), otherUser._id]);
       
       expect(testTask.assignments).toHaveLength(2);
-      expect(testTask.assignments[0].userId.toString()).toBe(testUser._id.toString());
-      expect(testTask.assignments[1].userId.toString()).toBe(otherUser._id.toString());
+      expect(testTask.assignments[0].userId.toString()).toBe(testUser._id);
+      expect(testTask.assignments[1].userId.toString()).toBe(otherUser._id);
     });
 
     /**
@@ -258,10 +259,10 @@ describe('Model Tests - No Mocking', () => {
       });
 
       // Assign to different user for same week
-      testTask.assignToWeek(startOfWeek, [otherUser._id.toString()]);
+      testTask.assignToWeek(startOfWeek, [otherUser._id]);
       
       expect(testTask.assignments).toHaveLength(1);
-      expect(testTask.assignments[0].userId.toString()).toBe(otherUser._id.toString());
+      expect(testTask.assignments[0].userId.toString()).toBe(otherUser._id);
     });
 
     /**
@@ -451,8 +452,8 @@ describe('Model Tests - No Mocking', () => {
       pollMessage.addVote(testUser._id.toString(), 'Option 1');
       await pollMessage.save();
 
-      expect(pollMessage.pollData.votes).toHaveLength(1);
-      expect(pollMessage.pollData.votes[0].option).toBe('Option 1');
+      expect(pollMessage.pollData!.votes).toHaveLength(1);
+      expect(pollMessage.pollData!.votes[0].option).toBe('Option 1');
     });
 
     /**
@@ -478,8 +479,9 @@ describe('Model Tests - No Mocking', () => {
       pollMessage.addVote(testUser._id.toString(), 'Option 2');
       await pollMessage.save();
 
-      expect(pollMessage.pollData.votes).toHaveLength(1);
-      expect(pollMessage.pollData.votes[0].option).toBe('Option 2');
+      expect(pollMessage.pollData!.votes).toHaveLength(1);
+      expect(pollMessage.pollData!.votes[0].option).toBe('Option 2');
+
     });
 
     /**
@@ -545,14 +547,15 @@ describe('Model Tests - No Mocking', () => {
 
       expect(pollMessage.hasUserVoted(testUser._id.toString())).toBe(true);
 
-      const otherUser = await UserModel.create({
+      const otherUser: any = await UserModel.create({
         email: 'novoteuser@example.com',
         name: 'No Vote User',
         googleId: 'novote-google-id',
         profileComplete: true
       });
-
       expect(pollMessage.hasUserVoted(otherUser._id.toString())).toBe(false);
+
+      
     });
   });
 
@@ -628,7 +631,7 @@ describe('Model Tests - No Mocking', () => {
      * Expected Behavior: Should return 0 for user with no ratings
      */
     test('getAverageRating should return 0 for user with no ratings', async () => {
-      const newUser = await UserModel.create({
+      const newUser: any = await UserModel.create({
         email: 'noratings@example.com',
         name: 'No Ratings User',
         googleId: 'noratings-google-id',

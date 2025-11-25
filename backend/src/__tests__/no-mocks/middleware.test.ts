@@ -7,7 +7,7 @@
 import request from 'supertest';
 import express from 'express';
 import { authenticate } from '../../middleware/auth';
-import { UserModel } from '../../models/User';
+import { UserModel } from '../../models/user.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';

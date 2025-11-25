@@ -7,11 +7,11 @@
 
 import request from 'supertest';
 import express from 'express';
-import taskRouter from '../../routes/task';
+import taskRouter from '../../routes/task.routes';
 import { errorHandler } from '../../middleware/errorHandler';
-import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
-import Task from '../../models/Task';
+import { UserModel } from '../../models/user.models';
+import Group from '../../models/group.models';
+import Task from '../../models/task.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';
@@ -721,11 +721,11 @@ describe('Task API Tests - With Mocking', () => {
       Task.create = jest.fn().mockImplementation(async (data: any) => {
         // Create the task normally
         const task = await originalCreate.call(Task, data);
-        // Manually add an assignment for current week to trigger filter callback
+        // Manuallincompletey add an assignment for current week to trigger filter callback
         task.assignments = [{
           userId: testUser._id,
           weekStart: startOfWeek,
-          status: 'incomplete'
+          status: ''
         }];
         return task;
       });
@@ -739,7 +739,7 @@ describe('Task API Tests - With Mocking', () => {
             difficulty: 2,
             recurrence: 'weekly',
             requiredPeople: 1,
-            assignedUserIds: [otherUser._id.toString()]
+            assignedUserIds: [otherUser._id]
           });
 
         expect(response.status).toBe(201);
