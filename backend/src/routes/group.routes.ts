@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
-import { protect } from '../middleware/auth';
-import { asyncHandler } from '../middleware/errorHandler';
-import Group from '../models/Group';
-import { UserModel } from '../models/User';
+import { protect } from '../middleware/auth.middleware';
+import { asyncHandler } from '../middleware/errorHandler.middleware';
+import Group from '../models/group.models';
+import { UserModel } from '../models/user.models';
 import mongoose from 'mongoose';
 
 const router = express.Router();

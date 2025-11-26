@@ -6,11 +6,11 @@
  */
 
 import mongoose from 'mongoose';
-import Group from '../../models/Group';
-import Task from '../../models/Task';
-import Message from '../../models/Message';
-import Rating from '../../models/Rating';
-import { UserModel } from '../../models/User';
+import Group from '../../models/group.models';
+import Task from '../../models/task.models';
+import Message from '../../models/chat.models';
+import Rating from '../../models/rating.models';
+import { UserModel } from '../../models/user.models';
 
 describe('Model Tests - No Mocking', () => {
   beforeEach(async () => {

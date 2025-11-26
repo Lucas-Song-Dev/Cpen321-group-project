@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model } from 'mongoose';
-import { IRating } from '../types';
+import { IRating } from '../types/index.types';
 
 // Interface for static methods
 interface IRatingModel extends Model<IRating> {

@@ -1,10 +1,9 @@
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { protect } from '../middleware/auth';
-import { asyncHandler } from '../middleware/errorHandler';
-import Task from '../models/Task';
-import Group from '../models/Group';
-import { UserModel } from '../models/User';
+import { protect } from '../middleware/auth.middleware';
+import { asyncHandler } from '../middleware/errorHandler.middleware';
+import Task from '../models/task.models';
+import Group from '../models/group.models';
 
 const router = express.Router();
 

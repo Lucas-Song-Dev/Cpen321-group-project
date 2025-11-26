@@ -7,16 +7,16 @@
 
 import request from 'supertest';
 import express from 'express';
-import { userRouter } from '../../routes/user';
-import { errorHandler } from '../../middleware/errorHandler';
-import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
-import Message from '../../models/Message';
+import { userRouter } from '../../routes/user.routes';
+import { errorHandler } from '../../middleware/errorHandler.middleware';
+import { UserModel } from '../../models/user.models';
+import Group from '../../models/group.models';
+import Message from '../../models/chat.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';
-import { UserReporter } from '../../controller/report';
-import { UserController } from '../../controller/user';
+import { UserReporter } from '../../controller/report.controller';
+import { UserController } from '../../controller/user.controller';
 
 const app = express();
 app.use(express.json());
@@ -374,7 +374,7 @@ describe('User API Tests - With Mocking', () => {
      */
     test('should return 401 when userId is missing', async () => {
       // Test the controller directly to cover lines 186-188
-      const { UserController } = require('../../controller/user');
+      const { UserController } = require('../../controller/user.controller');
       const mockReq = {
         user: {
           // No _id field - this should trigger line 186-188
@@ -631,11 +631,11 @@ describe('User API Tests - With Mocking', () => {
       process.env.TEST_REPORT_OFFENSIVE = 'true';
       
       // Clear require cache to reload the module with new env var
-      const reportPath = require.resolve('../../controller/report');
+      const reportPath = require.resolve('../../controller/report.controller');
       delete require.cache[reportPath];
       
       // Reload the module to get the updated code with environment variable
-      const { UserReporter: ReloadedReporter } = require('../../controller/report');
+      const { UserReporter: ReloadedReporter } = require('../../controller/report.controller');
       
       // Call the controller directly to ensure we execute the actual code (lines 105-107)
       const mockReq = {

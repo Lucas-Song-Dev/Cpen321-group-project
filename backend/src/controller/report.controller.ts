@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 // import OpenAI from 'openai';
-import { UserModel } from '../models/User';
-import Message from '../models/Message';
+import { UserModel } from '../models/user.models';
+import Message from '../models/chat.models';
 
 export const UserReporter = {
   report: async (req: Request, res: Response): Promise<any> => {

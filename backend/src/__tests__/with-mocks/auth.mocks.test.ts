@@ -7,8 +7,8 @@
 
 import request from 'supertest';
 import express from 'express';
-import { authRouter } from '../../routes/auth';
-import { UserModel } from '../../models/User';
+import { authRouter } from '../../routes/auth.routes';
+import { UserModel } from '../../models/user.models';
 import mongoose from 'mongoose';
 
 // Mock Google OAuth client (hoist-safe)
@@ -29,7 +29,7 @@ jest.mock('google-auth-library', () => {
 var mockSignup: jest.Mock;
 var mockLogin: jest.Mock;
 
-jest.mock('../../services/auth', () => {
+jest.mock('../../services/auth.services', () => {
   mockSignup = jest.fn();
   mockLogin = jest.fn();
   return {

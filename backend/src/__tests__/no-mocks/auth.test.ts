@@ -7,9 +7,9 @@
 
 import request from 'supertest';
 import express from 'express';
-import { authRouter } from '../../routes/auth';
+import { authRouter } from '../../routes/auth.routes';
 import mongoose from 'mongoose';
-import { UserModel } from '../../models/User';
+import { UserModel } from '../../models/user.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import { OAuth2Client } from 'google-auth-library';
