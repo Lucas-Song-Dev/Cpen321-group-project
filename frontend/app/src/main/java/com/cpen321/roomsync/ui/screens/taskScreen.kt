@@ -1111,7 +1111,7 @@ fun AddTaskDialog(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    // Second row - 2 options
+                    // Second row - remaining options
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1123,25 +1123,11 @@ fun AddTaskDialog(
                             modifier = Modifier.weight(1f)
                         )
                         FilterChip(
-                            onClick = { recurrence = "bi-weekly" },
-                            label = { Text("Bi weekly") },
-                            selected = recurrence == "bi-weekly",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    // Third row - 1 option
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
                             onClick = { recurrence = "monthly" },
                             label = { Text("Monthly") },
                             selected = recurrence == "monthly",
                             modifier = Modifier.weight(1f)
                         )
-                        // Empty spacer to balance the row
-                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
                 
