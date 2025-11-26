@@ -13,15 +13,23 @@ class GroupController {
         });
       }
 
-      const group = await groupService.createGroup(req.user!._id, name);
+      const userId = req.user?._id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const group = await groupService.createGroup(userId, name);
 
       res.status(201).json({
         success: true,
         message: 'Group created successfully',
         data: group
       });
-    } catch (error: any) {
-      if (error.message === 'USER_ALREADY_IN_GROUP') {
+    } catch (error) {
+      if (error instanceof Error && error.message === 'USER_ALREADY_IN_GROUP') {
         return res.status(400).json({
           success: false,
           message: 'User is already a member of a group'
