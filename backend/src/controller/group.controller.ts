@@ -21,8 +21,7 @@ class GroupController {
         });
       }
 
-      const userId: string = req.user._id.toString();
-
+      const userId = String(req.user._id);
       const group = await groupService.createGroup(userId, name);
 
       res.status(201).json({
