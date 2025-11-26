@@ -4,7 +4,6 @@ import { protect } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/errorHandler.middleware';
 import Task from '../models/task.models';
 import Group from '../models/group.models';
-import { UserModel } from '../models/user.models';
 
 const router = express.Router();
 
