@@ -153,4 +153,32 @@ class GroupRepository {
             GroupResponse(false, "Unexpected error: ${e.message}")
         }
     }
+
+    suspend fun updateGroupName(newName: String): GroupResponse {
+        return try {
+            println("GroupRepository: Updating group name to: $newName")
+            val response = RetrofitInstance.api.updateGroupName(UpdateGroupNameRequest(newName))
+            println("GroupRepository: Update group name response code: ${response.code()}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                println("GroupRepository: Update group name response body: $body")
+                body ?: GroupResponse(false, "Empty response from server")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                println("GroupRepository: Update group name error response: $errorBody")
+                GroupResponse(false, errorBody ?: "Update group name failed: ${response.code()}")
+            }
+        } catch (e: IOException) {
+            println("GroupRepository: Update group name IOException: ${e.message}")
+            GroupResponse(false, "Network error: ${e.message}")
+        } catch (e: HttpException) {
+            println("GroupRepository: Update group name HttpException: ${e.code()} - ${e.message()}")
+            GroupResponse(false, "HTTP error: ${e.code()} - ${e.message()}")
+        } catch (e: Exception) {
+            println("GroupRepository: Update group name Exception: ${e.message}")
+            e.printStackTrace()
+            GroupResponse(false, "Unexpected error: ${e.message}")
+        }
+    }
 }

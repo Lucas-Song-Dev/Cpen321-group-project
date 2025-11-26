@@ -53,6 +53,13 @@ fun GroupDetailsScreenModern(
     
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
     val isCurrentUserOwner = groupUiState.group?.owner?.id == currentUserId
+    val currentGroupName = groupUiState.group?.name ?: groupName
+
+    LaunchedEffect(currentGroupName) {
+        if (!showEditGroupDialog) {
+            editedGroupName = currentGroupName
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -141,7 +148,7 @@ fun GroupDetailsScreenModern(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = groupName,
+                                    text = currentGroupName,
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -367,18 +374,17 @@ fun GroupDetailsScreenModern(
                 confirmButton = {
                     Button(
                         onClick = {
-                            // TODO: Implement group name update API call
-                            // groupViewModel.updateGroupName(editedGroupName)
+                            groupViewModel.updateGroupName(editedGroupName.trim())
                             showEditGroupDialog = false
                         },
-                        enabled = editedGroupName.trim().isNotEmpty() && editedGroupName != groupName
+                        enabled = editedGroupName.trim().isNotEmpty() && editedGroupName.trim() != currentGroupName
                     ) {
                         Text("Save")
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { 
-                        editedGroupName = groupName
+                        editedGroupName = currentGroupName
                         showEditGroupDialog = false 
                     }) {
                         Text("Cancel")

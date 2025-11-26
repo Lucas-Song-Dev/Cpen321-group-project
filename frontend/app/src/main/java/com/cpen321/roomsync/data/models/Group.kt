@@ -20,6 +20,10 @@ data class CreateGroupRequest(
     val name: String
 )
 
+data class UpdateGroupNameRequest(
+    val name: String
+)
+
 data class JoinGroupRequest(
     val groupCode: String
 )
