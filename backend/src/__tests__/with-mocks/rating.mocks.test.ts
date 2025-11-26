@@ -10,7 +10,7 @@ import express from 'express';
 import ratingRouter from '../../routes/rating';
 import { errorHandler } from '../../middleware/errorHandler';
 import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
+import Group from '../../models/group.models';
 import Rating from '../../models/Rating';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';

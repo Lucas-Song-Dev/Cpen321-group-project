@@ -14,7 +14,7 @@ import express from 'express';
 import { authRouter } from '../../routes/auth';
 import chatRouter from '../../routes/chat';
 import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
+import Group from '../../models/group.models';
 import Message from '../../models/Message';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';

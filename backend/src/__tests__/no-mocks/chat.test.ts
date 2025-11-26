@@ -8,7 +8,7 @@
 import request from 'supertest';
 import express from 'express';
 import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
+import Group from '../../models/group.models';
 import Message from '../../models/Message';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';

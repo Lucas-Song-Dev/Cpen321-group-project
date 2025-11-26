@@ -10,7 +10,7 @@ import express from 'express';
 import taskRouter from '../../routes/task';
 import { errorHandler } from '../../middleware/errorHandler';
 import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
+import Group from '../../models/group.models';
 import Task from '../../models/Task';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';

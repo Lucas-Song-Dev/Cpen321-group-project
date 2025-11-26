@@ -10,7 +10,7 @@ import express from 'express';
 import { userRouter } from '../../routes/user';
 import { errorHandler } from '../../middleware/errorHandler';
 import { UserModel } from '../../models/User';
-import Group from '../../models/Group';
+import Group from '../../models/group.models';
 import Message from '../../models/Message';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';

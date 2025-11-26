@@ -6,7 +6,7 @@
  */
 
 import mongoose from 'mongoose';
-import Group from '../../models/Group';
+import Group from '../../models/group.models';
 import Task from '../../models/Task';
 import Message from '../../models/Message';
 import Rating from '../../models/Rating';

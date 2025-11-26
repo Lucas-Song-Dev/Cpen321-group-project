@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import Message from '../models/Message';
-import Group from '../models/Group';
+import Group from '../models/group.models';
 import { UserModel } from '../models/User';
 import mongoose from 'mongoose';
 import { socketHandler } from '../index';

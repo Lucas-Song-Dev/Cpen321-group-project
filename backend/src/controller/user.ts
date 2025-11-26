@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { UserModel } from '../models/User';
-import Group from '../models/Group';
+import Group from '../models/group.models';
 
 export const UserController = {
   setProfile: async (req: Request, res: Response): Promise<void> => {

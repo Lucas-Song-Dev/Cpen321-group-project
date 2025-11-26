@@ -3,7 +3,7 @@ import { protect } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import Rating from '../models/Rating';
 import { UserModel } from '../models/User';
-import Group from '../models/Group';
+import Group from '../models/group.models';
 import mongoose from 'mongoose';
 
 const router = express.Router();
