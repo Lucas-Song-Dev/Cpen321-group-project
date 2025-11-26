@@ -54,6 +54,9 @@ interface ApiService {
     @PUT("api/group/transfer-ownership/{newOwnerId}")
     suspend fun transferOwnership(@Path("newOwnerId") newOwnerId: String, @Body emptyBody: Map<String, String> = emptyMap()): Response<GroupResponse>
 
+    @PUT("api/group/name")
+    suspend fun updateGroupName(@Body request: UpdateGroupNameRequest): Response<GroupResponse>
+
     // Task endpoints
     @GET("api/task")
     suspend fun getTasks(): Response<TasksResponse>

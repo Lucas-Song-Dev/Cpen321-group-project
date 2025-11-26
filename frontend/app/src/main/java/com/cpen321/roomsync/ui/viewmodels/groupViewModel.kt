@@ -401,4 +401,38 @@ class GroupViewModel(
             }
         }
     }
+
+    fun updateGroupName(newName: String) {
+        viewModelScope.launch {
+            try {
+                println("GroupViewModel: Updating group name to '$newName'")
+                _uiState.value = _uiState.value.copy(isLoading = true)
+
+                val response = groupRepository.updateGroupName(newName)
+
+                if (response.success && response.data != null) {
+                    println("GroupViewModel: Group name updated successfully")
+                    val group = convertApiGroupToViewModel(response.data)
+                    _uiState.value = _uiState.value.copy(
+                        group = group,
+                        isLoading = false,
+                        error = null
+                    )
+                } else {
+                    println("GroupViewModel: Failed to update group name: ${response.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = response.message ?: "Failed to update group name"
+                    )
+                }
+            } catch (e: Exception) {
+                println("GroupViewModel: Exception updating group name: ${e.message}")
+                e.printStackTrace()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Failed to update group name: ${e.message}"
+                )
+            }
+        }
+    }
 }

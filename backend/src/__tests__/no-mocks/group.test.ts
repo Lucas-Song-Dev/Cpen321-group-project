@@ -201,6 +201,82 @@ describe('Group API - No Mocking', () => {
   });
 
   /**
+   * Test: PUT /api/group/name
+   * Input: Valid new group name and JWT token (owner)
+   * Expected Status: 200
+   * Expected Behavior: Should update group name for all members
+   */
+  test('PUT /api/group/name - should update group name when owner', async () => {
+    const group = await Group.create({
+      name: 'Original Group',
+      owner: testUser._id,
+      members: [{ userId: testUser._id, joinDate: new Date() }]
+    });
+
+    await UserModel.findByIdAndUpdate(testUser._id, { groupName: group.name });
+
+    const response = await request(app)
+      .put('/api/group/name')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ name: 'Updated Group' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.name).toBe('Updated Group');
+
+    const refreshedGroup = await Group.findById(group._id);
+    expect(refreshedGroup?.name).toBe('Updated Group');
+
+    const updatedOwner = await UserModel.findById(testUser._id);
+    expect(updatedOwner?.groupName).toBe('Updated Group');
+  });
+
+  /**
+   * Test: PUT /api/group/name
+   * Input: Valid new group name but JWT token for non-owner
+   * Expected Status: 403
+   * Expected Behavior: Should reject non-owner attempts
+   */
+  test('PUT /api/group/name - should reject non-owner attempt', async () => {
+    const memberUser = await UserModel.create({
+      email: 'member2@example.com',
+      name: 'Member Two',
+      googleId: 'member-two-google-id',
+      profileComplete: true
+    });
+
+    const memberToken = jwt.sign(
+      { email: memberUser.email, id: memberUser._id.toString() },
+      config.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    const group = await Group.create({
+      name: 'Owner Group',
+      owner: testUser._id,
+      members: [
+        { userId: testUser._id, joinDate: new Date() },
+        { userId: memberUser._id, joinDate: new Date() }
+      ]
+    });
+
+    await UserModel.findByIdAndUpdate(testUser._id, { groupName: group.name });
+    await UserModel.findByIdAndUpdate(memberUser._id, { groupName: group.name });
+
+    const response = await request(app)
+      .put('/api/group/name')
+      .set('Authorization', `Bearer ${memberToken}`)
+      .send({ name: 'Unauthorized Update' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toContain('owner');
+
+    const refreshedGroup = await Group.findById(group._id);
+    expect(refreshedGroup?.name).toBe('Owner Group');
+  });
+
+  /**
    * Test: PUT /api/group/transfer-ownership/:newOwnerId
    * Input: Non-owner trying to transfer
    * Expected Status: 403

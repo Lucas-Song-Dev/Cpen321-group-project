@@ -283,6 +283,80 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   }
 }));
 
+// @desc    Update group name (owner only)
+// @route   PUT /api/group/name
+// @access  Private
+router.put('/name', asyncHandler(async (req: Request, res: Response) => {
+  const timestamp = new Date().toISOString();
+  const { name } = req.body;
+
+  const trimmedName = name?.trim();
+
+  if (!trimmedName) {
+    return res.status(400).json({
+      success: false,
+      message: 'Group name is required'
+    });
+  }
+
+  if (trimmedName.length > 100) {
+    return res.status(400).json({
+      success: false,
+      message: 'Group name must be 100 characters or fewer'
+    });
+  }
+
+  const group = await Group.findOne({
+    'members.userId': new mongoose.Types.ObjectId(req.user?._id)
+  });
+
+  if (!group) {
+    return res.status(404).json({
+      success: false,
+      message: 'User is not a member of any group'
+    });
+  }
+
+  if (group.owner.toString() !== req.user?._id.toString()) {
+    return res.status(403).json({
+      success: false,
+      message: 'Only the group owner can update the name'
+    });
+  }
+
+  // Update name only if it has changed
+  if (group.name !== trimmedName) {
+    group.name = trimmedName;
+    await group.save();
+
+    // Update all members' cached groupName fields
+    const memberIds = group.members
+      .map(member => {
+        if (!member.userId) {
+          return null;
+        }
+        return new mongoose.Types.ObjectId(member.userId as mongoose.Types.ObjectId);
+      })
+      .filter((id): id is mongoose.Types.ObjectId => id !== null);
+
+    if (memberIds.length > 0) {
+      await UserModel.updateMany(
+        { _id: { $in: memberIds } },
+        { $set: { groupName: trimmedName } }
+      );
+    }
+  }
+
+  await group.populate('owner', 'name email bio averageRating');
+  await group.populate('members.userId', 'name email bio averageRating');
+
+  res.status(200).json({
+    success: true,
+    message: 'Group name updated successfully',
+    data: group
+  });
+}));
+
 // @desc    Transfer ownership to another member (owner only)
 // @route   PUT /api/group/transfer-ownership/:newOwnerId
 // @access  Private
