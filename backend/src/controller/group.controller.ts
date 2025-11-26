@@ -13,13 +13,15 @@ class GroupController {
         });
       }
 
-      const userId: string = req.user?._id as string;
-      if (!userId) {
+      // Check if user exists first
+      if (!req.user?._id) {
         return res.status(401).json({
           success: false,
           message: 'User not authenticated'
         });
       }
+
+      const userId: string = req.user._id.toString();
 
       const group = await groupService.createGroup(userId, name);
 
