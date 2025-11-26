@@ -29,7 +29,7 @@ jest.mock('google-auth-library', () => {
 var mockSignup: jest.Mock;
 var mockLogin: jest.Mock;
 
-jest.mock('../../services/auth', () => {
+jest.mock('../../services/auth.services', () => {
   mockSignup = jest.fn();
   mockLogin = jest.fn();
   return {
