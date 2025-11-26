@@ -13,7 +13,7 @@ class GroupController {
         });
       }
 
-      const userId = req.user?._id;
+      const userId: string = req.user?._id as string;
       if (!userId) {
         return res.status(401).json({
           success: false,

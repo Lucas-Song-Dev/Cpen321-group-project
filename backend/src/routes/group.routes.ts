@@ -11,8 +11,10 @@ import mongoose from 'mongoose';
 const router = express.Router();
 
 // All routes below this middleware are protected
-router.use((req, res, next) => {
-  protect(req, res, next).catch((err: unknown) => next(err));
+router.use((req, res, next) => { 
+  protect(req, res, next).catch((err: unknown) => {
+    next(err);
+  });
 });
 
 
