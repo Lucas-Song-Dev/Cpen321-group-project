@@ -4,7 +4,7 @@ import groupService from '../services/group.services';
 class GroupController {
   async createGroup(req: Request, res: Response) {
     try {
-      const { name } = req.body;
+      const name = String(req.body.name);
 
       if (!name || name.trim().length === 0) {
         return res.status(400).json({
