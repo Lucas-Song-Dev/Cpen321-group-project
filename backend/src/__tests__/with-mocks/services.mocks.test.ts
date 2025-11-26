@@ -4,8 +4,8 @@
  * These tests verify service layer functions using mocks to simulate external component failures.
  */
 
-import { AuthService } from '../../services/auth';
-import { UserModel } from '../../models/User';
+import { AuthService } from '../../services/auth.services';
+import { UserModel } from '../../models/user.models';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 

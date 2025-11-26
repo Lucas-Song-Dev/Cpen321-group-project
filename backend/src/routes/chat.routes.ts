@@ -1,9 +1,9 @@
 import express, { Request, Response } from 'express';
-import { protect } from '../middleware/auth';
-import { asyncHandler } from '../middleware/errorHandler';
-import Message from '../models/Message';
+import { protect } from '../middleware/auth.middleware';
+import { asyncHandler } from '../middleware/errorHandler.middleware';
+import Message from '../models/chat.models';
 import Group from '../models/group.models';
-import { UserModel } from '../models/User';
+import { UserModel } from '../models/user.models';
 import mongoose from 'mongoose';
 import { socketHandler } from '../index';
 

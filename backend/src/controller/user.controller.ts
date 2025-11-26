@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { UserModel } from '../models/User';
+import { UserModel } from '../models/user.models';
 import Group from '../models/group.models';
 
 export const UserController = {

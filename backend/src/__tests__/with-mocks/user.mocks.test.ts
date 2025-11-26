@@ -7,16 +7,16 @@
 
 import request from 'supertest';
 import express from 'express';
-import { userRouter } from '../../routes/user';
-import { errorHandler } from '../../middleware/errorHandler';
-import { UserModel } from '../../models/User';
+import { userRouter } from '../../routes/user.routes';
+import { errorHandler } from '../../middleware/errorHandler.middleware';
+import { UserModel } from '../../models/user.models';
 import Group from '../../models/group.models';
-import Message from '../../models/Message';
+import Message from '../../models/chat.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';
-import { UserReporter } from '../../controller/report';
-import { UserController } from '../../controller/user';
+import { UserReporter } from '../../controller/report.controller';
+import { UserController } from '../../controller/user.controller';
 
 const app = express();
 app.use(express.json());

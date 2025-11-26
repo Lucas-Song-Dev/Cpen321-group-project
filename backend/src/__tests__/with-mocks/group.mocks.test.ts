@@ -7,9 +7,9 @@
 
 import request from 'supertest';
 import express from 'express';
-import groupRouter from '../../routes/group';
-import { errorHandler } from '../../middleware/errorHandler';
-import { UserModel } from '../../models/User';
+import groupRouter from '../../routes/group.routes';
+import { errorHandler } from '../../middleware/errorHandler.middleware';
+import { UserModel } from '../../models/user.models';
 import Group from '../../models/group.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';

@@ -5,10 +5,10 @@
  */
 
 import { verifyGoogleToken, generateTokens, findOrCreateUser, verifyJWT, getUserFromToken, GoogleTokenPayload } from '../../services/authService';
-import { User } from '../../models';
+import { User } from '../../models/index.models';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
-import { AppError } from '../../middleware/errorHandler';
+import { AppError } from '../../middleware/errorHandler.middleware';
 import mongoose from 'mongoose';
 
 // Mock dependencies

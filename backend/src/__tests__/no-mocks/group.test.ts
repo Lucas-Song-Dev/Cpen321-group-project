@@ -6,8 +6,8 @@
 
 import request from 'supertest';
 import express from 'express';
-import groupRouter from '../../routes/group';
-import { UserModel } from '../../models/User';
+import groupRouter from '../../routes/group.routes';
+import { UserModel } from '../../models/user.models';
 import Group from '../../models/group.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';

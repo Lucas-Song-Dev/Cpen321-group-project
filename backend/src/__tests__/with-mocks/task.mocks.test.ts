@@ -7,11 +7,11 @@
 
 import request from 'supertest';
 import express from 'express';
-import taskRouter from '../../routes/task';
-import { errorHandler } from '../../middleware/errorHandler';
-import { UserModel } from '../../models/User';
+import taskRouter from '../../routes/task.routes';
+import { errorHandler } from '../../middleware/errorHandler.middleware';
+import { UserModel } from '../../models/user.models';
 import Group from '../../models/group.models';
-import Task from '../../models/Task';
+import Task from '../../models/task.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
 import mongoose from 'mongoose';

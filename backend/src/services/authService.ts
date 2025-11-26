@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
-import { User  } from '../models';
-import { IUser } from '../types';
-import { asyncHandler, AppError } from '../middleware/errorHandler';
+import { User  } from '../models/index.models';
+import { IUser } from '../types/index.types';
+import { asyncHandler, AppError } from '../middleware/errorHandler.middleware';
 
 // Initialize Google OAuth client
 // Use Web Client ID for token verification (audience field)

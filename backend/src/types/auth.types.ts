@@ -1,4 +1,4 @@
-import { IUser } from './index';
+import { IUser } from './index.types';
 
 // Request types
 // ------------------------------------------------------------

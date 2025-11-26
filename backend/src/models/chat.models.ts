@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { IMessage } from '../types';
+import { IMessage } from '../types/index.types';
 
 const MessageSchema = new Schema<IMessage>({
   groupId: {
