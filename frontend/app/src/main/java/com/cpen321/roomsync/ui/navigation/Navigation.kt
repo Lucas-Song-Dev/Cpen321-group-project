@@ -12,7 +12,7 @@ import com.cpen321.roomsync.ui.screens.PersonalProfileScreen
 import com.cpen321.roomsync.ui.screens.OptionalProfileScreen
 import com.cpen321.roomsync.ui.screens.GroupSelectionScreen
 import com.cpen321.roomsync.ui.screens.CreateGroupScreen
-import com.cpen321.roomsync.ui.screens.JoinGroupScreen
+import com.cpen321.roomsync.ui.screens. JoinGroupScreen
 import com.cpen321.roomsync.ui.screens.HomeScreen
 import com.cpen321.roomsync.ui.screens.HomeScreenGlass
 import com.cpen321.roomsync.ui.screens.ProfileScreen
