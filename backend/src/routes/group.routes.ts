@@ -21,9 +21,11 @@ router.use((req, res, next) => {
 
 // @desc    Create a new group
 // @route   POST /api/group
-// @access  Private
 router.post('/', asyncHandler(groupController.createGroup.bind(groupController)));
 
+// @desc    Join an existing group
+// @route   POST /api/group/join
+router.post('/join', asyncHandler(groupController.joinGroup.bind(groupController)));
 
 
 
@@ -37,10 +39,10 @@ router.post('/', asyncHandler(groupController.createGroup.bind(groupController))
 
 
 
-// // @desc    Join an existing group
-// // @route   POST /api/group/join
-// // @access  Private
-// router.post('/join', asyncHandler(groupController.joinGroup.bind(groupController)));
+
+
+
+
 
 // // @desc    Get user's current group
 // // @route   GET /api/group
@@ -63,86 +65,11 @@ router.post('/', asyncHandler(groupController.createGroup.bind(groupController))
 // router.delete('/leave', asyncHandler(groupController.leaveGroup.bind(groupController)));
 
 
-// @desc    Join an existing group
-// @route   POST /api/group/join
-// @access  Private
-router.post('/join', asyncHandler(async (req: Request, res: Response) => {
-  const timestamp = new Date().toISOString();
-  
-  const { groupCode } = req.body;
 
-  if (!groupCode || groupCode.trim().length === 0) {
-      return res.status(400).json({
-      success: false,
-      message: 'Group code is required'
-    });
-  }
 
-  // Find group by code
-  const group = await Group.findOne({ groupCode: groupCode.toUpperCase() });
 
-  if (!group) {
-    return res.status(404).json({
-      success: false,
-      message: 'Group not found'
-    });
-  }
 
-  // Check if user is already a member of this group
-  const isAlreadyMember = group.members.some(member => 
-    member.userId.toString() === req.user?._id.toString()
-  );
 
-  if (isAlreadyMember) {
-    return res.status(400).json({
-      success: false,
-      message: 'User is already a member of this group'
-    });
-  }
-
-  // Check if user is already in a different group
-  const existingGroup = await Group.findOne({ 
-    'members.userId': req.user?._id 
-  });
-
-  if (existingGroup) {
-    return res.status(400).json({
-      success: false,
-      message: 'User is already a member of a group'
-    });
-  }
-
-  // Check if group is full
-  if (group.members.length >= 8) {
-    return res.status(400).json({
-      success: false,
-      message: 'Group is full (maximum 8 members)'
-    });
-  }
-
-  // Add user to group
-  group.members.push({
-    userId: new mongoose.Types.ObjectId(req.user?._id),
-    joinDate: new Date()
-  });
-
-  await group.save();
-
-  // Update user's groupName
-  await UserModel.findByIdAndUpdate(req.user?._id, { 
-    groupName: group.name 
-  });
-
-  // Populate member information
-  await group.populate('owner', 'name email');
-  await group.populate('members.userId', 'name email');
-
-  res.status(200).json({
-    success: true,
-    message: 'Joined group successfully',
-    data: group
-  });
-}));
 
 // @desc    Get user's current group
 // @route   GET /api/group
