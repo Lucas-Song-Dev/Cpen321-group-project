@@ -106,8 +106,26 @@ class GroupController {
     }
   }
 
-  async getUserGroup(req: Request, res: Response) {
+  async updateGroupName(req: Request, res: Response) {
     try {
+      const name = String(req.body.name);
+
+      const trimmedName = name?.trim();
+
+      if (!trimmedName) {
+        return res.status(400).json({
+          success: false,
+          message: 'Group name is required'
+        });
+      }
+
+      if (trimmedName.length > 100) {
+        return res.status(400).json({
+          success: false,
+          message: 'Group name must be 100 characters or fewer'
+        });
+      }
+
       // Check if user exists first
       if (!req.user?._id) {
         return res.status(401).json({
@@ -125,25 +143,30 @@ class GroupController {
         });
       }
 
-      const group = await groupService.getUserGroup(userId);
+      const group = await groupService.updateGroupName(userId, trimmedName);
 
       res.status(200).json({
         success: true,
+        message: 'Group name updated successfully',
         data: group
       });
     } catch (error) {
-      if (error instanceof Error && error.message === 'USER_NOT_IN_GROUP') {
-        return res.status(404).json({
-          success: false,
-          message: 'User is not a member of any group'
-        });
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'USER_NOT_IN_GROUP':
+            return res.status(404).json({
+              success: false,
+              message: 'User is not a member of any group'
+            });
+          case 'NOT_GROUP_OWNER':
+            return res.status(403).json({
+              success: false,
+              message: 'Only the group owner can update the name'
+            });
+        }
       }
-
-      console.error('GROUP GET: Unexpected error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to load group data'
-      });
+      
+      throw error;
     }
   }
 

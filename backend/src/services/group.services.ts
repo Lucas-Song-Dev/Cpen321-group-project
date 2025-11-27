@@ -112,95 +112,46 @@ class GroupService {
     return group;
   }
 
-  async getUserGroup(userId: string) {
-    const group = await Group.findOne({ 
-      'members.userId': new mongoose.Types.ObjectId(userId) 
-    }) as GroupDocument;
+  async updateGroupName(userId: string, newName: string) {
+    const group = await Group.findOne({
+      'members.userId': new mongoose.Types.ObjectId(userId)
+    });
 
     if (!group) {
       throw new Error('USER_NOT_IN_GROUP');
     }
 
-    // Populate owner data with error handling
-    try {
-      await group.populate('owner', 'name email bio averageRating');
+    if (group.owner.toString() !== userId) {
+      throw new Error('NOT_GROUP_OWNER');
+    }
 
-      const owner = group.owner as any;
-      if (!owner || typeof owner === 'string' || !owner.name) {
-        // If owner is invalid, transfer to oldest valid member
-        await this.transferOwnershipToOldestMember(group as GroupDocument);
-        await group.populate('owner', 'name email bio averageRating');
-      }
-          
-      // // Validate that owner still exists and has valid data
-      // if (!group.owner || typeof group.owner === 'string' || !('name' in group.owner && group.owner.name)) {
-      //   // If owner is invalid, transfer to oldest valid member
-      //   await this.transferOwnershipToOldestMember(group);
-      //   await group.populate('owner', 'name email bio averageRating');
-      // }
-    } catch (populateError) {
-      console.error('Error populating owner:', populateError);
-      await this.transferOwnershipToOldestMember(group);
-      
-      try {
-        await group.populate('owner', 'name email bio averageRating');
-      } catch (retryError) {
-        console.error('Retry populate also failed:', retryError);
-        this.setPlaceholderOwner(group);
+    // Update name only if it has changed
+    if (group.name !== newName) {
+      group.name = newName;
+      await group.save();
+
+      // Update all members' cached groupName fields
+      const memberIds = group.members
+        .map(member => {
+          if (!member.userId) {
+            return null;
+          }
+          return new mongoose.Types.ObjectId(member.userId as mongoose.Types.ObjectId);
+        })
+        .filter((id): id is mongoose.Types.ObjectId => id !== null);
+
+      if (memberIds.length > 0) {
+        await UserModel.updateMany(
+          { _id: { $in: memberIds } },
+          { $set: { groupName: newName } }
+        );
       }
     }
 
-    // Populate member data with error handling
-    try {
-      await group.populate('members.userId', 'name email bio averageRating');
-    } catch (populateError) {
-      console.error('Error populating members:', populateError);
-
-      group.members = group.members.filter((member: any) => {
-        return member.userId && typeof member.userId === 'object';
-      });
-      // Filter out any members that failed to populate
-      // group.members = group.members.filter(member => {
-      //   return member.userId && typeof member.userId === 'object';
-      // });
-    }
+    await group.populate('owner', 'name email bio averageRating');
+    await group.populate('members.userId', 'name email bio averageRating');
 
     return group;
-  }
-
-  /**
-   * Helper: Transfer ownership to oldest valid member
-   */
-  private async transferOwnershipToOldestMember(group: GroupDocument): Promise<void> {
-    const validMembers = group.members.filter((member): member is PopulatedMember => 
-      typeof member.userId === 'object' && 'name' in member.userId && Boolean(member.userId.name)
-    );
-    
-    if (validMembers.length > 0) {
-      const oldestMember = validMembers.reduce((oldest, current) => {
-        const oldestDate = new Date(oldest.joinDate).getTime();
-        const currentDate = new Date(current.joinDate).getTime();
-        return currentDate < oldestDate ? current : oldest;
-      });
-      
-      group.owner = oldestMember.userId._id;
-      await group.save();
-    } else {
-      this.setPlaceholderOwner(group);
-    }
-  }
-
-  /**
-   * Helper: Set placeholder owner
-   */
-  private setPlaceholderOwner(group: GroupDocument): void {
-    group.owner = {
-      _id: 'deleted-owner',
-      name: 'Deleted User',
-      email: '',
-      bio: '',
-      averageRating: 0
-    };
   }
 }
 
