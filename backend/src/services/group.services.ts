@@ -36,55 +36,138 @@ class GroupService {
   }
 
   async joinGroup(userId: string, groupCode: string) {
-  // Find group by code
-  const group = await Group.findOne({ groupCode: groupCode.toUpperCase() });
+    // Find group by code
+    const group = await Group.findOne({ groupCode: groupCode.toUpperCase() });
 
-  if (!group) {
-    throw new Error('GROUP_NOT_FOUND');
+    if (!group) {
+      throw new Error('GROUP_NOT_FOUND');
+    }
+
+    // Check if user is already a member of this group
+    const isAlreadyMember = group.members.some(member => 
+      member.userId.toString() === userId
+    );
+
+    if (isAlreadyMember) {
+      throw new Error('ALREADY_MEMBER_OF_THIS_GROUP');
+    }
+
+    // Check if user is already in a different group
+    const existingGroup = await Group.findOne({ 
+      'members.userId': new mongoose.Types.ObjectId(userId)
+    });
+
+    if (existingGroup) {
+      throw new Error('USER_ALREADY_IN_GROUP');
+    }
+
+    // Check if group is full
+    if (group.members.length >= 8) {
+      throw new Error('GROUP_FULL');
+    }
+
+    // Add user to group
+    group.members.push({
+      userId: new mongoose.Types.ObjectId(userId),
+      joinDate: new Date()
+    });
+
+    await group.save();
+
+    // Update user's groupName
+    await UserModel.findByIdAndUpdate(userId, { 
+      groupName: group.name 
+    });
+
+    // Populate member information
+    await group.populate('owner', 'name email');
+    await group.populate('members.userId', 'name email');
+
+    return group;
   }
 
-  // Check if user is already a member of this group
-  const isAlreadyMember = group.members.some(member => 
-    member.userId.toString() === userId
-  );
+  async getUserGroup(userId: string) {
+    const group = await Group.findOne({ 
+      'members.userId': new mongoose.Types.ObjectId(userId) 
+    });
 
-  if (isAlreadyMember) {
-    throw new Error('ALREADY_MEMBER_OF_THIS_GROUP');
+    if (!group) {
+      throw new Error('USER_NOT_IN_GROUP');
+    }
+
+    // Populate owner data with error handling
+    try {
+      await group.populate('owner', 'name email bio averageRating');
+          
+      // Validate that owner still exists and has valid data
+      if (!group.owner || typeof group.owner === 'string' || !(group.owner as { name?: string }).name) {
+        // If owner is invalid, transfer to oldest valid member
+        await this.transferOwnershipToOldestMember(group);
+        await group.populate('owner', 'name email bio averageRating');
+      }
+    } catch (populateError) {
+      console.error('Error populating owner:', populateError);
+      await this.transferOwnershipToOldestMember(group);
+      
+      try {
+        await group.populate('owner', 'name email bio averageRating');
+      } catch (retryError) {
+        console.error('Retry populate also failed:', retryError);
+        this.setPlaceholderOwner(group);
+      }
+    }
+
+    // Populate member data with error handling
+    try {
+      await group.populate('members.userId', 'name email bio averageRating');
+    } catch (populateError) {
+      console.error('Error populating members:', populateError);
+      // Filter out any members that failed to populate
+      group.members = group.members.filter(member => {
+        if (!member.userId || typeof member.userId === 'string') {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    return group;
   }
 
-  // Check if user is already in a different group
-  const existingGroup = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(userId)
-  });
-
-  if (existingGroup) {
-    throw new Error('USER_ALREADY_IN_GROUP');
+  /**
+   * Helper: Transfer ownership to oldest valid member
+   */
+  private async transferOwnershipToOldestMember(group: any) {
+    const validMembers = group.members.filter((member: any) => 
+      typeof member.userId === 'object' && (member.userId as { name?: string }).name
+    );
+    
+    if (validMembers.length > 0) {
+      const oldestMember = validMembers.reduce((oldest: any, current: any) => {
+        const oldestDate = new Date(oldest.joinDate);
+        const currentDate = new Date(current.joinDate);
+        return currentDate < oldestDate ? current : oldest;
+      });
+      
+      group.owner = oldestMember.userId;
+      await group.save();
+    } else {
+      this.setPlaceholderOwner(group);
+    }
   }
 
-  // Check if group is full
-  if (group.members.length >= 8) {
-    throw new Error('GROUP_FULL');
+  /**
+   * Helper: Set placeholder owner
+   */
+  private setPlaceholderOwner(group: any) {
+    (group as unknown as { owner: { _id: string; name: string; email: string; bio: string; averageRating: number } }).owner = {
+      _id: 'deleted-owner',
+      name: 'Deleted User',
+      email: '',
+      bio: '',
+      averageRating: 0
+    };
   }
-
-  // Add user to group
-  group.members.push({
-    userId: new mongoose.Types.ObjectId(userId),
-    joinDate: new Date()
-  });
-
-  await group.save();
-
-  // Update user's groupName
-  await UserModel.findByIdAndUpdate(userId, { 
-    groupName: group.name 
-  });
-
-  // Populate member information
-  await group.populate('owner', 'name email');
-  await group.populate('members.userId', 'name email');
-
-  return group;
-}
 }
 
 export default new GroupService();
