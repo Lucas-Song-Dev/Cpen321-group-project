@@ -45,11 +45,21 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  if (deadline && new Date(deadline) <= new Date()) {
-    return res.status(400).json({
-      success: false,
-      message: 'Deadline must be in the future'
-    });
+  // Only validate deadline date for one-time tasks
+  if (recurrence === 'one-time' && deadline) {
+    const deadlineDate = new Date(deadline);
+    if (isNaN(deadlineDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid deadline date format'
+      });
+    }
+    if (deadlineDate <= new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Deadline must be in the future'
+      });
+    }
   }
 
   // Get user's current group
