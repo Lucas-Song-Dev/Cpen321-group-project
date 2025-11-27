@@ -162,14 +162,14 @@ fun ProfileScreen(
             partying = updatedUser.livingPreferences?.partying
             noise = updatedUser.livingPreferences?.noise
             profession = updatedUser.livingPreferences?.profession
-            // Don't clear selectedImageUri if it's a local content:// URI
-            // Keep it displayed since it works during the current session
-            // Only clear if the saved profile picture is a valid HTTP/HTTPS URL
+            // Clear selectedImageUri if the saved profile picture is a valid URL or base64 data URI
+            // This ensures we use the persisted image from the database
             if (updatedUser.profilePicture?.startsWith("http://") == true || 
-                updatedUser.profilePicture?.startsWith("https://") == true) {
+                updatedUser.profilePicture?.startsWith("https://") == true ||
+                updatedUser.profilePicture?.startsWith("data:image") == true) {
                 selectedImageUri = null
             }
-            // Otherwise, keep selectedImageUri so the image continues to display
+            // Otherwise, keep selectedImageUri so the image continues to display (for content:// URIs)
         }
     }
 
@@ -243,10 +243,17 @@ fun ProfileScreen(
                         .border(3.dp, ComposeColor.White, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
+                // Get the most up-to-date user from success state if available
+                val currentState = optionalProfileState // Store in local variable for smart cast
+                val currentUser = when (currentState) {
+                    is OptionalProfileState.Success -> currentState.user
+                    else -> user
+                }
+                
                 // Display selected image if available (always show it, even if content:// URI)
-                // If no selected image, use saved profile picture (only if it's a valid HTTP/HTTPS URL)
+                // If no selected image, use saved profile picture (only if it's a valid HTTP/HTTPS URL or base64)
                 // content:// URIs from saved profile pictures are invalid after app restart, so filter them out
-                val savedPicture = user.profilePicture?.takeIf { 
+                val savedPicture = currentUser.profilePicture?.takeIf { 
                     // Use saved picture if it's a valid HTTP/HTTPS URL or base64 data URI
                     // Base64 data URIs persist across app restarts
                     it.startsWith("http://") || 

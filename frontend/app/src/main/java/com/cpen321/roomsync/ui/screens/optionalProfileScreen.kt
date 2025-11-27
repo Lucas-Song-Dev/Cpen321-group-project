@@ -1,5 +1,8 @@
 package com.cpen321.roomsync.ui.screens
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,7 +34,35 @@ import com.cpen321.roomsync.data.models.User
 import com.cpen321.roomsync.ui.theme.GlassGradients
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModel
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileState
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import android.util.Base64
 
+/**
+ * Converts an image URI to a base64 data URI string
+ */
+fun convertUriToBase64(context: Context, uri: Uri): String? {
+    return try {
+        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+        inputStream?.use { stream ->
+            // Decode the image
+            val bitmap = BitmapFactory.decodeStream(stream)
+            
+            // Compress to JPEG (you can change to PNG if needed)
+            val outputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream) // 80% quality
+            
+            // Convert to base64
+            val base64String = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+            
+            // Return as data URI
+            "data:image/jpeg;base64,$base64String"
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
 
 @Composable
 fun OptionalProfileScreen(
@@ -39,8 +70,10 @@ fun OptionalProfileScreen(
     viewModel: OptionalProfileViewModel,
     onComplete: () -> Unit = {}
 ) {
-    var bio by remember { mutableStateOf("") }
+    var bio by remember { mutableStateOf(user.bio ?: "") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var hasNewImageSelected by remember { mutableStateOf(false) }
+    var imageRemoved by remember { mutableStateOf(false) }
 
     //Living Preferences - lowercase to match backend
     var morningNight by remember { mutableStateOf<String?>(null) }
@@ -57,6 +90,8 @@ fun OptionalProfileScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedImageUri = uri
+        hasNewImageSelected = uri != null
+        imageRemoved = false
     }
 
     // Navigate when profile update is successful
@@ -146,10 +181,31 @@ fun OptionalProfileScreen(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (selectedImageUri != null) {
+                    // Get the most up-to-date user from success state if available
+                    val currentState = optionalProfileState // Store in local variable for smart cast
+                    val currentUser = when (currentState) {
+                        is OptionalProfileState.Success -> currentState.user
+                        else -> user
+                    }
+                    
+                    // Handle both local URIs and base64 data URIs from database
+                    val imageToShow: Any? = selectedImageUri ?: currentUser.profilePicture?.let { profilePic ->
+                        // If it's a data URI (base64), use it directly
+                        // Otherwise, try to parse it as a URI
+                        if (profilePic.startsWith("data:")) {
+                            profilePic
+                        } else {
+                            try {
+                                Uri.parse(profilePic)
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+                    }
+                    if (imageToShow != null) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)
-                                .data(selectedImageUri)
+                                .data(imageToShow)
                                 .crossfade(true)
                                 .build(),
                             contentDescription = "Profile Picture",
@@ -188,9 +244,13 @@ fun OptionalProfileScreen(
                         Text("Gallery", fontSize = 12.sp)
                     }
 
-                    if (selectedImageUri != null) {
+                    if (selectedImageUri != null || user.profilePicture != null) {
                         OutlinedButton(
-                            onClick = { selectedImageUri = null },
+                            onClick = { 
+                                selectedImageUri = null
+                                hasNewImageSelected = true
+                                imageRemoved = true
+                            },
                             modifier = Modifier.height(40.dp)
                         ) {
                             Text("Remove", fontSize = 12.sp)
@@ -238,10 +298,20 @@ fun OptionalProfileScreen(
             ) {
                 Button(
                     onClick = {
+                        // Convert image to base64 if a new image is selected
+                        val currentImageUri = selectedImageUri // Store in local variable for smart cast
+                        val profilePictureBase64 = when {
+                            imageRemoved -> "" // Send empty string to explicitly remove picture
+                            hasNewImageSelected && currentImageUri != null -> {
+                                convertUriToBase64(context, currentImageUri) ?: null
+                            }
+                            else -> null // Don't send profilePicture if no new image was selected
+                        }
+                        
                         viewModel.updateOptionalProfile(
                             email = user.email,
                             bio = bio.takeIf { it.isNotBlank() },
-                            profilePicture = selectedImageUri?.toString(),
+                            profilePicture = profilePictureBase64,
                             schedule = morningNight,
                             drinking = drinking,
                             partying = partying,
