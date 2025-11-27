@@ -559,7 +559,7 @@ fun ProfileScreen(
                             .fillMaxWidth()
                             .border(
                                 width = 1.dp,
-                                color = ComposeColor(0xFFFF6B6B),
+                                color = GlassColors.AlertRed,
                                 shape = RoundedCornerShape(12.dp)
                             ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -570,7 +570,7 @@ fun ProfileScreen(
                         Text(
                             text = "✗ ${(optionalProfileState as OptionalProfileState.Error).message}",
                             modifier = Modifier.padding(16.dp),
-                            color = ComposeColor(0xFFFF6B6B)
+                            color = GlassColors.AlertRed
                         )
                     }
                 }

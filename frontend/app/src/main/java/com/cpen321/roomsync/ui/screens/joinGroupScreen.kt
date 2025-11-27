@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cpen321.roomsync.ui.theme.GlassColors
 import com.cpen321.roomsync.ui.theme.GlassGradients
 import com.cpen321.roomsync.ui.viewmodels.GroupViewModel
 import androidx.compose.ui.graphics.Color as ComposeColor
@@ -124,7 +125,7 @@ fun JoinGroupScreen(
                 if (uiState.error != null) {
                     Text(
                         text = uiState.error!!,
-                        color = ComposeColor(0xFFFF6B6B),
+                        color = GlassColors.AlertRed,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
