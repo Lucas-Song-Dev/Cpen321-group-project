@@ -115,7 +115,7 @@ class GroupService {
   async getUserGroup(userId: string) {
     const group = await Group.findOne({ 
       'members.userId': new mongoose.Types.ObjectId(userId) 
-    }) as GroupDocument | null;
+    }) as GroupDocument;
 
     if (!group) {
       throw new Error('USER_NOT_IN_GROUP');
@@ -124,13 +124,20 @@ class GroupService {
     // Populate owner data with error handling
     try {
       await group.populate('owner', 'name email bio averageRating');
-          
-      // Validate that owner still exists and has valid data
-      if (!group.owner || typeof group.owner === 'string' || !('name' in group.owner && group.owner.name)) {
+
+      const owner = group.owner as any;
+      if (!owner || typeof owner === 'string' || !owner.name) {
         // If owner is invalid, transfer to oldest valid member
-        await this.transferOwnershipToOldestMember(group);
+        await this.transferOwnershipToOldestMember(group as GroupDocument);
         await group.populate('owner', 'name email bio averageRating');
       }
+          
+      // // Validate that owner still exists and has valid data
+      // if (!group.owner || typeof group.owner === 'string' || !('name' in group.owner && group.owner.name)) {
+      //   // If owner is invalid, transfer to oldest valid member
+      //   await this.transferOwnershipToOldestMember(group);
+      //   await group.populate('owner', 'name email bio averageRating');
+      // }
     } catch (populateError) {
       console.error('Error populating owner:', populateError);
       await this.transferOwnershipToOldestMember(group);
@@ -148,10 +155,14 @@ class GroupService {
       await group.populate('members.userId', 'name email bio averageRating');
     } catch (populateError) {
       console.error('Error populating members:', populateError);
-      // Filter out any members that failed to populate
-      group.members = group.members.filter(member => {
+
+      group.members = group.members.filter((member: any) => {
         return member.userId && typeof member.userId === 'object';
       });
+      // Filter out any members that failed to populate
+      // group.members = group.members.filter(member => {
+      //   return member.userId && typeof member.userId === 'object';
+      // });
     }
 
     return group;
