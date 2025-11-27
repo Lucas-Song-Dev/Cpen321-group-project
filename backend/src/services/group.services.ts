@@ -2,6 +2,32 @@ import Group from '../models/group.models';
 import { UserModel } from '../models/user.models';
 import mongoose from 'mongoose';
 
+interface PopulatedMember {
+  userId: {
+    _id: mongoose.Types.ObjectId;
+    name?: string;
+    email?: string;
+    bio?: string;
+    averageRating?: number;
+  };
+  joinDate: Date;
+}
+
+interface GroupDocument {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  owner: mongoose.Types.ObjectId | {
+    _id: string;
+    name: string;
+    email: string;
+    bio: string;
+    averageRating: number;
+  };
+  members: PopulatedMember[];
+  save: () => Promise<void>;
+  populate: (path: string, select: string) => Promise<void>;
+}
+
 class GroupService {
   async createGroup(userId: string, name: string) {
     // Check if user is already in a group
@@ -89,7 +115,7 @@ class GroupService {
   async getUserGroup(userId: string) {
     const group = await Group.findOne({ 
       'members.userId': new mongoose.Types.ObjectId(userId) 
-    });
+    }) as GroupDocument | null;
 
     if (!group) {
       throw new Error('USER_NOT_IN_GROUP');
@@ -100,7 +126,7 @@ class GroupService {
       await group.populate('owner', 'name email bio averageRating');
           
       // Validate that owner still exists and has valid data
-      if (!group.owner || typeof group.owner === 'string' || !(group.owner as { name?: string }).name) {
+      if (!group.owner || typeof group.owner === 'string' || !('name' in group.owner && group.owner.name)) {
         // If owner is invalid, transfer to oldest valid member
         await this.transferOwnershipToOldestMember(group);
         await group.populate('owner', 'name email bio averageRating');
@@ -124,10 +150,7 @@ class GroupService {
       console.error('Error populating members:', populateError);
       // Filter out any members that failed to populate
       group.members = group.members.filter(member => {
-        if (!member.userId || typeof member.userId === 'string') {
-          return false;
-        }
-        return true;
+        return member.userId && typeof member.userId === 'object';
       });
     }
 
@@ -137,19 +160,19 @@ class GroupService {
   /**
    * Helper: Transfer ownership to oldest valid member
    */
-  private async transferOwnershipToOldestMember(group: any) {
-    const validMembers = group.members.filter((member: any) => 
-      typeof member.userId === 'object' && (member.userId as { name?: string }).name
+  private async transferOwnershipToOldestMember(group: GroupDocument): Promise<void> {
+    const validMembers = group.members.filter((member): member is PopulatedMember => 
+      typeof member.userId === 'object' && 'name' in member.userId && Boolean(member.userId.name)
     );
     
     if (validMembers.length > 0) {
-      const oldestMember = validMembers.reduce((oldest: any, current: any) => {
-        const oldestDate = new Date(oldest.joinDate);
-        const currentDate = new Date(current.joinDate);
+      const oldestMember = validMembers.reduce((oldest, current) => {
+        const oldestDate = new Date(oldest.joinDate).getTime();
+        const currentDate = new Date(current.joinDate).getTime();
         return currentDate < oldestDate ? current : oldest;
       });
       
-      group.owner = oldestMember.userId;
+      group.owner = oldestMember.userId._id;
       await group.save();
     } else {
       this.setPlaceholderOwner(group);
@@ -159,8 +182,8 @@ class GroupService {
   /**
    * Helper: Set placeholder owner
    */
-  private setPlaceholderOwner(group: any) {
-    (group as unknown as { owner: { _id: string; name: string; email: string; bio: string; averageRating: number } }).owner = {
+  private setPlaceholderOwner(group: GroupDocument): void {
+    group.owner = {
       _id: 'deleted-owner',
       name: 'Deleted User',
       email: '',

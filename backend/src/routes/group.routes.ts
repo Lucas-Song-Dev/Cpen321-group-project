@@ -46,26 +46,21 @@ router.get('/', asyncHandler(groupController.getUserGroup.bind(groupController))
 
 
 
-
 // // @desc    Transfer ownership to another member (owner only)
 // // @route   PUT /api/group/transfer-ownership/:newOwnerId
-// // @access  Private
 // router.put('/transfer-ownership/:newOwnerId', asyncHandler(groupController.transferOwnership.bind(groupController)));
 
 // // @desc    Remove a member from group (owner only)
 // // @route   DELETE /api/group/member/:memberId
-// // @access  Private
 // router.delete('/member/:memberId', asyncHandler(groupController.removeMember.bind(groupController)));
 
 // // @desc    Leave current group
 // // @route   DELETE /api/group/leave
-// // @access  Private
 // router.delete('/leave', asyncHandler(groupController.leaveGroup.bind(groupController)));
 
 
 // @desc    Leave current group
 // @route   DELETE /api/group/leave
-// @access  Private
 router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
   const group = await Group.findOne({ 
     'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
