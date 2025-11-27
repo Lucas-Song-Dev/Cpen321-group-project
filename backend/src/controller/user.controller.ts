@@ -5,11 +5,16 @@ import Group from '../models/group.models';
 
 export const UserController = {
   setProfile: async (req: Request, res: Response): Promise<void> => {
-    const { email, dob, gender } = req.body;
+    const { email, dob, gender, name, updatedEmail } = req.body;
 
     //validate inputs
     if (!email || !dob || !gender) {
       res.status(400).json({ success: false, message: 'Email, DOB, and gender are required' });
+      return;
+    }
+
+    if (!name || !name.trim()) {
+      res.status(400).json({ success: false, message: 'Name is required' });
       return;
     }
     
@@ -24,6 +29,21 @@ export const UserController = {
       if (!user) {
         res.status(404).json({ success: false, message: 'User not found' });
         return;
+      }
+
+      // Handle email change request
+      if (updatedEmail && updatedEmail !== email) {
+        const trimmedEmail = updatedEmail.trim();
+        if (!trimmedEmail) {
+          res.status(400).json({ success: false, message: 'Updated email cannot be empty' });
+          return;
+        }
+        const existingUser = await UserModel.findOne({ email: trimmedEmail });
+        if (existingUser) {
+          res.status(400).json({ success: false, message: 'Email already in use' });
+          return;
+        }
+        user.email = trimmedEmail;
       }
 
       //enforce immutability
@@ -44,6 +64,7 @@ export const UserController = {
       // Update user
       user.dob = dobDate;
       user.gender = gender;
+      user.name = name.trim();
       user.profileComplete = true;
       await user.save();
 
