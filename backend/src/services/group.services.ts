@@ -13,20 +13,20 @@ interface PopulatedMember {
   joinDate: Date;
 }
 
-interface GroupDocument {
-  _id: mongoose.Types.ObjectId;
-  name: string;
-  owner: mongoose.Types.ObjectId | {
-    _id: string;
-    name: string;
-    email: string;
-    bio: string;
-    averageRating: number;
-  };
-  members: PopulatedMember[];
-  save: () => Promise<void>;
-  populate: (path: string, select: string) => Promise<void>;
-}
+// interface GroupDocument {
+//   _id: mongoose.Types.ObjectId;
+//   name: string;
+//   owner: mongoose.Types.ObjectId | {
+//     _id: string;
+//     name: string;
+//     email: string;
+//     bio: string;
+//     averageRating: number;
+//   };
+//   members: PopulatedMember[];
+//   save: () => Promise<void>;
+//   populate: (path: string, select: string) => Promise<void>;
+// }
 
 class GroupService {
   async createGroup(userId: string, name: string) {
@@ -112,7 +112,9 @@ class GroupService {
     return group;
   }
 
-  async updateGroupName(userId: string, newName: string) {
+  async getCurrentGroup(userId: string) {
+    const timestamp = new Date().toISOString();
+
     const group = await Group.findOne({
       'members.userId': new mongoose.Types.ObjectId(userId)
     });
@@ -121,38 +123,116 @@ class GroupService {
       throw new Error('USER_NOT_IN_GROUP');
     }
 
-    if (group.owner.toString() !== userId) {
-      throw new Error('NOT_GROUP_OWNER');
-    }
+    // Populate owner data with error handling
+    try {
+      await group.populate('owner', 'name email bio averageRating');
 
-    // Update name only if it has changed
-    if (group.name !== newName) {
-      group.name = newName;
-      await group.save();
+      // Validate that owner still exists and has valid data
+      if (!group.owner || typeof group.owner === 'string' || !(group.owner as { name?: string }).name) {
 
-      // Update all members' cached groupName fields
-      const memberIds = group.members
-        .map(member => {
-          if (!member.userId) {
-            return null;
-          }
-          return new mongoose.Types.ObjectId(member.userId as mongoose.Types.ObjectId);
-        })
-        .filter((id): id is mongoose.Types.ObjectId => id !== null);
-
-      if (memberIds.length > 0) {
-        await UserModel.updateMany(
-          { _id: { $in: memberIds } },
-          { $set: { groupName: newName } }
+        // If owner is invalid, transfer to oldest valid member
+        const validMembers = group.members.filter(member =>
+          typeof member.userId === 'object' && (member.userId as { name?: string }).name
         );
+
+        if (validMembers.length > 0) {
+          // Find the oldest member (earliest join date) to transfer ownership to
+          const oldestMember = validMembers.reduce((oldest, current) => {
+            const oldestDate = new Date(oldest.joinDate);
+            const currentDate = new Date(current.joinDate);
+            return currentDate < oldestDate ? current : oldest;
+          });
+
+          group.owner = oldestMember.userId;
+          await group.save();
+
+          // Re-populate the new owner
+          await group.populate('owner', 'name email bio averageRating');
+        } else {
+          // Create a placeholder owner if no valid members exist
+          (group as unknown as { owner: { _id: string; name: string; email: string; bio: string; averageRating: number } }).owner = {
+            _id: 'deleted-owner',
+            name: 'Deleted User',
+            email: '',
+            bio: '',
+            averageRating: 0
+          };
+        }
+      }
+    } catch (populateError) {
+      console.error(`[${timestamp}] GROUP GET: Error populating owner:`, populateError);
+
+      // Try to fix ownership by transferring to oldest valid member
+      const validMembers = group.members.filter(member =>
+        typeof member.userId === 'object' && (member.userId as { name?: string }).name
+      );
+
+      if (validMembers.length > 0) {
+        // Find the oldest member (earliest join date) to transfer ownership to
+        const oldestMember = validMembers.reduce((oldest, current) => {
+          const oldestDate = new Date(oldest.joinDate);
+          const currentDate = new Date(current.joinDate);
+          return currentDate < oldestDate ? current : oldest;
+        });
+
+        group.owner = oldestMember.userId;
+        await group.save();
+
+        // Try to populate again
+        try {
+          await group.populate('owner', 'name email bio averageRating');
+        } catch (retryError) {
+          console.error(`[${timestamp}] GROUP GET: Retry populate also failed:`, retryError);
+          // Create placeholder owner
+          (group as unknown as { owner: { _id: string; name: string; email: string; bio: string; averageRating: number } }).owner = {
+            _id: 'deleted-owner',
+            name: 'Deleted User',
+            email: '',
+            bio: '',
+            averageRating: 0
+          };
+        }
+      } else {
+        // Create placeholder owner if no valid members exist
+        (group as unknown as { owner: { _id: string; name: string; email: string; bio: string; averageRating: number } }).owner = {
+          _id: 'deleted-owner',
+          name: 'Deleted User',
+          email: '',
+          bio: '',
+          averageRating: 0
+        };
       }
     }
 
-    await group.populate('owner', 'name email bio averageRating');
-    await group.populate('members.userId', 'name email bio averageRating');
+    // Populate member data with error handling
+    try {
+      await group.populate('members.userId', 'name email bio averageRating');
+    } catch (populateError) {
+      console.error(`[${timestamp}] GROUP GET: Error populating members:`, populateError);
+      // Filter out any members that failed to populate
+      group.members = group.members.filter(member => {
+        if (!member.userId || typeof member.userId === 'string') {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    // Log how long each user has been in the group
+    const now = new Date();
+    group.members.forEach(member => {
+      if ((member.userId as { name?: string }).name) {
+        const joinDate = new Date(member.joinDate);
+        const durationMs = now.getTime() - joinDate.getTime();
+        const durationMinutes = Math.floor(durationMs / (1000 * 60));
+        const durationHours = Math.floor(durationMinutes / 60);
+        const durationDays = Math.floor(durationHours / 24);
+      }
+    });
 
     return group;
   }
+
 }
 
 export default new GroupService();
