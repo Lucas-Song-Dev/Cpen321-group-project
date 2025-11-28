@@ -15,7 +15,7 @@ class TaskService {
       assignedUserIds?: string[];
     }
   ) {
-    const { name, description, difficulty, recurrence, requiredPeople, deadline, assignedUserIds } = taskData;
+    const { name, description, difficulty, recurrence, requiredPeople, deadline } = taskData;
 
     // Validate inputs
     if (!name || !difficulty || !recurrence || !requiredPeople) {
@@ -56,7 +56,7 @@ class TaskService {
     // Create task
     const task = await Task.create({
       name,
-      description: description || '',
+      description: description ?? '',
       difficulty,
       recurrence,
       requiredPeople,

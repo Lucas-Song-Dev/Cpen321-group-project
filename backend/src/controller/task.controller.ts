@@ -102,7 +102,6 @@ export const TaskController = {
   },
 
   getMyTasks: async (req: Request, res: Response) => {
-    try {
       // Check if user exists first
       if (!req.user?._id) {
         return res.status(401).json({
@@ -119,9 +118,6 @@ export const TaskController = {
         success: true,
         data: tasks
       });
-    } catch (error) {
-      throw error;
-    }
   },
 
   updateTaskStatus: async (req: Request, res: Response) => {
