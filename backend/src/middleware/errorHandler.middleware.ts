@@ -1,9 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
-
-// export interface AppError extends Error {
-//   statusCode?: number;
-//   isOperational?: boolean;
-// }
+import { NextFunction, Request, Response } from 'express';
 
 export class AppError extends Error {
   statusCode?: number;

@@ -1,20 +1,19 @@
 import express, { Request, Response } from 'express';
+import mongoose from 'mongoose';
+import { socketHandler } from '../index';
 import { protect } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/errorHandler.middleware';
 import Message from '../models/chat.models';
 import Group from '../models/group.models';
-import mongoose from 'mongoose';
-import { socketHandler } from '../index';
 
-const router = express.Router();
+const chatRouter = express.Router();
 
 // All routes below this middleware are protected
-router.use(protect);
+chatRouter.use(protect);
 
 // @desc    Get messages for a group
 // @route   GET /api/chat/:groupId/messages
-// @access  Private
-router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response) => {
+chatRouter.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response) => {
   const timestamp = new Date().toISOString();
 
   const { groupId } = req.params;
@@ -70,8 +69,7 @@ router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response
 
 // @desc    Send a text message
 // @route   POST /api/chat/:groupId/message
-// @access  Private
-router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response) => {
+chatRouter.post('/:groupId/message', asyncHandler(async (req: Request, res: Response) => {
   const timestamp = new Date().toISOString();
   const { groupId } = req.params;
   const { content } = req.body;
@@ -160,8 +158,7 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
 
 // @desc    Send a poll
 // @route   POST /api/chat/:groupId/poll
-// @access  Private
-router.post('/:groupId/poll', asyncHandler(async (req: Request, res: Response) => {
+chatRouter.post('/:groupId/poll', asyncHandler(async (req: Request, res: Response) => {
   const { groupId } = req.params;
   const { question, options, expiresInDays = 7 } = req.body;
 
@@ -229,8 +226,7 @@ router.post('/:groupId/poll', asyncHandler(async (req: Request, res: Response) =
 
 // @desc    Vote on a poll
 // @route   POST /api/chat/:groupId/poll/:messageId/vote
-// @access  Private
-router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, res: Response) => {
+chatRouter.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, res: Response) => {
   const { groupId, messageId } = req.params;
   const { option } = req.body;
 
@@ -335,8 +331,7 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
 
 // @desc    Delete a message (only by sender)
 // @route   DELETE /api/chat/:groupId/message/:messageId
-// @access  Private
-router.delete('/:groupId/message/:messageId', asyncHandler(async (req: Request, res: Response) => {
+chatRouter.delete('/:groupId/message/:messageId', asyncHandler(async (req: Request, res: Response) => {
   const { groupId, messageId } = req.params;
 
   const message = await Message.findById(messageId);
@@ -370,4 +365,4 @@ router.delete('/:groupId/message/:messageId', asyncHandler(async (req: Request, 
   });
 }));
 
-export default router;
+export default chatRouter;

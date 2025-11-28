@@ -1,11 +1,10 @@
-import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
-import { User  } from '../models/index.models';
+import jwt from 'jsonwebtoken';
+import { AppError } from '../middleware/errorHandler.middleware';
+import { User } from '../models/index.models';
 import { IUser } from '../types/index.types';
-import { asyncHandler, AppError } from '../middleware/errorHandler.middleware';
 
-// Initialize Google OAuth client
-// Use Web Client ID for token verification (audience field)
+// Initialize Google OAuth client, using Web Client ID for token verification
 const client = new OAuth2Client('445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com');
 
 export interface GoogleTokenPayload {
@@ -61,10 +60,6 @@ export const generateTokens = (user: IUser): AuthTokens => {
     name: user.name,
   };
 
-  // const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
-  //   expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  // });
-
   const secret = process.env.JWT_SECRET ?? 'fallback-secret-key';
   const accessToken = jwt.sign(payload, secret, { expiresIn: '1h' });
 
@@ -107,8 +102,8 @@ export const findOrCreateUser = async (payload: GoogleTokenPayload): Promise<IUs
       name: `${payload.given_name} ${payload.family_name}`.trim(),
       profileComplete: false,
       // Note: We'll require additional fields during profile completion
-      dob: new Date('1900-01-01'), // Placeholder - will be required later
-      gender: 'Prefer-not-to-say', // Placeholder - will be required later
+      dob: new Date('1900-01-01'), 
+      gender: 'Prefer-not-to-say', 
     });
 
     await newUser.save();

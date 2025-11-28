@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 import { config } from '../config';
-import { UserModel } from '../models/user.models';
-import Group from '../models/group.models';
-import Task from '../models/task.models';
 import Message from '../models/chat.models';
+import Group from '../models/group.models';
 import Rating from '../models/rating.models';
+import Task from '../models/task.models';
+import { UserModel } from '../models/user.models';
 
 /**
  * Script to purge all data from the database
