@@ -204,6 +204,64 @@ class GroupController {
       throw error;
     }
   }
+
+  async transferOwnership(req: Request, res: Response) {
+    try {
+      const newOwnerId = String(req.body.params);
+
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const group = await groupService.transferOwnership(userId, newOwnerId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Ownership transferred successfully',
+        data: group
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'USER_NOT_IN_GROUP':
+            return res.status(404).json({
+              success: false,
+              message: 'User is not a member of any group'
+            });
+          case 'NOT_GROUP_OWNER':
+            return res.status(403).json({
+              success: false,
+              message: 'Only the group owner can transfer ownership'
+            });
+          case 'ALREADY_OWNER':
+            return res.status(400).json({
+              success: false,
+              message: 'You are already the owner of this group'
+            });
+          case 'NEW_OWNER_NOT_MEMBER':
+            return res.status(400).json({
+              success: false,
+              message: 'The specified user is not a member of this group'
+            });
+        }
+      }
+
+      throw error;
+    }
+  }
 }
 
 export default new GroupController();

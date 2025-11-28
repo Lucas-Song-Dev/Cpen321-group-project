@@ -242,6 +242,45 @@ class GroupService {
     return group;
   }
 
+  async transferOwnership(userId: string, newOwnerId: string) {
+    // Find user's current group
+    const group = await Group.findOne({
+      'members.userId': new mongoose.Types.ObjectId(userId)
+    });
+
+    if (!group) {
+      throw new Error('USER_NOT_IN_GROUP');
+    }
+
+    // Check if user is the owner
+    if (group.owner.toString() !== userId) {
+      throw new Error('NOT_GROUP_OWNER');
+    }
+
+    // Check if trying to transfer to the same person
+    if (newOwnerId === group.owner.toString()) {
+      throw new Error('ALREADY_OWNER');
+    }
+
+    // Check if new owner is a member of the group
+    const newOwnerIsMember = group.members.some(member =>
+      member.userId.toString() === newOwnerId
+    );
+
+    if (!newOwnerIsMember) {
+      throw new Error('NEW_OWNER_NOT_MEMBER');
+    }
+
+    // Transfer ownership
+    group.owner = new mongoose.Types.ObjectId(newOwnerId);
+    await group.save();
+
+    // Populate group with updated member information
+    await group.populate('owner', 'name email bio averageRating');
+    await group.populate('members.userId', 'name email bio averageRating');
+
+    return group;
+  }
 }
 
 export default new GroupService();

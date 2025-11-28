@@ -31,78 +31,20 @@ router.post('/join', asyncHandler(groupController.joinGroup.bind(groupController
 // @route   GET /api/group
 router.get('/', asyncHandler(groupController.getCurrentGroup.bind(groupController)));
 
-
-
-
-
-
 // @desc    Update group name (owner only)
 // @route   PUT /api/group/name
-// @access  Private
 router.put('/name', asyncHandler(groupController.updateGroupName.bind(groupController)));
-
 
 // @desc    Transfer ownership to another member (owner only)
 // @route   PUT /api/group/transfer-ownership/:newOwnerId
-router.put('/transfer-ownership/:newOwnerId', asyncHandler(async (req: Request, res: Response) => {
-  const timestamp = new Date().toISOString();
-  const { newOwnerId } = req.params;
-
-  // Get user's current group
-  const group = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
-  });
-
-  if (!group) {
-    return res.status(404).json({
-      success: false,
-      message: 'User is not a member of any group'
-    });
-  }
-
-  // Check if user is the owner
-  if (group.owner.toString() !== req.user?._id.toString()) {
-    return res.status(403).json({
-      success: false,
-      message: 'Only the group owner can transfer ownership'
-    });
-  }
-
-  // Check if trying to transfer to the same person
-  if (newOwnerId === group.owner.toString()) {
-    return res.status(400).json({
-      success: false,
-      message: 'You are already the owner of this group'
-    });
-  }
-
-  // Check if new owner is a member of the group
-  const newOwnerIsMember = group.members.some(member => 
-    member.userId.toString() === newOwnerId
-  );
-
-  if (!newOwnerIsMember) {
-    return res.status(400).json({
-      success: false,
-      message: 'The specified user is not a member of this group'
-    });
-  }
-
-  // Transfer ownership
-  group.owner = new mongoose.Types.ObjectId(newOwnerId);
-  await group.save();
+router.put('/transfer-ownership/:newOwnerId', asyncHandler(groupController.transferOwnership.bind(groupController)));
 
 
-  // Populate group with updated member information
-  await group.populate('owner', 'name email bio averageRating');
-  await group.populate('members.userId', 'name email bio averageRating');
 
-  res.status(200).json({
-    success: true,
-    message: 'Ownership transferred successfully',
-    data: group
-  });
-}));
+
+
+
+
 
 // @desc    Remove a member from group (owner only)
 // @route   DELETE /api/group/member/:memberId
