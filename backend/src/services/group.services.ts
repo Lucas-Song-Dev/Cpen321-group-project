@@ -2,32 +2,6 @@ import Group from '../models/group.models';
 import { UserModel } from '../models/user.models';
 import mongoose from 'mongoose';
 
-interface PopulatedMember {
-  userId: {
-    _id: mongoose.Types.ObjectId;
-    name?: string;
-    email?: string;
-    bio?: string;
-    averageRating?: number;
-  };
-  joinDate: Date;
-}
-
-// interface GroupDocument {
-//   _id: mongoose.Types.ObjectId;
-//   name: string;
-//   owner: mongoose.Types.ObjectId | {
-//     _id: string;
-//     name: string;
-//     email: string;
-//     bio: string;
-//     averageRating: number;
-//   };
-//   members: PopulatedMember[];
-//   save: () => Promise<void>;
-//   populate: (path: string, select: string) => Promise<void>;
-// }
-
 class GroupService {
   async createGroup(userId: string, name: string) {
     // Check if user is already in a group
@@ -128,7 +102,7 @@ class GroupService {
       await group.populate('owner', 'name email bio averageRating');
 
       // Validate that owner still exists and has valid data
-      if (!group.owner || typeof group.owner === 'string' || !(group.owner as { name?: string }).name) {
+      if (!(group.owner as { name?: string }).name) {
 
         // If owner is invalid, transfer to oldest valid member
         const validMembers = group.members.filter(member =>
@@ -211,10 +185,7 @@ class GroupService {
       console.error(`[${timestamp}] GROUP GET: Error populating members:`, populateError);
       // Filter out any members that failed to populate
       group.members = group.members.filter(member => {
-        if (!member.userId || typeof member.userId === 'string') {
-          return false;
-        }
-        return true;
+        return member.userId && typeof member.userId === 'object';
       });
     }
 
@@ -224,9 +195,7 @@ class GroupService {
       if ((member.userId as { name?: string }).name) {
         const joinDate = new Date(member.joinDate);
         const durationMs = now.getTime() - joinDate.getTime();
-        const durationMinutes = Math.floor(durationMs / (1000 * 60));
-        const durationHours = Math.floor(durationMinutes / 60);
-        const durationDays = Math.floor(durationHours / 24);
+        const durationDays = Math.floor(durationMs / (1000 * 60 * 60 * 24));
       }
     });
 
