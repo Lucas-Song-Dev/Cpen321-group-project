@@ -149,7 +149,7 @@ class GroupController {
 
   async updateGroupName(req: Request, res: Response) {
     try {
-      const { name } = req.body;
+      const name = String(req.body.name);
 
       // Check if user exists first
       if (!req.user?._id) {

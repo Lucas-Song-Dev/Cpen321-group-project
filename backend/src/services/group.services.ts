@@ -194,7 +194,7 @@ class GroupService {
 
   async updateGroupName(userId: string, newName: string) {
     // Validate name
-    const trimmedName = newName?.trim();
+    const trimmedName = newName.trim();
     if (!trimmedName) {
       throw new Error('GROUP_NAME_REQUIRED');
     }
@@ -225,10 +225,7 @@ class GroupService {
       // Update all members' cached groupName fields
       const memberIds = group.members
         .map(member => {
-          if (!member.userId) {
-            return null;
-          }
-          return new mongoose.Types.ObjectId(member.userId as mongoose.Types.ObjectId);
+          return member.userId ? new mongoose.Types.ObjectId(member.userId.toString()) : null;
         })
         .filter((id): id is mongoose.Types.ObjectId => id !== null);
 
