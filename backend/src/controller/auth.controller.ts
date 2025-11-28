@@ -1,18 +1,5 @@
 import { Request, Response } from "express";
-import { OAuth2Client } from "google-auth-library";
-import { AuthService } from "../services/auth.services";
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-async function verifyGoogleToken(idToken: string) {
-  const ticket = await client.verifyIdToken({
-    idToken,
-    audience: process.env.GOOGLE_CLIENT_ID,
-  });
-  const payload = ticket.getPayload();
-  if (!payload) throw new Error("Invalid token");
-  return { email: payload.email!, name: payload.name || "Unknown" , googleId: payload.sub};
-}
+import { AuthService, verifyGoogleToken } from "../services/auth.services";
 
 export const AuthController = {
   signup: async (req: Request, res: Response): Promise<void> => {
@@ -26,7 +13,7 @@ export const AuthController = {
         return;
       }
 
-      const { email, name, googleId } = await verifyGoogleToken(token);
+      const { email, name, sub: googleId } = await verifyGoogleToken(token);
       const result = await AuthService.signup(email, name, googleId);  //added await for async service
       res.json(result);
     } catch (err) {

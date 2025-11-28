@@ -360,7 +360,6 @@ class GroupService {
 
     // Update user's groupName
     await UserModel.findByIdAndUpdate(userId, { groupName: "" });
-
     return { message: 'Successfully left the group' };
   }
 }

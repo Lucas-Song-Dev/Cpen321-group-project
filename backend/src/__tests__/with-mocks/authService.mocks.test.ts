@@ -4,8 +4,9 @@
  * These tests verify authService functions using mocks to simulate external component failures.
  */
 
-import { verifyGoogleToken, generateTokens, findOrCreateUser, verifyJWT, getUserFromToken, GoogleTokenPayload } from '../../services/authService';
+import { verifyGoogleToken, generateTokens, findOrCreateUser, verifyJWT, getUserFromToken, GoogleTokenPayload } from '../../services/auth.services';
 import { User } from '../../models/index.models';
+import { IUser } from '../../types/index.types';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../../middleware/errorHandler.middleware';
@@ -211,7 +212,7 @@ describe('AuthService - With Mocking', () => {
         email: 'existing@example.com',
         name: 'Existing User',
         profileComplete: true
-      });
+      }) as IUser;
       createdUsers.push(existingUser);
 
       const payload: GoogleTokenPayload = {
@@ -235,7 +236,7 @@ describe('AuthService - With Mocking', () => {
         email: 'old@example.com',
         name: 'Existing User',
         profileComplete: true
-      });
+      }) as IUser;
       createdUsers.push(existingUser);
 
       const payload: GoogleTokenPayload = {
@@ -259,7 +260,7 @@ describe('AuthService - With Mocking', () => {
         email: 'existing@example.com',
         name: 'Existing User',
         profileComplete: true
-      });
+      }) as IUser;
       createdUsers.push(existingUser);
 
       const payload: GoogleTokenPayload = {
@@ -382,7 +383,7 @@ describe('AuthService - With Mocking', () => {
         name: 'Test User',
         googleId: 'google-123',
         profileComplete: true
-      });
+      }) as IUser;
       createdUsers.push(testUser);
 
       const mockDecoded = {
