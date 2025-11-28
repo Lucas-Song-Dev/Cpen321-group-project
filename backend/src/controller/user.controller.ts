@@ -4,60 +4,51 @@ import { UserModel } from '../models/user.models';
 import Group from '../models/group.models';
 
 export const UserController = {
-  setProfile: async (req: Request, res: Response): Promise<void> => {
+  setProfile: async (req: Request, res: Response) => {
     const { email, dob, gender, name, updatedEmail } = req.body;
 
     //validate inputs
     if (!email || !dob || !gender) {
-      res.status(400).json({ success: false, message: 'Email, DOB, and gender are required' });
-      return;
+      return res.status(400).json({ success: false, message: 'Email, DOB, and gender are required' });
     }
 
     if (!name || !name.trim()) {
-      res.status(400).json({ success: false, message: 'Name is required' });
-      return;
+      return res.status(400).json({ success: false, message: 'Name is required' });
     }
     
     if (!['Male', 'Female', 'Prefer-not-to-say'].includes(gender)) {
-      res.status(400).json({ success: false, message: 'Invalid gender value' });
-      return;
+      return res.status(400).json({ success: false, message: 'Invalid gender value' });
     }
 
     try {
       //find user by email (remove JWT check)
       const user = await UserModel.findOne({ email });
       if (!user) {
-        res.status(404).json({ success: false, message: 'User not found' });
-        return;
+        return res.status(404).json({ success: false, message: 'User not found' });
       }
 
-      // Handle email change request
       if (updatedEmail && updatedEmail !== email) {
         const trimmedEmail = updatedEmail.trim();
         if (!trimmedEmail) {
-          res.status(400).json({ success: false, message: 'Updated email cannot be empty' });
-          return;
+          return res.status(400).json({ success: false, message: 'Updated email cannot be empty' });
         }
         const existingUser = await UserModel.findOne({ email: trimmedEmail });
         if (existingUser) {
-          res.status(400).json({ success: false, message: 'Email already in use' });
-          return;
+          return res.status(400).json({ success: false, message: 'Email already in use' });
         }
         user.email = trimmedEmail;
       }
 
       //enforce immutability
-      if (user.dob ?? user.gender) {
-        res.status(400).json({ success: false, message: 'DOB and gender cannot be changed once set' });
-        return;
+      if (user.dob || user.gender) {
+        return res.status(400).json({ success: false, message: 'DOB and gender cannot be changed once set' });
       }
 
       //validate DOB format (expects 'YYYY-MM-DD')
       //NEED TO LATER ADD to handle other formats and error for invalid date inputs
       const dobDate = new Date(dob);
       if (isNaN(dobDate.getTime())) {
-        res.status(400).json({ success: false, message: 'Invalid DOB format' });
-        return;
+        return res.status(400).json({ success: false, message: 'Invalid DOB format' });
       }
     // console.log('Parsed DOB:', dobDate);
 
@@ -68,7 +59,7 @@ export const UserController = {
       user.profileComplete = true;
       await user.save();
 
-      res.json({
+      return res.json({
         success: true,
         message: 'Profile updated successfully',
         user: {
@@ -77,25 +68,25 @@ export const UserController = {
           dob: user.dob,
           gender: user.gender,
           profileComplete: user.profileComplete,
-          groupName: user.groupName ?? null,
+          groupName: user.groupName || null,
         },
       });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ success: false, message: 'Server error' });
+      return res.status(500).json({ success: false, message: 'Server error' });
     }
   },
 
   //for optional profile settings/updates
-  updateProfile: async (req: Request, res: Response): Promise<void> => {
+  updateProfile: async (req: Request, res: Response) => {
     const { email, bio, profilePicture, livingPreferences } = req.body;
 
     console.log('calling updateOptionalProfile');
-  
+    console.log('Received data:', { email, bio, profilePicture, livingPreferences });
+
     //validate inputs
     if (!email) {
-      res.status(400).json({ success: false, message: 'Email is required' });
-      return;
+      return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
     // Validate livingPreferences if provided
@@ -106,48 +97,40 @@ export const UserController = {
       const validProfessions = ['Student', 'Worker', 'Unemployed'];
 
 
-      if (typeof livingPreferences.schedule === 'string' && !validSchedules.includes(livingPreferences.schedule)) {
-        res.status(400).json({ success: false, message: 'Invalid schedule value' });
-        return;
+      if (livingPreferences.schedule && !validSchedules.includes(livingPreferences.schedule)) {
+        return res.status(400).json({ success: false, message: 'Invalid schedule value' });
       }
-      if (typeof livingPreferences.drinking === 'string' && !validFrequencies.includes(livingPreferences.drinking)) {
-        res.status(400).json({ success: false, message: 'Invalid drinking value' });
-        return;
+      if (livingPreferences.drinking && !validFrequencies.includes(livingPreferences.drinking)) {
+        return res.status(400).json({ success: false, message: 'Invalid drinking value' });
       }
-      if (typeof livingPreferences.partying === 'string' && !validFrequencies.includes(livingPreferences.partying)) {
-        res.status(400).json({ success: false, message: 'Invalid partying value' });
-        return;
+      if (livingPreferences.partying && !validFrequencies.includes(livingPreferences.partying)) {
+        return res.status(400).json({ success: false, message: 'Invalid partying value' });
       }
-      if (typeof livingPreferences.noise === 'string' && !validNoise.includes(livingPreferences.noise)) {
-        res.status(400).json({ success: false, message: 'Invalid noise value' });
-        return;
+      if (livingPreferences.noise && !validNoise.includes(livingPreferences.noise)) {
+        return res.status(400).json({ success: false, message: 'Invalid noise value' });
       }
-      if (typeof livingPreferences.profession === 'string' && !validProfessions.includes(livingPreferences.profession)) {
-        res.status(400).json({ success: false, message: 'Invalid profession value' });
-        return;
+      if (livingPreferences.profession && !validProfessions.includes(livingPreferences.profession)) {
+        return res.status(400).json({ success: false, message: 'Invalid profession value' });
       }
     }
 
     // Validate bio length
     if (bio && bio.length > 500) {
-      res.status(400).json({ success: false, message: 'Bio must be 500 characters or less' });
-      return;
+      return res.status(400).json({ success: false, message: 'Bio must be 500 characters or less' });
     }
 
     try {
       const user = await UserModel.findOne({ email });
       if (!user) {
-        res.status(404).json({ success: false, message: 'User not found' });
-        return;
+        return res.status(404).json({ success: false, message: 'User not found' });
       }
 
       // Check if mandatory profile is complete
       if (!user.profileComplete) {
-        res.status(400).json({ 
+        return res.status(400).json({ 
           success: false, 
           message: 'Please complete your basic profile first (DOB and gender)' 
         });
-        return;
       }
 
       // Update optional fields (only update fields that are provided)
@@ -177,7 +160,7 @@ export const UserController = {
 
       await user.save();
 
-      res.status(200).json({
+      return res.json({
         success: true,
         message: 'Optional profile updated successfully',
         user: {
@@ -194,47 +177,53 @@ export const UserController = {
       });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ success: false, message: 'Server error' });
+      return res.status(500).json({ success: false, message: 'Server error' });
     }
   },
 
-  deleteUser: async (req: Request, res: Response): Promise<void> => {
+  deleteUser: async (req: Request, res: Response) => {
     const timestamp = new Date().toISOString();
-      
+    console.log(`[${timestamp}] DELETE USER: Starting user deletion`);
+    
     try {
       const userId = req.user?._id;
       
       if (!userId) {
-              res.status(401).json({ success: false, message: 'Unauthorized' });
-              return;
+        console.log(`[${timestamp}] DELETE USER: No user ID found in request`);
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
 
-    
+      console.log(`[${timestamp}] DELETE USER: Deleting user with ID: ${userId}`);
+
       // Remove user from any group memberships first
       const group = await Group.findOne({ 'members.userId': userId });
       if (group) {
-              // Filter out the user from members
-        group.members = group.members.filter((m: { userId: mongoose.Types.ObjectId }) => m.userId.toString() !== userId.toString());
+        console.log(`[${timestamp}] DELETE USER: Removing user from group ${group._id}`);
+        // Filter out the user from members
+        group.members = group.members.filter((m: any) => m.userId.toString() !== userId.toString());
 
         // If the user was the owner, transfer ownership or handle empty group
         if (group.owner && group.owner.toString() === userId.toString()) {
           if (group.members.length > 0) {
             // Find the oldest member (earliest join date) to transfer ownership to
-            const oldestMember = group.members.reduce((oldest: { userId: mongoose.Types.ObjectId; joinDate: Date }, current: { userId: mongoose.Types.ObjectId; joinDate: Date }) => {
+            const oldestMember = group.members.reduce((oldest: any, current: any) => {
               const oldestDate = new Date(oldest.joinDate);
               const currentDate = new Date(current.joinDate);
               return currentDate < oldestDate ? current : oldest;
             });
             
             const newOwner = oldestMember.userId;
-            group.owner = newOwner;
-                      
+            group.owner = newOwner as any;
+            console.log(`[${timestamp}] DELETE USER: Transferred ownership to oldest member ${newOwner} (joined: ${oldestMember.joinDate})`);
+            
             // Update the new owner's groupName to match the group
             await UserModel.findByIdAndUpdate(newOwner, { groupName: group.name });
-                    } else {
+            console.log(`[${timestamp}] DELETE USER: Updated new owner's groupName to ${group.name}`);
+          } else {
             // No members left; delete the group
             await group.deleteOne();
-                    }
+            console.log(`[${timestamp}] DELETE USER: Group ${group._id} deleted as it has no members`);
+          }
         }
 
         // Save group if it still exists and has members
@@ -247,18 +236,19 @@ export const UserController = {
       const deletedUser = await UserModel.findByIdAndDelete(userId);
       
       if (!deletedUser) {
-              res.status(404).json({ success: false, message: 'User not found' });
-              return;
+        console.log(`[${timestamp}] DELETE USER: User not found`);
+        return res.status(404).json({ success: false, message: 'User not found' });
       }
 
-          
-      res.json({
+      console.log(`[${timestamp}] DELETE USER: User deleted successfully`);
+      
+      return res.json({
         success: true,
         message: 'Account deleted successfully and group membership updated'
       });
     } catch (err) {
       console.error(`[${timestamp}] DELETE USER: Error:`, err);
-      res.status(500).json({ success: false, message: 'Server error' });
+      return res.status(500).json({ success: false, message: 'Server error' });
     }
   },
 };

@@ -72,7 +72,7 @@ RatingSchema.index({
 // Note: Time validation is now done in the route handler based on join dates
 RatingSchema.pre('save', function(next) {
   if (this.timeSpentMinutes < 0) {
-    next(new Error('Time spent cannot be negative')); return;
+    return next(new Error('Time spent cannot be negative'));
   }
   next();
 });

@@ -1,4 +1,3 @@
-// import express from 'express';
 import { protect } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/errorHandler.middleware';
 import groupController from '../controller/group.controller';

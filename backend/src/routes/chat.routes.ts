@@ -16,14 +16,13 @@ router.use(protect);
 // @access  Private
 router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response) => {
   const timestamp = new Date().toISOString();
-  
+
   const { groupId } = req.params;
   const { page = 1, limit = 50 } = req.query;
-
   
   // Validate ObjectId format
   if (!mongoose.Types.ObjectId.isValid(groupId)) {
-      return res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: 'Invalid group ID format'
     });
@@ -32,18 +31,18 @@ router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response
   // Verify user is member of the group
   const group = await Group.findById(groupId);
   if (!group) {
-      return res.status(404).json({
+    return res.status(404).json({
       success: false,
       message: 'Group not found'
     });
   }
 
   const isMember = group.members.some(member => 
-    member.userId.toString() === req.user?._id.toString()
+    member.userId.toString() === req.user!._id.toString()
   );
 
   if (!isMember) {
-      return res.status(403).json({
+    return res.status(403).json({
       success: false,
       message: 'Access denied. You are not a member of this group.'
     });
@@ -74,19 +73,18 @@ router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response
 // @access  Private
 router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response) => {
   const timestamp = new Date().toISOString();
-  
   const { groupId } = req.params;
   const { content } = req.body;
 
   if (!content || content.trim().length === 0) {
-      return res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: 'Message content is required'
     });
   }
 
   if (content.length > 1000) {
-      return res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: 'Message content too long (max 1000 characters)'
     });
@@ -94,7 +92,7 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
 
   // Validate ObjectId format
   if (!mongoose.Types.ObjectId.isValid(groupId)) {
-      return res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: 'Invalid group ID format'
     });
@@ -110,7 +108,7 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
   }
 
   const isMember = group.members.some(member => 
-    member.userId.toString() === req.user?._id.toString()
+    member.userId.toString() === req.user!._id.toString()
   );
 
   if (!isMember) {
@@ -123,7 +121,7 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
   // Create message
   const message = await Message.create({
     groupId,
-    senderId: req.user?._id,
+    senderId: req.user!._id,
     content: content.trim(),
     type: 'text'
   });
@@ -138,17 +136,17 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
       id: message._id.toString(),
       content: message.content,
       senderId: message.senderId._id.toString(),
-      senderName: (message.senderId as { name?: string }).name ?? 'User',
-      groupId,
+      senderName: (message.senderId as any).name || 'User',
+      groupId: groupId,
       timestamp: message.createdAt.getTime(),
       type: message.type
     };
-      
+    
     // Get all sockets in the room
     const socketsInRoom = await io.in(groupId).fetchSockets();
-      
+    
     io.to(groupId).emit('new-message', messageData);
-    } catch (socketError) {
+  } catch (socketError) {
     console.error(`[${timestamp}] CHAT SEND MESSAGE: Socket broadcast error:`, socketError);
   }
 
@@ -191,7 +189,7 @@ router.post('/:groupId/poll', asyncHandler(async (req: Request, res: Response) =
   }
 
   const isMember = group.members.some(member => 
-    member.userId.toString() === req.user?._id.toString()
+    member.userId.toString() === req.user!._id.toString()
   );
 
   if (!isMember) {
@@ -207,7 +205,7 @@ router.post('/:groupId/poll', asyncHandler(async (req: Request, res: Response) =
 
   const message = await Message.create({
     groupId,
-    senderId: req.user?._id,
+    senderId: req.user!._id,
     content: question.trim(),
     type: 'poll',
     pollData: {
@@ -261,7 +259,7 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
   }
 
   const voteGroupIsMember = voteGroup.members.some(member => 
-    member.userId.toString() === req.user?._id.toString()
+    member.userId.toString() === req.user!._id.toString()
   );
 
   if (!voteGroupIsMember) {
@@ -311,13 +309,13 @@ router.post('/:groupId/poll/:messageId/vote', asyncHandler(async (req: Request, 
   }
 
   // Add vote - remove existing vote from this user first
-  message.pollData.votes = message.pollData.votes.filter((vote: { userId: mongoose.Types.ObjectId }) => 
-    vote.userId.toString() !== req.user?._id.toString()
+  message.pollData.votes = message.pollData.votes.filter((vote: any) => 
+    vote.userId.toString() !== req.user!._id.toString()
   );
   
   // Add new vote
   message.pollData.votes.push({
-    userId: new mongoose.Types.ObjectId(req.user?._id),
+    userId: req.user!._id as any,
     option,
     timestamp: new Date()
   });
@@ -357,7 +355,7 @@ router.delete('/:groupId/message/:messageId', asyncHandler(async (req: Request, 
   }
 
   // Only the sender can delete their message
-  if (message.senderId.toString() !== req.user?._id.toString()) {
+  if (message.senderId.toString() !== req.user!._id.toString()) {
     return res.status(403).json({
       success: false,
       message: 'Access denied. You can only delete your own messages.'
