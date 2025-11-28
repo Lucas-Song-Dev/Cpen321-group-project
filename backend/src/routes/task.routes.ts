@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { protect } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/errorHandler.middleware';
+import { TaskController } from '../controller/task.controller';
 import Task from '../models/task.models';
 import Group from '../models/group.models';
 
@@ -13,119 +14,10 @@ router.use(protect);
 
 // @desc    Create a new task
 // @route   POST /api/task
-// @access  Private
-router.post('/', asyncHandler(async (req: Request, res: Response) => {
-  const { name, description, difficulty, recurrence, requiredPeople, deadline, assignedUserIds } = req.body;
-
-  if (!name || !difficulty || !recurrence || !requiredPeople) {
-    return res.status(400).json({
-      success: false,
-      message: 'Task name, difficulty, recurrence, and required people are required'
-    });
-  }
-
-  if (difficulty < 1 || difficulty > 5) {
-    return res.status(400).json({
-      success: false,
-      message: 'Difficulty must be between 1 and 5'
-    });
-  }
-
-  if (requiredPeople < 1 || requiredPeople > 10) {
-    return res.status(400).json({
-      success: false,
-      message: 'Required people must be between 1 and 10'
-    });
-  }
-
-  // Validate deadline for one-time tasks
-  if (recurrence === 'one-time' && !deadline) {
-    return res.status(400).json({
-      success: false,
-      message: 'Deadline is required for one-time tasks'
-    });
-  }
-
-  // Only validate deadline date for one-time tasks
-  if (recurrence === 'one-time' && deadline) {
-    const deadlineDate = new Date(deadline);
-    if (isNaN(deadlineDate.getTime())) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid deadline date format'
-      });
-    }
-    if (deadlineDate <= new Date()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Deadline must be in the future'
-      });
-    }
-  }
-
-  // Get user's current group
-  const group = await Group.findOne({ 
-    'members.userId': req.user!._id 
-  });
-
-  if (!group) {
-    return res.status(404).json({
-      success: false,
-      message: 'User is not a member of any group'
-    });
-  }
-
-  // Create task
-  const task = await Task.create({
-    name: name.trim(),
-    description: description?.trim(),
-    groupId: group._id,
-    createdBy: req.user!._id,
-    difficulty,
-    recurrence,
-    requiredPeople,
-    deadline: deadline ? new Date(deadline) : undefined,
-    assignments: []
-  });
-
-  // Only assign task if specific users are provided
-  if (assignedUserIds && assignedUserIds.length > 0) {
-    const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    // Remove existing assignment for this week
-    task.assignments = task.assignments.filter((assignment: any) => 
-      assignment.weekStart.getTime() !== startOfWeek.getTime()
-    );
-    
-    // Assign to specified users
-    assignedUserIds.forEach((userId: string) => {
-      task.assignments.push({
-        userId: userId as any,
-        weekStart: startOfWeek,
-        status: 'incomplete'
-      });
-    });
-  }
-  
-  await task.save();
-
-  // Populate references
-  await task.populate('createdBy', 'name email');
-  await task.populate('assignments.userId', 'name email');
-
-  res.status(201).json({
-    success: true,
-    data: {
-      task
-    }
-  });
-}));
+router.post('/', (req, res) => TaskController.createTask(req, res));
 
 // @desc    Get tasks for current group
 // @route   GET /api/task
-// @access  Private
 router.get('/', asyncHandler(async (req: Request, res: Response) => {  
   // Get user's current group
   const group = await Group.findOne({ 
@@ -153,7 +45,6 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Get tasks assigned to current user
 // @route   GET /api/task/my-tasks
-// @access  Private
 router.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
   // Get user's current group
   const group = await Group.findOne({ 
@@ -190,7 +81,6 @@ router.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Update task status
 // @route   PUT /api/task/:id/status
-// @access  Private
 router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -253,7 +143,6 @@ router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Assign task to users for current week
 // @route   POST /api/task/:id/assign
-// @access  Private
 router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userIds } = req.body;
@@ -332,7 +221,6 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Algorithmically assign all tasks for current week
 // @route   POST /api/task/assign-weekly
-// @access  Private
 router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) => {
   // Get user's current group
   const group = await Group.findOne({ 
@@ -429,7 +317,6 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
 
 // @desc    Get tasks for a specific week
 // @route   GET /api/task/week/:weekStart
-// @access  Private
 router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) => {
   const { weekStart } = req.params;
   
@@ -471,7 +358,6 @@ router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) 
 
 // @desc    Delete task
 // @route   DELETE /api/task/:id
-// @access  Private
 router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
@@ -515,7 +401,6 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Get tasks for a specific date
 // @route   GET /api/task/date/:date
-// @access  Private
 router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
   const { date } = req.params;
   const targetDate = new Date(date);
