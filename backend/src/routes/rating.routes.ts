@@ -2,7 +2,6 @@ import express from 'express';
 import { protect } from '../middleware/auth.middleware';
 import { RatingController } from '../controller/rating.controller';
 
-
 const router = express.Router();
 
 // All routes below this middleware are protected
