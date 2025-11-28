@@ -93,6 +93,7 @@ export interface IRating extends Document {
   createdAt: Date;
 }
 
+
 // Request/Response types
 export interface AuthRequest extends Request {
   user?: IUser;
