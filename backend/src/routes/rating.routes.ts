@@ -9,14 +9,14 @@ router.use(protect);
 
 // @desc    Rate a roommate (1-5 stars, requires >= 5 minutes time spent)
 // @route   POST /api/rating
-router.post('/', RatingController.rateRoommate);
+router.post('/', (req, res) => RatingController.rateRoommate(req, res));
 
 // @desc    Get ratings for a user
 // @route   GET /api/rating/:userId
-router.get('/:userId', RatingController.getRatingsForUser);
+router.get('/:userId', (req, res) => RatingController.getRatingsForUser(req, res));
 
 // @desc    Get ratings for a user in a specific group
 // @route   GET /api/rating/user/:userId/group/:groupId
-router.get('/user/:userId/group/:groupId', RatingController.getRatingsForUserInGroup);
+router.get('/user/:userId/group/:groupId', (req, res) => RatingController.getRatingsForUserInGroup(req, res));
 
 export default router;

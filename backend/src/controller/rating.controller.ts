@@ -105,7 +105,6 @@ export const RatingController = {
   },
 
   getRatingsForUserInGroup: async (req: Request, res: Response) => {
-    try {
       const { userId, groupId } = req.params;
 
       const data = await ratingService.getRatingsForUserInGroup(userId, groupId);
@@ -114,8 +113,5 @@ export const RatingController = {
         success: true,
         data
       });
-    } catch (error) {
-      throw error;
-    }
   }
 };
