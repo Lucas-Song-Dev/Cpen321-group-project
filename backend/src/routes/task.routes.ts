@@ -11,6 +11,32 @@ const router = express.Router();
 // All routes below this middleware are protected
 router.use(protect);
 
+const parseLocalEndOfDayDate = (dateString: string): Date | null => {
+  if (!dateString || typeof dateString !== 'string') {
+    return null;
+  }
+
+  const parts = dateString.split('-');
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  const [yearStr, monthStr, dayStr] = parts;
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+
+  if (
+    Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day) ||
+    month < 1 || month > 12 || day < 1 || day > 31
+  ) {
+    return null;
+  }
+
+  const date = new Date(year, month - 1, day, 23, 59, 59, 999);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 // @desc    Create a new task
 // @route   POST /api/task
 // @access  Private
@@ -39,23 +65,24 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Validate deadline for one-time tasks
-  if (recurrence === 'one-time' && !deadline) {
-    return res.status(400).json({
-      success: false,
-      message: 'Deadline is required for one-time tasks'
-    });
-  }
+  let parsedDeadline: Date | undefined;
+  if (recurrence === 'one-time') {
+    if (!deadline) {
+      return res.status(400).json({
+        success: false,
+        message: 'Deadline is required for one-time tasks'
+      });
+    }
 
-  // Only validate deadline date for one-time tasks
-  if (recurrence === 'one-time' && deadline) {
-    const deadlineDate = new Date(deadline);
-    if (isNaN(deadlineDate.getTime())) {
+    parsedDeadline = parseLocalEndOfDayDate(deadline) ?? undefined;
+    if (!parsedDeadline) {
       return res.status(400).json({
         success: false,
         message: 'Invalid deadline date format'
       });
     }
-    if (deadlineDate <= new Date()) {
+
+    if (parsedDeadline.getTime() <= Date.now()) {
       return res.status(400).json({
         success: false,
         message: 'Deadline must be in the future'
@@ -75,6 +102,13 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
+  if (requiredPeople > group.members.length) {
+    return res.status(400).json({
+      success: false,
+      message: `Required people (${requiredPeople}) cannot exceed group size (${group.members.length})`
+    });
+  }
+
   // Create task
   const task = await Task.create({
     name: name.trim(),
@@ -84,7 +118,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     difficulty,
     recurrence,
     requiredPeople,
-    deadline: deadline ? new Date(deadline) : undefined,
+    deadline: parsedDeadline ?? (deadline ? new Date(deadline) : undefined),
     assignments: []
   });
 
@@ -372,29 +406,37 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
 
   // Algorithm: Assign tasks based on required people count
   for (const task of tasks) {
-    // Skip if task is not recurring (but allow one-time tasks)
-    if (task.recurrence === 'one-time') {
-      // For one-time tasks, only assign if they haven't been assigned yet
-      if (task.assignments.length > 0) continue;
-    }
+    const requiredPeople = task.requiredPeople || 1;
 
-    // Check if task already has assignments for this week
-    const hasAssignmentForThisWeek = task.assignments.some((assignment: any) => 
+    // Find existing assignments for this week
+    const assignmentsThisWeek = task.assignments.filter((assignment: any) => 
       assignment.weekStart.getTime() === startOfWeek.getTime()
     );
-    
-    // Skip if already assigned for this week
-    if (hasAssignmentForThisWeek) {
+
+    const existingCount = assignmentsThisWeek.length;
+    const neededAssignees = Math.max(requiredPeople - existingCount, 0);
+
+    // If we already have enough people assigned for this week, skip
+    if (neededAssignees <= 0) {
       continue;
     }
 
-    // Use the requiredPeople field to determine how many people to assign
-    // Fallback to 1 if requiredPeople is undefined (for existing tasks created before schema fix)
-    const requiredPeople = task.requiredPeople || 1;
-    const actualNumAssignees = Math.min(requiredPeople, allMembers.length);
+    // Determine available members who aren't already assigned this week
+    const assignedUserIds = new Set(
+      assignmentsThisWeek.map((assignment: any) => assignment.userId.toString())
+    );
+    const availableMembers = allMembers.filter(member => 
+      !assignedUserIds.has(member.userId.toString())
+    );
+
+    if (availableMembers.length === 0) {
+      continue;
+    }
+
+    const actualNumAssignees = Math.min(neededAssignees, availableMembers.length);
 
     // Shuffle members for fair distribution
-    const shuffledMembers = [...allMembers].sort(() => Math.random() - 0.5);
+    const shuffledMembers = [...availableMembers].sort(() => Math.random() - 0.5);
     const selectedMembers = shuffledMembers.slice(0, actualNumAssignees);
 
     // Ensure requiredPeople is set (fallback for existing tasks)
