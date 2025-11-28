@@ -185,7 +185,7 @@ class GroupService {
       console.error(`[${timestamp}] GROUP GET: Error populating members:`, populateError);
       // Filter out any members that failed to populate
       group.members = group.members.filter(member => {
-        return member.userId && typeof member.userId === 'object';
+        return typeof member.userId === 'object' && (member.userId as any).name;
       });
     }
 
@@ -195,7 +195,10 @@ class GroupService {
       if ((member.userId as { name?: string }).name) {
         const joinDate = new Date(member.joinDate);
         const durationMs = now.getTime() - joinDate.getTime();
-        const durationDays = Math.floor(durationMs / (1000 * 60 * 60 * 24));
+        const durationMinutes = Math.floor(durationMs / (1000 * 60));
+        const durationHours = Math.floor(durationMinutes / 60);
+        const durationDays = Math.floor(durationHours / 24);
+        console.log(`[${timestamp}] User ${(member.userId as { name?: string }).name} has been in group for ${durationDays} days`);
       }
     });
 
