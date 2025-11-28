@@ -1,4 +1,4 @@
-import mongoose, { Schema, Model } from 'mongoose';
+import mongoose, { Model, Schema } from 'mongoose';
 import { IRating } from '../types/index.types';
 
 // Interface for static methods
@@ -69,7 +69,6 @@ RatingSchema.index({
 }, { unique: true });
 
 // Pre-save middleware to validate minimum time spent
-// Note: Time validation is now done in the route handler based on join dates
 RatingSchema.pre('save', function(next) {
   if (this.timeSpentMinutes < 0) {
     return next(new Error('Time spent cannot be negative'));

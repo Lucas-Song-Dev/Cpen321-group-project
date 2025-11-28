@@ -1,6 +1,5 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
 import { config } from "../config";
 import { UserModel } from "../models/user.models";
 
@@ -73,5 +72,4 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-// Export protect as an alias for authenticate
 export const protect = authenticate;

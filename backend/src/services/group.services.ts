@@ -1,6 +1,6 @@
+import mongoose from 'mongoose';
 import Group from '../models/group.models';
 import { UserModel } from '../models/user.models';
-import mongoose from 'mongoose';
 
 class GroupService {
   async createGroup(userId: string, name: string) {

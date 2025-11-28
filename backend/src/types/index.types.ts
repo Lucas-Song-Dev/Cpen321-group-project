@@ -1,6 +1,4 @@
-// import { Document } from 'mongoose';
 import { Document, Types } from 'mongoose';
-
 
 // User related types - matches the actual User model
 export interface IUser extends Document {
@@ -30,7 +28,7 @@ export interface IGroup extends Document {
   _id: string;
   name: string;
   groupCode: string;
-  owner: Types.ObjectId; //USER ID - fixed
+  owner: Types.ObjectId;
   members: Array<{
     userId: Types.ObjectId;
     joinDate: Date;
@@ -47,7 +45,7 @@ export interface ITask extends Document {
   description?: string;
   groupId: Types.ObjectId; 
   createdBy: Types.ObjectId;  // User ID
-  difficulty: 1 | 2 | 3 | 4 | 5; // Weight of task
+  difficulty: 1 | 2 | 3 | 4 | 5; 
   recurrence: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'one-time';
   requiredPeople: number; // Number of people needed to complete the task
   deadline?: Date; // Optional deadline for one-time tasks

@@ -1,15 +1,13 @@
 import express, { Request, Response } from 'express';
-import mongoose from 'mongoose';
 import { protect } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/errorHandler.middleware';
-import Task from '../models/task.models';
 import Group from '../models/group.models';
+import Task from '../models/task.models';
 
-
-const router = express.Router();
+const taskRouter = express.Router();
 
 // All routes below this middleware are protected
-router.use(protect);
+taskRouter.use(protect);
 
 const parseLocalEndOfDayDate = (dateString: string): Date | null => {
   if (!dateString || typeof dateString !== 'string') {
@@ -39,8 +37,7 @@ const parseLocalEndOfDayDate = (dateString: string): Date | null => {
 
 // @desc    Create a new task
 // @route   POST /api/task
-// @access  Private
-router.post('/', asyncHandler(async (req: Request, res: Response) => {
+taskRouter.post('/', asyncHandler(async (req: Request, res: Response) => {
   const { name, description, difficulty, recurrence, requiredPeople, deadline, assignedUserIds } = req.body;
 
   if (!name || !difficulty || !recurrence || !requiredPeople) {
@@ -159,8 +156,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Get tasks for current group
 // @route   GET /api/task
-// @access  Private
-router.get('/', asyncHandler(async (req: Request, res: Response) => {  
+taskRouter.get('/', asyncHandler(async (req: Request, res: Response) => {  
   // Get user's current group
   const group = await Group.findOne({ 
     'members.userId': req.user!._id 
@@ -187,8 +183,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Get tasks assigned to current user
 // @route   GET /api/task/my-tasks
-// @access  Private
-router.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
+taskRouter.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
   // Get user's current group
   const group = await Group.findOne({ 
     'members.userId': req.user!._id 
@@ -224,8 +219,7 @@ router.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Update task status
 // @route   PUT /api/task/:id/status
-// @access  Private
-router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
+taskRouter.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -287,8 +281,7 @@ router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Assign task to users for current week
 // @route   POST /api/task/:id/assign
-// @access  Private
-router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
+taskRouter.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userIds } = req.body;
 
@@ -366,8 +359,7 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Algorithmically assign all tasks for current week
 // @route   POST /api/task/assign-weekly
-// @access  Private
-router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) => {
+taskRouter.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) => {
   // Get user's current group
   const group = await Group.findOne({ 
     'members.userId': req.user!._id 
@@ -471,8 +463,7 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
 
 // @desc    Get tasks for a specific week
 // @route   GET /api/task/week/:weekStart
-// @access  Private
-router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) => {
+taskRouter.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) => {
   const { weekStart } = req.params;
   
   // Parse week start date
@@ -513,8 +504,7 @@ router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) 
 
 // @desc    Delete task
 // @route   DELETE /api/task/:id
-// @access  Private
-router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
+taskRouter.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const task = await Task.findById(id);
@@ -557,8 +547,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 
 // @desc    Get tasks for a specific date
 // @route   GET /api/task/date/:date
-// @access  Private
-router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
+taskRouter.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
   const { date } = req.params;
   const targetDate = new Date(date);
   
@@ -620,4 +609,4 @@ router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
   });
 }));
 
-export default router;
+export default taskRouter;

@@ -1,6 +1,6 @@
-import { UserModel } from "../models/user.models";
 import jwt from "jsonwebtoken";
 import { config } from "../config";
+import { UserModel } from "../models/user.models";
 
 
 export const AuthService = {
