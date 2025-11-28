@@ -2,6 +2,7 @@ import { UserModel } from "../models/user.models";
 import jwt from "jsonwebtoken";
 import { config } from "../config";
 
+
 export const AuthService = {
   signup: async (email: string, name: string, googleId: string) => {
     try {
@@ -21,13 +22,13 @@ export const AuthService = {
           _id: String(user._id),
           email: user.email, 
           name: user.name,
-          dob: user.dob ?? null,
-          gender: user.gender ?? null,
+          dob: user.dob || null,
+          gender: user.gender || null,
           profileComplete: user.profileComplete,
-          bio: user.bio ?? null,
-          profilePicture: user.profilePicture ?? null,
-          livingPreferences: user.livingPreferences ?? null,
-          groupName: user.groupName ?? null
+          bio: user.bio || null,
+          profilePicture: user.profilePicture || null,
+          livingPreferences: user.livingPreferences || null,
+          groupName: user.groupName || null
         },
         token,
       };
@@ -39,7 +40,8 @@ export const AuthService = {
 
   login: async (email: string) => {
     try {
-          const user = await UserModel.findOne({ email });
+      console.log('Logging in user with email:', email);
+      const user = await UserModel.findOne({ email });
       if (!user) {
         return { success: false, message: "User does not exist. Please sign up first." };
       }
@@ -52,13 +54,13 @@ export const AuthService = {
           _id: String(user._id),
           email: user.email, 
           name: user.name,
-          dob: user.dob ?? null,
-          gender: user.gender ?? null,
+          dob: user.dob || null,
+          gender: user.gender || null,
           profileComplete: user.profileComplete,
-          bio: user.bio ?? null,
-          profilePicture: user.profilePicture ?? null,
-          livingPreferences: user.livingPreferences ?? null,
-          groupName: user.groupName ?? null
+          bio: user.bio || null,
+          profilePicture: user.profilePicture || null,
+          livingPreferences: user.livingPreferences || null,
+          groupName: user.groupName || null
         },
         token,
       };

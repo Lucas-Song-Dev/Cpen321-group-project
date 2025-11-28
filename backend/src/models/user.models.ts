@@ -1,5 +1,6 @@
 import { Schema, model, Document } from "mongoose";
 
+
 export interface User extends Document {
   //mandatory fields
   email: string;

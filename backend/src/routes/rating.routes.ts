@@ -6,6 +6,7 @@ import { UserModel } from '../models/user.models';
 import Group from '../models/group.models';
 import mongoose from 'mongoose';
 
+
 const router = express.Router();
 
 // All routes below this middleware are protected
@@ -19,59 +20,53 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   
   // Validate required fields (timeSpentMinutes no longer required from client)
   if (!ratedUserId || !groupId || !rating) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: 'Missing required fields: ratedUserId, groupId, rating'
     });
-    return;
   }
   
   // Validate rating is 1-5
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: 'Rating must be an integer between 1 and 5'
     });
-    return;
   }
   
   // Validate testimonial length if provided
   if (testimonial && testimonial.length > 500) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: 'Testimonial must be 500 characters or less'
     });
-    return;
   }
   
   // Cannot rate yourself
-  if (ratedUserId === req.user?._id.toString()) {
-    res.status(400).json({
+  if (ratedUserId === req.user!._id.toString()) {
+    return res.status(400).json({
       success: false,
       message: 'You cannot rate yourself'
     });
-    return;
   }
   
   // Verify both users are in the same group and check their join duration
   const group = await Group.findById(groupId);
   if (!group) {
-    res.status(404).json({
+    return res.status(404).json({
       success: false,
       message: 'Group not found'
     });
-    return;
   }
   
   const ratedUserMember = group.members.find(m => m.userId.toString() === ratedUserId);
-  const raterMember = group.members.find(m => m.userId.toString() === req.user?._id.toString());
+  const raterMember = group.members.find(m => m.userId.toString() === req.user!._id.toString());
   
   if (!ratedUserMember || !raterMember) {
-    res.status(403).json({
+    return res.status(403).json({
       success: false,
       message: 'Both users must be members of the same group'
     });
-    return;
   }
   
   // Check that both users have been in the group for at least 1 month (30 days)
@@ -84,39 +79,45 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const MINIMUM_GROUP_DURATION_DAYS = 30; // 1 month
   
   if (ratedUserDays < MINIMUM_GROUP_DURATION_DAYS) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: `Cannot rate user who has been in group for less than ${MINIMUM_GROUP_DURATION_DAYS} days (current: ${ratedUserDays} days)`
     });
-    return;
   }
   
   if (raterDays < MINIMUM_GROUP_DURATION_DAYS) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: `You must be in the group for at least ${MINIMUM_GROUP_DURATION_DAYS} days before rating (current: ${raterDays} days)`
     });
-    return;
   }
   
+  console.log(`Rating validation: Rated user in group for ${ratedUserDays} days, Rater in group for ${raterDays} days`);
 
   // Calculate time spent together (minimum of both users' durations)
   const timeSpentDays = Math.min(ratedUserDays, raterDays);
   const timeSpentMinutes = timeSpentDays * 24 * 60; // Convert to minutes
   
+  console.log(`Auto-calculated time spent together: ${timeSpentDays} days (${timeSpentMinutes} minutes)`);
 
-  // Check if rating already exists (affects status code and logging)
+  // Check if rating already exists (for logging purposes)
   const existingRating = await Rating.findOne({
     ratedUserId: new mongoose.Types.ObjectId(ratedUserId),
-    raterUserId: new mongoose.Types.ObjectId(req.user?._id),
+    raterUserId: new mongoose.Types.ObjectId(req.user!._id),
     groupId: new mongoose.Types.ObjectId(groupId)
   });
+  
+  if (existingRating) {
+    console.log(`Updating existing rating: ${existingRating._id} (old rating: ${existingRating.rating}, new rating: ${rating})`);
+  } else {
+    console.log(`Creating new rating for user ${ratedUserId} by ${req.user!._id} in group ${groupId}`);
+  }
   
   // Create or update rating (upsert ensures one rating per user pair per group)
   const newRating = await Rating.findOneAndUpdate(
     {
       ratedUserId: new mongoose.Types.ObjectId(ratedUserId),
-      raterUserId: new mongoose.Types.ObjectId(req.user?._id),
+      raterUserId: new mongoose.Types.ObjectId(req.user!._id),
       groupId: new mongoose.Types.ObjectId(groupId)
     },
     {
@@ -132,20 +133,15 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   );
   
   // Update the rated user's average rating
-  if (typeof ratedUserId !== 'string') {
-    res.status(400).json({ success: false, message: 'Invalid ratedUserId' });
-    return;
-  }
   const ratingStats = await Rating.getAverageRating(ratedUserId);
   await UserModel.findByIdAndUpdate(
     ratedUserId,
     { averageRating: Math.round(ratingStats.averageRating * 10) / 10 }
   );
   
-  const statusCode = existingRating ? 200 : 201;
-  res.status(statusCode).json({
+  res.status(201).json({
     success: true,
-    message: existingRating ? 'Rating updated successfully' : 'Rating submitted successfully',
+    message: 'Rating submitted successfully',
     data: newRating
   });
 }));
@@ -155,30 +151,23 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // @access  Public
 router.get('/:userId', asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
-  try {
-    const ratings = await Rating.find({ ratedUserId: userId })
-      .populate('raterUserId', 'name email')
-      .populate('groupId', 'name');
-    const ratingStats = await Rating.getAverageRating(userId);
-    res.status(200).json({
-      success: true,
-      data: {
-        ratings,
-        averageRating: ratingStats.averageRating,
-        totalRatings: ratingStats.totalRatings
-      }
-    });
-  } catch (err) {
-    // Gracefully degrade to empty result if aggregation/populate fails
-    res.status(200).json({
-      success: true,
-      data: {
-        ratings: [],
-        averageRating: 0,
-        totalRatings: 0
-      }
-    });
-  }
+  
+  // Get all ratings for the user
+  const ratings = await Rating.find({ ratedUserId: userId })
+    .populate('raterUserId', 'name email')
+    .populate('groupId', 'name');
+  
+  // Get average rating
+  const ratingStats = await Rating.getAverageRating(userId);
+  
+  res.status(200).json({
+    success: true,
+    data: {
+      ratings,
+      averageRating: ratingStats.averageRating,
+      totalRatings: ratingStats.totalRatings
+    }
+  });
 }));
 
 // @desc    Get ratings for a user in a specific group

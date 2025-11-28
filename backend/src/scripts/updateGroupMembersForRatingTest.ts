@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { config } from '../config';
-import Group from '../models/Group';
-import { UserModel } from '../models/User';
+import Group from '../models/group.models';
+import { UserModel } from '../models/user.models';
 
 /**
  * Script to update group members' join dates and add test users

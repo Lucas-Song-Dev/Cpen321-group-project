@@ -40,9 +40,10 @@ const TaskSchema = new Schema<ITask>({
   },
   requiredPeople: {
     type: Number,
-    required: false,
+    required: true,
     min: 1,
     max: 10,
+    default: 1,
     validate: {
       validator: Number.isInteger,
       message: 'Required people must be an integer between 1 and 10'
@@ -117,7 +118,7 @@ TaskSchema.index({ 'assignments.weekStart': 1 });
 
 // Method to assign task to users for a specific week
 TaskSchema.methods.assignToWeek = function(weekStart: Date, userIds: string[]) {
-  // Remove existing anyfor this week
+  // Remove existing assignment for this week
   this.assignments = this.assignments.filter((assignment: any) => 
     assignment.weekStart.getTime() !== weekStart.getTime()
   );

@@ -5,6 +5,7 @@ import { asyncHandler } from '../middleware/errorHandler.middleware';
 import Task from '../models/task.models';
 import Group from '../models/group.models';
 
+
 const router = express.Router();
 
 // All routes below this middleware are protected
@@ -64,7 +65,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user?._id 
+    'members.userId': req.user!._id 
   });
 
   if (!group) {
@@ -79,7 +80,7 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     name: name.trim(),
     description: description?.trim(),
     groupId: group._id,
-    createdBy: req.user?._id,
+    createdBy: req.user!._id,
     difficulty,
     recurrence,
     requiredPeople,
@@ -94,14 +95,14 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
     startOfWeek.setHours(0, 0, 0, 0);
 
     // Remove existing assignment for this week
-    task.assignments = task.assignments.filter((assignment: { weekStart: Date }) => 
+    task.assignments = task.assignments.filter((assignment: any) => 
       assignment.weekStart.getTime() !== startOfWeek.getTime()
     );
     
     // Assign to specified users
     assignedUserIds.forEach((userId: string) => {
       task.assignments.push({
-        userId: new mongoose.Types.ObjectId(userId),
+        userId: userId as any,
         weekStart: startOfWeek,
         status: 'incomplete'
       });
@@ -126,15 +127,18 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // @route   GET /api/task
 // @access  Private
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
+  console.log(`[${new Date().toISOString()}] GET /api/task - User:`, req.user?._id);
   
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user?._id 
+    'members.userId': req.user!._id 
   });
 
+  console.log(`[${new Date().toISOString()}] GET /api/task - Group found:`, group ? group._id : 'null');
 
   if (!group) {
-      return res.status(404).json({
+    console.log(`[${new Date().toISOString()}] GET /api/task - User not in any group`);
+    return res.status(404).json({
       success: false,
       message: 'User is not a member of any group'
     });
@@ -146,6 +150,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     .populate('assignments.userId', 'name email')
     .sort({ createdAt: -1 });
 
+  console.log(`[${new Date().toISOString()}] GET /api/task - Found ${tasks.length} tasks`);
 
   res.status(200).json({
     success: true,
@@ -159,7 +164,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
 router.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user?._id 
+    'members.userId': req.user!._id 
   });
 
   if (!group) {
@@ -177,7 +182,7 @@ router.get('/my-tasks', asyncHandler(async (req: Request, res: Response) => {
   // Get tasks assigned to current user for current week
   const tasks = await Task.find({ 
     groupId: group._id,
-    'assignments.userId': req.user?._id,
+    'assignments.userId': req.user!._id,
     'assignments.weekStart': startOfWeek
   })
     .populate('createdBy', 'name email')
@@ -220,8 +225,8 @@ router.put('/:id/status', asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Update assignment status
-  const assignment = task.assignments.find((assignment: { userId: mongoose.Types.ObjectId; weekStart: Date }) => 
-    assignment.userId.toString() === req.user?._id.toString() &&
+  const assignment = task.assignments.find((assignment: any) => 
+    assignment.userId.toString() === req.user!._id.toString() &&
     assignment.weekStart.getTime() === startOfWeek.getTime()
   );
 
@@ -278,7 +283,7 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
 
   // Get user's group
   const group = await Group.findOne({ 
-    'members.userId': req.user?._id 
+    'members.userId': req.user!._id 
   });
 
   if (!group) {
@@ -289,8 +294,8 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
   }
 
   // Check if user can assign tasks (task creator or group owner)
-  const canAssign = task.createdBy.toString() === req.user?._id.toString() || 
-                   group.owner.toString() === req.user?._id.toString();
+  const canAssign = task.createdBy.toString() === req.user!._id.toString() || 
+                   group.owner.toString() === req.user!._id.toString();
 
   if (!canAssign) {
     return res.status(403).json({
@@ -305,14 +310,14 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
   startOfWeek.setHours(0, 0, 0, 0);
 
   // Remove existing assignment for this week
-  task.assignments = task.assignments.filter((assignment: { weekStart: Date }) => 
+  task.assignments = task.assignments.filter((assignment: any) => 
     assignment.weekStart.getTime() !== startOfWeek.getTime()
   );
   
   // Add new assignments
   userIds.forEach((userId: string) => {
     task.assignments.push({
-      userId: new mongoose.Types.ObjectId(userId),
+      userId: userId as any,
       weekStart: startOfWeek,
       status: 'incomplete'
     });
@@ -338,7 +343,7 @@ router.post('/:id/assign', asyncHandler(async (req: Request, res: Response) => {
 router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) => {
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user?._id 
+    'members.userId': req.user!._id 
   }).populate('members.userId', 'name email');
 
   if (!group) {
@@ -381,13 +386,14 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     }
 
     // Check if task already has assignments for this week
-    const hasAssignmentForThisWeek = task.assignments.some((assignment: { weekStart: Date }) => 
+    const hasAssignmentForThisWeek = task.assignments.some((assignment: any) => 
       assignment.weekStart.getTime() === startOfWeek.getTime()
     );
     
     // Skip if already assigned for this week
     if (hasAssignmentForThisWeek) {
-          continue;
+      console.log(`[${new Date().toISOString()}] Skipping task "${task.name}" - already assigned for this week`);
+      continue;
     }
 
     // Use the requiredPeople field to determine how many people to assign
@@ -399,7 +405,8 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     const shuffledMembers = [...allMembers].sort(() => Math.random() - 0.5);
     const selectedMembers = shuffledMembers.slice(0, actualNumAssignees);
 
-  
+    console.log(`[${new Date().toISOString()}] Auto-assigning task "${task.name}" (required: ${requiredPeople}) to ${selectedMembers.length} members`);
+
     // Ensure requiredPeople is set (fallback for existing tasks)
     if (!task.requiredPeople) {
       task.requiredPeople = 1;
@@ -418,11 +425,15 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     assignedTasksCount++;
   }
 
-  // Return summary to avoid issues with mocked Task.find returning arrays
+  // Populate all tasks with user details
+  const populatedTasks = await Task.find({ groupId: group._id })
+    .populate('createdBy', 'name email')
+    .populate('assignments.userId', 'name email');
+
   res.status(200).json({
     success: true,
     message: `Successfully assigned ${assignedTasksCount} tasks for the week`,
-    data: { assignedTasks: assignedTasksCount }
+    data: populatedTasks
   });
 }));
 
@@ -432,8 +443,7 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
 router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) => {
   const { weekStart } = req.params;
   
-  // Parse week start date (expecting format like "2025-11-24")
-  // Use same approach as date endpoint to ensure consistency
+  // Parse week start date
   const weekStartDate = new Date(weekStart);
   if (isNaN(weekStartDate.getTime())) {
     return res.status(400).json({
@@ -442,13 +452,9 @@ router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) 
     });
   }
 
-  // Normalize week start to start of day (local time, same as how tasks are stored)
-  const normalizedWeekStart = new Date(weekStartDate);
-  normalizedWeekStart.setHours(0, 0, 0, 0);
-
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user?._id 
+    'members.userId': req.user!._id 
   });
 
   if (!group) {
@@ -458,45 +464,14 @@ router.get('/week/:weekStart', asyncHandler(async (req: Request, res: Response) 
     });
   }
 
-  // Calculate week end for date range checking (6 days after week start, at end of day)
-  const weekEndDate = new Date(normalizedWeekStart);
-  weekEndDate.setDate(weekEndDate.getDate() + 6);
-  weekEndDate.setHours(23, 59, 59, 999);
-
-  // Get tasks for the group - tasks that belong to this week
-  // Similar to date endpoint: return all recurring tasks (they can appear in any week)
-  // and one-time tasks with deadlines in this week
-  
-  // Log for debugging
-  console.log(`[Week Query] Week start: ${normalizedWeekStart.toISOString()}, Week end: ${weekEndDate.toISOString()}`);
-  
+  // Get tasks for the group with assignments for the specified week
   const tasks = await Task.find({ 
     groupId: group._id,
-    $or: [
-      // One-time tasks with deadline in this week
-      {
-        recurrence: 'one-time',
-        deadline: {
-          $gte: normalizedWeekStart,
-          $lte: weekEndDate
-        }
-      },
-      // All recurring tasks - they should appear regardless of assignments
-      // The frontend will filter assignments to show only those for this week
-      {
-        recurrence: { $ne: 'one-time' }
-      }
-    ]
+    'assignments.weekStart': weekStartDate
   })
-  .populate('createdBy', 'name email')
-  .populate('assignments.userId', 'name email')
-  .sort({ createdAt: -1 });
-
-  // Log tasks for debugging
-  console.log(`[Week Query] Found ${tasks.length} tasks`);
-  tasks.forEach((task, index) => {
-    console.log(`[Week Query] Task ${index + 1}: ${task.name}, recurrence: ${task.recurrence}, deadline: ${task.deadline?.toISOString() || 'N/A'}`);
-  });
+    .populate('createdBy', 'name email')
+    .populate('assignments.userId', 'name email')
+    .sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,
@@ -520,7 +495,7 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 
   // Only task creator or group owner can delete
   const group = await Group.findOne({ 
-    'members.userId': req.user?._id 
+    'members.userId': req.user!._id 
   });
 
   if (!group) {
@@ -530,8 +505,8 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  const canDelete = task.createdBy.toString() === req.user?._id.toString() || 
-                   group.owner.toString() === req.user?._id.toString();
+  const canDelete = task.createdBy.toString() === req.user!._id.toString() || 
+                   group.owner.toString() === req.user!._id.toString();
 
   if (!canDelete) {
     return res.status(403).json({
@@ -564,7 +539,7 @@ router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
 
   // Get user's current group
   const group = await Group.findOne({ 
-    'members.userId': req.user?._id 
+    'members.userId': req.user!._id 
   });
 
   if (!group) {
@@ -582,17 +557,6 @@ router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
   endOfDay.setHours(23, 59, 59, 999);
 
   // Find tasks that should appear on this date
-  // Calculate week start (Monday) for this date
-  const weekStartDate = new Date(startOfDay);
-  const dayOfWeek = weekStartDate.getDay();
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert Sunday (0) to 6, others to 0-4
-  weekStartDate.setDate(weekStartDate.getDate() - daysToMonday);
-  weekStartDate.setHours(0, 0, 0, 0);
-  
-  const weekEndDate = new Date(weekStartDate);
-  weekEndDate.setDate(weekEndDate.getDate() + 6);
-  weekEndDate.setHours(23, 59, 59, 999);
-
   const tasks = await Task.find({
     groupId: group._id,
     $or: [
@@ -604,9 +568,13 @@ router.get('/date/:date', asyncHandler(async (req: Request, res: Response) => {
           $lte: endOfDay
         }
       },
-      // All recurring tasks - they should appear regardless of assignments
+      // Recurring tasks that have assignments for this week
       {
-        recurrence: { $ne: 'one-time' }
+        recurrence: { $ne: 'one-time' },
+        'assignments.weekStart': {
+          $gte: new Date(startOfDay.getTime() - startOfDay.getDay() * 24 * 60 * 60 * 1000),
+          $lt: new Date(startOfDay.getTime() + (7 - startOfDay.getDay()) * 24 * 60 * 60 * 1000)
+        }
       }
     ]
   })

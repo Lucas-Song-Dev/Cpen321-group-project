@@ -93,7 +93,6 @@ export interface IRating extends Document {
   createdAt: Date;
 }
 
-
 // Request/Response types
 export interface AuthRequest extends Request {
   user?: IUser;
@@ -136,9 +135,9 @@ export interface SocketEvents {
     groupId: string;
     content: string;
     type: 'text' | 'poll';
-    pollData?: unknown;
+    pollData?: any;
   }) => void;
   'new-message': (data: IMessage) => void;
-  'send-poll': (data: unknown) => void;
-  'new-poll': (data: unknown) => void;
+  'send-poll': (data: any) => void;
+  'new-poll': (data: any) => void;
 }
