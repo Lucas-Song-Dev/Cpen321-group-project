@@ -16,34 +16,9 @@ router.use(protect);
 // router.post('/', asyncHandler(ratingController.rateRoommate.bind(ratingController)));
 router.post('/', asyncHandler(ratingController.rateRoommate.bind(ratingController)));
 
-
-
-
-
-
-
 // @desc    Get ratings for a user
 // @route   GET /api/rating/:userId
-router.get('/:userId', asyncHandler(async (req: Request, res: Response) => {
-  const { userId } = req.params;
-  
-  // Get all ratings for the user
-  const ratings = await Rating.find({ ratedUserId: userId })
-    .populate('raterUserId', 'name email')
-    .populate('groupId', 'name');
-  
-  // Get average rating
-  const ratingStats = await Rating.getAverageRating(userId);
-  
-  res.status(200).json({
-    success: true,
-    data: {
-      ratings,
-      averageRating: ratingStats.averageRating,
-      totalRatings: ratingStats.totalRatings
-    }
-  });
-}));
+router.get('/:userId', asyncHandler(ratingController.getRatingsForUser.bind(ratingController)));
 
 // @desc    Get ratings for a user in a specific group
 // @route   GET /api/rating/user/:userId/group/:groupId

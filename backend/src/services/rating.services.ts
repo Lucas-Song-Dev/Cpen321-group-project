@@ -82,6 +82,22 @@ class RatingService {
 
     return newRating;
   }
+
+  async getRatingsForUser(userId: string) {
+    // Get all ratings for the user
+    const ratings = await Rating.find({ ratedUserId: userId })
+      .populate('raterUserId', 'name email')
+      .populate('groupId', 'name');
+
+    // Get average rating
+    const ratingStats = await Rating.getAverageRating(userId);
+
+    return {
+      ratings,
+      averageRating: ratingStats.averageRating,
+      totalRatings: ratingStats.totalRatings
+    };
+  }
 }
 
 export default new RatingService();

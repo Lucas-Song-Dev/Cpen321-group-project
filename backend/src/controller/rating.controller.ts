@@ -92,6 +92,21 @@ class RatingController {
       throw error;
     }
   }
+
+  async getRatingsForUser(req: Request, res: Response) {
+    try {
+      const { userId } = req.params;
+
+      const data = await ratingService.getRatingsForUser(userId);
+
+      res.status(200).json({
+        success: true,
+        data
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new RatingController();
