@@ -17,8 +17,6 @@ router.use((req, res, next) => {
   });
 });
 
-
-
 // @desc    Create a new group
 // @route   POST /api/group
 router.post('/', asyncHandler(groupController.createGroup.bind(groupController)));
@@ -31,15 +29,13 @@ router.post('/join', asyncHandler(groupController.joinGroup.bind(groupController
 // @route   GET /api/group
 router.get('/', asyncHandler(groupController.getCurrentGroup.bind(groupController)));
 
-
-
-
-
-
 // @desc    Update group name (owner only)
 // @route   PUT /api/group/name
 // @access  Private
 router.put('/name', asyncHandler(groupController.updateGroupName.bind(groupController)));
+
+
+
 
 
 // @desc    Transfer ownership to another member (owner only)

@@ -260,17 +260,17 @@ class TaskViewModel(
                             deadline = task.deadline?.let { 
                                 SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
                             },
-                            createdBy = task.createdBy.name ?: "Unknown",
-                            createdById = task.createdBy._id,
-                            status = when (task.assignments.find { it.userId._id == currentUserId }?.status) {
+                            createdBy = task.createdBy?.name ?: "Unknown",
+                            createdById = task.createdBy?._id ?: "",
+                            status = when (task.assignments.find { it.userId?._id == currentUserId }?.status) {
                                 "incomplete" -> TaskStatus.INCOMPLETE
                                 "in-progress" -> TaskStatus.IN_PROGRESS
                                 "completed" -> TaskStatus.COMPLETED
                                 else -> TaskStatus.INCOMPLETE
                             },
                             createdAt = Date(task.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
-                            completedAt = task.assignments.find { it.userId._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
-                            assignedTo = task.assignments.map { it.userId.name ?: "Unknown" }
+                            completedAt = task.assignments.find { it.userId?._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
+                            assignedTo = task.assignments.mapNotNull { it.userId?.name ?: "Unknown" }
                         )
                     }
                     _uiState.value = _uiState.value.copy(
@@ -325,17 +325,17 @@ class TaskViewModel(
                             deadline = task.deadline?.let { 
                                 SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
                             },
-                            createdBy = task.createdBy.name ?: "Unknown",
-                            createdById = task.createdBy._id,
-                            status = when (task.assignments.find { it.userId._id == currentUserId }?.status) {
+                            createdBy = task.createdBy?.name ?: "Unknown",
+                            createdById = task.createdBy?._id ?: "",
+                            status = when (task.assignments.find { it.userId?._id == currentUserId }?.status) {
                                 "incomplete" -> TaskStatus.INCOMPLETE
                                 "in-progress" -> TaskStatus.IN_PROGRESS
                                 "completed" -> TaskStatus.COMPLETED
                                 else -> TaskStatus.INCOMPLETE
                             },
                             createdAt = Date(task.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
-                            completedAt = task.assignments.find { it.userId._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
-                            assignedTo = task.assignments.map { it.userId.name ?: "Unknown" }
+                            completedAt = task.assignments.find { it.userId?._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
+                            assignedTo = task.assignments.mapNotNull { it.userId?.name ?: "Unknown" }
                         )
                     }
                     
@@ -655,18 +655,18 @@ class TaskViewModel(
                             deadline = task.deadline?.let { 
                                 SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
                             },
-                            createdBy = task.createdBy.name ?: "Unknown",
-                            createdById = task.createdBy._id,
-                            status = when (assignmentsThisWeek.find { it.userId._id == currentUserId }?.status) {
+                            createdBy = task.createdBy?.name ?: "Unknown",
+                            createdById = task.createdBy?._id ?: "",
+                            status = when (assignmentsThisWeek.find { it.userId?._id == currentUserId }?.status) {
                                 "incomplete" -> TaskStatus.INCOMPLETE
                                 "in-progress" -> TaskStatus.IN_PROGRESS
                                 "completed" -> TaskStatus.COMPLETED
                                 else -> TaskStatus.INCOMPLETE
                             },
                             createdAt = Date(task.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
-                            completedAt = assignmentsThisWeek.find { it.userId._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
+                            completedAt = assignmentsThisWeek.find { it.userId?._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
                             // Only show assignments for this week
-                            assignedTo = assignmentsThisWeek.map { it.userId.name ?: "Unknown" }
+                            assignedTo = assignmentsThisWeek.mapNotNull { it.userId?.name ?: "Unknown" }
                         )
                     }
                     
@@ -702,19 +702,117 @@ class TaskViewModel(
                 val response = taskRepository.assignWeeklyTasks()
                 println("TaskViewModel: Assign weekly tasks response - success: ${response.success}, message: ${response.message}")
                 
-                if (response.success) {
-                    println("TaskViewModel: Weekly assignment successful, refreshing all task lists")
-                    // Refresh all task lists - loadWeeklyTasks updates allTasksGroupedByDay for weekly view
+                if (response.success && response.data != null) {
+                    println("TaskViewModel: Weekly assignment successful, processing ${response.data.size} tasks immediately")
+                    
+                    // Process the response data immediately to show assignments right away
+                    val weekStart = _uiState.value.currentWeekStart
+                    val calendar = Calendar.getInstance()
+                    calendar.time = weekStart
+                    calendar.set(Calendar.HOUR_OF_DAY, 0)
+                    calendar.set(Calendar.MINUTE, 0)
+                    calendar.set(Calendar.SECOND, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
+                    val normalizedWeekStart = calendar.time
+                    
+                    // Process tasks from response - show all assignments since they were just created
+                    // The backend returns tasks with assignments for the current week
+                    val tasksForThisWeek = response.data.map { task ->
+                        // For newly assigned tasks, show all assignments (they're all for current week)
+                        // Try to filter by week, but if that fails, show all assignments
+                        val assignmentsThisWeek = try {
+                            val filtered = task.assignments.filter { assignment ->
+                                try {
+                                    // Try multiple date formats
+                                    val assignmentWeekStart = try {
+                                        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(assignment.weekStart)
+                                    } catch (e: Exception) {
+                                        try {
+                                            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).parse(assignment.weekStart)
+                                        } catch (e2: Exception) {
+                                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(assignment.weekStart)
+                                        }
+                                    }
+                                    
+                                    if (assignmentWeekStart != null) {
+                                        val assignmentCalendar = Calendar.getInstance()
+                                        assignmentCalendar.time = assignmentWeekStart
+                                        assignmentCalendar.set(Calendar.HOUR_OF_DAY, 0)
+                                        assignmentCalendar.set(Calendar.MINUTE, 0)
+                                        assignmentCalendar.set(Calendar.SECOND, 0)
+                                        assignmentCalendar.set(Calendar.MILLISECOND, 0)
+                                        
+                                        // Compare dates (allow for small differences due to timezone)
+                                        val diff = kotlin.math.abs(assignmentCalendar.timeInMillis - normalizedWeekStart.time)
+                                        diff < 24 * 60 * 60 * 1000 // Within 24 hours
+                                    } else {
+                                        false
+                                    }
+                                } catch (e: Exception) {
+                                    println("TaskViewModel: Error parsing assignment date: ${e.message}")
+                                    false
+                                }
+                            }
+                            
+                            // If filtering found assignments, use them; otherwise use all assignments
+                            if (filtered.isNotEmpty()) {
+                                filtered
+                            } else {
+                                // Fallback: show all assignments if filtering failed
+                                println("TaskViewModel: No assignments matched week filter for task ${task.name}, showing all ${task.assignments.size} assignments")
+                                task.assignments
+                            }
+                        } catch (e: Exception) {
+                            println("TaskViewModel: Error filtering assignments: ${e.message}, showing all")
+                            task.assignments
+                        }
+                        
+                        println("TaskViewModel: Task ${task.name} has ${assignmentsThisWeek.size} assignments: ${assignmentsThisWeek.map { it.userId?.name ?: "Unknown" }}")
+                        
+                        TaskItem(
+                            id = task._id,
+                            name = task.name,
+                            description = task.description,
+                            difficulty = task.difficulty,
+                            recurrence = task.recurrence,
+                            requiredPeople = task.requiredPeople,
+                            deadline = task.deadline?.let { 
+                                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
+                            },
+                            createdBy = task.createdBy?.name ?: "Unknown",
+                            createdById = task.createdBy?._id ?: "",
+                            status = when (assignmentsThisWeek.find { it.userId?._id == currentUserId }?.status) {
+                                "incomplete" -> TaskStatus.INCOMPLETE
+                                "in-progress" -> TaskStatus.IN_PROGRESS
+                                "completed" -> TaskStatus.COMPLETED
+                                else -> TaskStatus.INCOMPLETE
+                            },
+                            createdAt = Date(task.createdAt.toLongOrNull() ?: System.currentTimeMillis()),
+                            completedAt = assignmentsThisWeek.find { it.userId?._id == currentUserId }?.completedAt?.let { Date(it.toLongOrNull() ?: 0) },
+                            // Show assignments
+                            assignedTo = assignmentsThisWeek.mapNotNull { it.userId?.name ?: "Unknown" }
+                        )
+                    }
+                    
+                    // Group tasks by day for this week
+                    val allTasksGrouped = groupTasksByDayForWeek(tasksForThisWeek, normalizedWeekStart)
+                    
+                    // Update UI immediately with the new assignments
+                    _uiState.value = _uiState.value.copy(
+                        weeklyTasks = tasksForThisWeek,
+                        allTasksGroupedByDay = allTasksGrouped,
+                        isAssigningWeekly = false
+                    )
+                    
+                    println("TaskViewModel: Updated UI immediately with ${tasksForThisWeek.size} tasks and their assignments")
+                    
+                    // Refresh other task lists in the background
                     val selectedDate = _uiState.value.selectedDate
-                    loadWeeklyTasks() // This updates allTasksGroupedByDay which is used in weekly view
                     loadTasks()
                     loadMyTasks()
-                    // Reload daily tasks for the currently selected date if we have one
                     selectedDate?.let { date ->
                         loadTasksForDate(date)
                     }
-                    // Set isAssigningWeekly to false after starting all refresh operations
-                    _uiState.value = _uiState.value.copy(isAssigningWeekly = false)
                 } else {
                     println("TaskViewModel: Weekly assignment failed: ${response.message}")
                     _uiState.value = _uiState.value.copy(
@@ -771,8 +869,8 @@ class TaskViewModel(
                             deadline = apiTask.deadline?.let { 
                                 SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
                             },
-                            createdBy = apiTask.createdBy.name,
-                            createdById = apiTask.createdBy._id,
+                            createdBy = apiTask.createdBy?.name ?: "Unknown",
+                            createdById = apiTask.createdBy?._id ?: "",
                             status = when (apiTask.assignments.firstOrNull()?.status) {
                                 "completed" -> TaskStatus.COMPLETED
                                 "in-progress" -> TaskStatus.IN_PROGRESS
@@ -782,7 +880,7 @@ class TaskViewModel(
                             completedAt = apiTask.assignments.firstOrNull()?.completedAt?.let {
                                 SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()).parse(it)
                             },
-                            assignedTo = apiTask.assignments.map { it.userId.name }
+                            assignedTo = apiTask.assignments.mapNotNull { it.userId?.name ?: "Unknown" }
                         )
                     } ?: emptyList()
                     

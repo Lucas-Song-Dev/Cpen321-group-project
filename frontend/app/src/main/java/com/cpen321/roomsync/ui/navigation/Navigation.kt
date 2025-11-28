@@ -12,7 +12,7 @@ import com.cpen321.roomsync.ui.screens.PersonalProfileScreen
 import com.cpen321.roomsync.ui.screens.OptionalProfileScreen
 import com.cpen321.roomsync.ui.screens.GroupSelectionScreen
 import com.cpen321.roomsync.ui.screens.CreateGroupScreen
-import com.cpen321.roomsync.ui.screens.JoinGroupScreen
+import com.cpen321.roomsync.ui.screens. JoinGroupScreen
 import com.cpen321.roomsync.ui.screens.HomeScreen
 import com.cpen321.roomsync.ui.screens.HomeScreenGlass
 import com.cpen321.roomsync.ui.screens.ProfileScreen
@@ -149,6 +149,15 @@ fun AppNavigation() {
             val factory = OptionalProfileViewModelFactory(RetrofitInstance.api)
             val optionalProfileViewModel: OptionalProfileViewModel = viewModel(factory = factory)
             val user = authResponse?.user
+            val optionalProfileState by optionalProfileViewModel.optionalProfileState.collectAsState()
+
+            // Keep auth state in sync when optional profile updates succeed
+            LaunchedEffect(optionalProfileState) {
+                val state = optionalProfileState
+                if (state is OptionalProfileState.Success) {
+                    authViewModel.updateUserData(state.user)
+                }
+            }
 
             if (user != null) {
                 OptionalProfileScreen(

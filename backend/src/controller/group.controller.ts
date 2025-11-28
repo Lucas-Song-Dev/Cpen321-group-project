@@ -204,6 +204,7 @@ class GroupController {
       throw error;
     }
   }
+
 }
 
 export default new GroupController();

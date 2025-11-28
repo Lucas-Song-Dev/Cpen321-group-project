@@ -34,6 +34,9 @@ object GlassColors {
     val AccentBlue = Color(0xFF3B82F6)
     val AccentPink = Color(0xFFEC4899)
     val AccentTeal = Color(0xFF14B8A6)
+    
+    // Alert / error color
+    val AlertRed = Color(0xFFFF3B58)
 }
 
 // Gradient definitions

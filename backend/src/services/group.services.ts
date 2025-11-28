@@ -189,9 +189,10 @@ class GroupService {
       });
     }
 
+
     return group;
   }
-
+  
   async updateGroupName(userId: string, newName: string) {
     // Validate name
     const trimmedName = newName.trim();
