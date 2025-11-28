@@ -205,7 +205,6 @@ class GroupController {
     }
   }
 
-<<<<<<< HEAD
   async transferOwnership(req: Request, res: Response) {
     try {
       const newOwnerId = String(req.body.params);
@@ -263,8 +262,64 @@ class GroupController {
       throw error;
     }
   }
-=======
->>>>>>> 4e22482b211f8b3e95f63f581ac2ee622ceaf200
+
+  async removeMember(req: Request, res: Response) {
+    try {
+      const memberId = String(req.body.params);
+
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const group = await groupService.removeMember(userId, memberId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Member removed successfully',
+        data: group
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'USER_NOT_IN_GROUP':
+            return res.status(404).json({
+              success: false,
+              message: 'User is not a member of any group'
+            });
+          case 'NOT_GROUP_OWNER':
+            return res.status(403).json({
+              success: false,
+              message: 'Only the group owner can remove members'
+            });
+          case 'CANNOT_REMOVE_OWNER':
+            return res.status(400).json({
+              success: false,
+              message: 'Cannot remove the group owner'
+            });
+          case 'MEMBER_NOT_FOUND':
+            return res.status(404).json({
+              success: false,
+              message: 'Member not found in group'
+            });
+        }
+      }
+
+      throw error;
+    }
+  }
 }
 
 export default new GroupController();

@@ -282,6 +282,50 @@ class GroupService {
 
     return group;
   }
+
+  async removeMember(userId: string, memberIdToRemove: string) {
+    // Get user's current group
+    const group = await Group.findOne({
+      'members.userId': new mongoose.Types.ObjectId(userId)
+    });
+
+    if (!group) {
+      throw new Error('USER_NOT_IN_GROUP');
+    }
+
+    // Check if user is the owner
+    if (group.owner.toString() !== userId) {
+      throw new Error('NOT_GROUP_OWNER');
+    }
+
+    // Check if trying to remove the owner
+    if (memberIdToRemove === group.owner.toString()) {
+      throw new Error('CANNOT_REMOVE_OWNER');
+    }
+
+    // Remove member from group
+    const initialMemberCount = group.members.length;
+    group.members = group.members.filter(member =>
+      member.userId.toString() !== memberIdToRemove
+    );
+
+    if (group.members.length === initialMemberCount) {
+      throw new Error('MEMBER_NOT_FOUND');
+    }
+
+    await group.save();
+
+    // Update user's groupName to null
+    await UserModel.findByIdAndUpdate(memberIdToRemove, {
+      groupName: null
+    });
+
+    // Populate group with updated member information
+    await group.populate('owner', 'name email bio averageRating');
+    await group.populate('members.userId', 'name email bio averageRating');
+
+    return group;
+  }
 }
 
 export default new GroupService();
