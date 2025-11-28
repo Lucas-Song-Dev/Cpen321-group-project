@@ -50,7 +50,6 @@ export const UserController = {
       if (isNaN(dobDate.getTime())) {
         return res.status(400).json({ success: false, message: 'Invalid DOB format' });
       }
-    // console.log('Parsed DOB:', dobDate);
 
       // Update user
       user.dob = dobDate;
@@ -72,7 +71,6 @@ export const UserController = {
         },
       });
     } catch (err) {
-      console.error(err);
       return res.status(500).json({ success: false, message: 'Server error' });
     }
   },
@@ -80,9 +78,6 @@ export const UserController = {
   //for optional profile settings/updates
   updateProfile: async (req: Request, res: Response) => {
     const { email, bio, profilePicture, livingPreferences } = req.body;
-
-    console.log('calling updateOptionalProfile');
-    console.log('Received data:', { email, bio, profilePicture, livingPreferences });
 
     //validate inputs
     if (!email) {
@@ -176,29 +171,23 @@ export const UserController = {
         },
       });
     } catch (err) {
-      console.error(err);
       return res.status(500).json({ success: false, message: 'Server error' });
     }
   },
 
   deleteUser: async (req: Request, res: Response) => {
     const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] DELETE USER: Starting user deletion`);
-    
+
     try {
       const userId = req.user?._id;
       
       if (!userId) {
-        console.log(`[${timestamp}] DELETE USER: No user ID found in request`);
         return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
-
-      console.log(`[${timestamp}] DELETE USER: Deleting user with ID: ${userId}`);
 
       // Remove user from any group memberships first
       const group = await Group.findOne({ 'members.userId': userId });
       if (group) {
-        console.log(`[${timestamp}] DELETE USER: Removing user from group ${group._id}`);
         // Filter out the user from members
         group.members = group.members.filter((m: any) => m.userId.toString() !== userId.toString());
 
@@ -214,15 +203,12 @@ export const UserController = {
             
             const newOwner = oldestMember.userId;
             group.owner = newOwner as any;
-            console.log(`[${timestamp}] DELETE USER: Transferred ownership to oldest member ${newOwner} (joined: ${oldestMember.joinDate})`);
             
             // Update the new owner's groupName to match the group
             await UserModel.findByIdAndUpdate(newOwner, { groupName: group.name });
-            console.log(`[${timestamp}] DELETE USER: Updated new owner's groupName to ${group.name}`);
           } else {
             // No members left; delete the group
             await group.deleteOne();
-            console.log(`[${timestamp}] DELETE USER: Group ${group._id} deleted as it has no members`);
           }
         }
 
@@ -236,18 +222,14 @@ export const UserController = {
       const deletedUser = await UserModel.findByIdAndDelete(userId);
       
       if (!deletedUser) {
-        console.log(`[${timestamp}] DELETE USER: User not found`);
         return res.status(404).json({ success: false, message: 'User not found' });
       }
-
-      console.log(`[${timestamp}] DELETE USER: User deleted successfully`);
       
       return res.json({
         success: true,
         message: 'Account deleted successfully and group membership updated'
       });
     } catch (err) {
-      console.error(`[${timestamp}] DELETE USER: Error:`, err);
       return res.status(500).json({ success: false, message: 'Server error' });
     }
   },
