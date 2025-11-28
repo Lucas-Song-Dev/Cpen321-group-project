@@ -5,7 +5,11 @@ import { TaskController } from '../controller/task.controller';
 const taskRouter = express.Router();
 
 // All routes below this middleware are protected
-taskRouter.use(protect);
+taskRouter.use((req, res, next) => {
+  protect(req, res, next).catch((err: unknown) => {
+    next(err);
+  });
+});
 
 // @desc    Create a new task
 // @route   POST /api/task

@@ -5,7 +5,11 @@ import { protect } from '../middleware/auth.middleware';
 const chatRouter = express.Router();
 
 // All routes below this middleware are protected
-chatRouter.use(protect);
+chatRouter.use((req, res, next) => {
+  protect(req, res, next).catch((err: unknown) => {
+    next(err);
+  });
+});
 
 // @desc    Get messages for a group
 // @route   GET /api/chat/:groupId/messages
