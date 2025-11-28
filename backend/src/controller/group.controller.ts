@@ -146,6 +146,64 @@ class GroupController {
       });
     }
   }
+
+  async updateGroupName(req: Request, res: Response) {
+    try {
+      const { name } = req.body;
+
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const group = await groupService.updateGroupName(userId, name);
+
+      res.status(200).json({
+        success: true,
+        message: 'Group name updated successfully',
+        data: group
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'GROUP_NAME_REQUIRED':
+            return res.status(400).json({
+              success: false,
+              message: 'Group name is required'
+            });
+          case 'GROUP_NAME_TOO_LONG':
+            return res.status(400).json({
+              success: false,
+              message: 'Group name must be 100 characters or fewer'
+            });
+          case 'USER_NOT_IN_GROUP':
+            return res.status(404).json({
+              success: false,
+              message: 'User is not a member of any group'
+            });
+          case 'NOT_GROUP_OWNER':
+            return res.status(403).json({
+              success: false,
+              message: 'Only the group owner can update the name'
+            });
+        }
+      }
+
+      throw error;
+    }
+  }
 }
 
 export default new GroupController();
