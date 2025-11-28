@@ -205,6 +205,7 @@ class GroupController {
     }
   }
 
+<<<<<<< HEAD
   async transferOwnership(req: Request, res: Response) {
     try {
       const newOwnerId = String(req.body.params);
@@ -262,6 +263,8 @@ class GroupController {
       throw error;
     }
   }
+=======
+>>>>>>> 4e22482b211f8b3e95f63f581ac2ee622ceaf200
 }
 
 export default new GroupController();

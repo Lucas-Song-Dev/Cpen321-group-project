@@ -297,7 +297,7 @@ fun HomeScreenGlass(
                             Text("Cancel", color = Color.White)
                         }
                     },
-                    containerColor = Color(0x30000000),
+                    containerColor = Color(0xCC000000),
                     shape = RoundedCornerShape(20.dp)
                 )
             }
@@ -337,7 +337,7 @@ fun HomeScreenGlass(
                             Text("Cancel", color = Color.White)
                         }
                     },
-                    containerColor = Color(0x30000000),
+                    containerColor = Color(0xCC000000),
                     shape = RoundedCornerShape(20.dp)
                 )
             }

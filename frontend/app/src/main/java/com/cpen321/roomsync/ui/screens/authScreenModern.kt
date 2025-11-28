@@ -249,8 +249,9 @@ fun AuthScreenModern(
                 if (!state.success && state.message.isNotEmpty()) {
                     Text(
                         text = state.message,
-                        color = Color(0xFFFFCDD2),
-                        fontSize = 14.sp
+                        color = GlassColors.AlertRed,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
