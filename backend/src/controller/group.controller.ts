@@ -24,7 +24,7 @@ export const GroupController = {
       const userId = String(req.user._id);
       const group = await groupService.createGroup(userId, name);
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: 'Group created successfully',
         data: group
@@ -71,7 +71,7 @@ export const GroupController = {
 
       const group = await groupService.joinGroup(userId, groupCode);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Joined group successfully',
         data: group
@@ -127,7 +127,7 @@ export const GroupController = {
 
       const group = await groupService.getCurrentGroup(userId);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: group
       });
@@ -140,7 +140,7 @@ export const GroupController = {
       }
 
       console.error(`[${new Date().toISOString()}] GROUP GET: Unexpected error:`, error);
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: 'Failed to load group data'
       });
@@ -170,7 +170,7 @@ export const GroupController = {
 
       const group = await groupService.updateGroupName(userId, name);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Group name updated successfully',
         data: group
@@ -228,7 +228,7 @@ export const GroupController = {
 
       const group = await groupService.transferOwnership(userId, newOwnerId);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Ownership transferred successfully',
         data: group
@@ -286,7 +286,7 @@ export const GroupController = {
 
       const group = await groupService.removeMember(userId, memberId);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Member removed successfully',
         data: group
@@ -342,7 +342,7 @@ export const GroupController = {
 
       const result = await groupService.leaveGroup(userId);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: result.message
       });

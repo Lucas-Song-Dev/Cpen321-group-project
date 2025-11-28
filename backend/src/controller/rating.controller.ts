@@ -36,7 +36,7 @@ export const RatingController = {
 
       const newRating = await ratingService.rateRoommate(raterUserId, ratedUserId, groupId, rating, testimonial);
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: 'Rating submitted successfully',
         data: newRating
@@ -94,18 +94,14 @@ export const RatingController = {
   },
 
   getRatingsForUser: async (req: Request, res: Response) => {
-    try {
       const { userId } = req.params;
 
       const data = await ratingService.getRatingsForUser(userId);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data
       });
-    } catch (error) {
-      throw error;
-    }
   },
 
   getRatingsForUserInGroup: async (req: Request, res: Response) => {
@@ -114,7 +110,7 @@ export const RatingController = {
 
       const data = await ratingService.getRatingsForUserInGroup(userId, groupId);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data
       });
