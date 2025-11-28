@@ -1,8 +1,6 @@
+import express from 'express';
 import { protect } from '../middleware/auth.middleware';
-import { asyncHandler } from '../middleware/errorHandler.middleware';
-import groupController from '../controller/group.controller';
-
-import express, { Request, Response } from 'express';
+import { GroupController } from '../controller/group.controller';
 
 const groupRouter = express.Router();
 
@@ -15,31 +13,31 @@ groupRouter.use((req, res, next) => {
 
 // @desc    Create a new group
 // @route   POST /api/group
-groupRouter.post('/', asyncHandler(groupController.createGroup.bind(groupController)));
+groupRouter.post('/', GroupController.createGroup);
 
 // @desc    Join an existing group
 // @route   POST /api/group/join
-groupRouter.post('/join', asyncHandler(groupController.joinGroup.bind(groupController)));
+groupRouter.post('/join', GroupController.joinGroup);
 
 // @desc    Get user's current group
 // @route   GET /api/group
-groupRouter.get('/', asyncHandler(groupController.getCurrentGroup.bind(groupController)));
+groupRouter.get('/', GroupController.getCurrentGroup);
 
 // @desc    Update group name (owner only)
 // @route   PUT /api/group/name
-groupRouter.put('/name', asyncHandler(groupController.updateGroupName.bind(groupController)));
+groupRouter.put('/name', GroupController.updateGroupName);
 
 // @desc    Transfer ownership to another member (owner only)
 // @route   PUT /api/group/transfer-ownership/:newOwnerId
-groupRouter.put('/transfer-ownership/:newOwnerId', asyncHandler(groupController.transferOwnership.bind(groupController)));
+groupRouter.put('/transfer-ownership/:newOwnerId', GroupController.transferOwnership);
 
 // @desc    Remove a member from group (owner only)
 // @route   DELETE /api/group/member/:memberId
-groupRouter.delete('/member/:memberId', asyncHandler(groupController.removeMember.bind(groupController)));
+groupRouter.delete('/member/:memberId', GroupController.removeMember);
 
 // @desc    Leave current group
 // @route   DELETE /api/group/leave
-groupRouter.delete('/leave', asyncHandler(groupController.leaveGroup.bind(groupController)));
+groupRouter.delete('/leave', GroupController.leaveGroup);
 
 
 export default groupRouter;

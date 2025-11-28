@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import ratingService from '../services/rating.services';
 
-class RatingController {
-  async rateRoommate(req: Request, res: Response) {
+export const RatingController = {
+  rateRoommate: async (req: Request, res: Response) => {
     try {
         const ratedUserId = String(req.body.ratedUserId);
         const groupId = String(req.body.groupId);
@@ -91,9 +91,9 @@ class RatingController {
 
       throw error;
     }
-  }
+  },
 
-  async getRatingsForUser(req: Request, res: Response) {
+  getRatingsForUser: async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
 
@@ -106,7 +106,20 @@ class RatingController {
     } catch (error) {
       throw error;
     }
-  }
-}
+  },
 
-export default new RatingController();
+  getRatingsForUserInGroup: async (req: Request, res: Response) => {
+    try {
+      const { userId, groupId } = req.params;
+
+      const data = await ratingService.getRatingsForUserInGroup(userId, groupId);
+
+      res.status(200).json({
+        success: true,
+        data
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+};

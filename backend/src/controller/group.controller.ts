@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import groupService from '../services/group.services';
 
-class GroupController {
-  async createGroup(req: Request, res: Response) {
+export const GroupController = {
+  createGroup: async (req: Request, res: Response) => {
     try {
       const name = String(req.body.name);
 
@@ -36,12 +36,12 @@ class GroupController {
           message: 'User is already a member of a group'
         });
       }
-      
+
       throw error;
     }
-  }
+  },
 
-  async joinGroup(req: Request, res: Response) {
+  joinGroup: async (req: Request, res: Response) => {
     try {
       const groupCode = String(req.body.groupCode);
 
@@ -61,7 +61,7 @@ class GroupController {
       }
 
       const userId = String(req.user._id);
-      
+
       if (typeof userId !== 'string') {
         return res.status(401).json({
           success: false,
@@ -101,12 +101,12 @@ class GroupController {
             });
         }
       }
-      
+
       throw error;
     }
-  }
+  },
 
-  async getCurrentGroup(req: Request, res: Response) {
+  getCurrentGroup: async (req: Request, res: Response) => {
     try {
       // Check if user exists first
       if (!req.user?._id) {
@@ -145,9 +145,9 @@ class GroupController {
         message: 'Failed to load group data'
       });
     }
-  }
+  },
 
-  async updateGroupName(req: Request, res: Response) {
+  updateGroupName: async (req: Request, res: Response) => {
     try {
       const name = String(req.body.name);
 
@@ -203,11 +203,11 @@ class GroupController {
 
       throw error;
     }
-  }
+  },
 
-  async transferOwnership(req: Request, res: Response) {
+  transferOwnership: async (req: Request, res: Response) => {
     try {
-      const newOwnerId = String(req.body.params);
+      const { newOwnerId } = req.params;
 
       // Check if user exists first
       if (!req.user?._id) {
@@ -261,11 +261,11 @@ class GroupController {
 
       throw error;
     }
-  }
+  },
 
-  async removeMember(req: Request, res: Response) {
+  removeMember: async (req: Request, res: Response) => {
     try {
-      const memberId = String(req.body.params);
+      const { memberId } = req.params;
 
       // Check if user exists first
       if (!req.user?._id) {
@@ -319,9 +319,9 @@ class GroupController {
 
       throw error;
     }
-  }
+  },
 
-  async leaveGroup(req: Request, res: Response) {
+  leaveGroup: async (req: Request, res: Response) => {
     try {
       // Check if user exists first
       if (!req.user?._id) {
@@ -357,6 +357,4 @@ class GroupController {
       throw error;
     }
   }
-}
-
-export default new GroupController();
+};

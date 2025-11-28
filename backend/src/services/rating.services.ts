@@ -98,6 +98,39 @@ class RatingService {
       totalRatings: ratingStats.totalRatings
     };
   }
+
+  async getRatingsForUserInGroup(userId: string, groupId: string) {
+    // Get ratings for the user in the group
+    const ratings = await Rating.find({
+      ratedUserId: userId,
+      groupId
+    })
+      .populate('raterUserId', 'name email')
+      .sort({ createdAt: -1 });
+
+    // Get average rating in this group
+    const ratingStats = await Rating.aggregate([
+      {
+        $match: {
+          ratedUserId: new mongoose.Types.ObjectId(userId),
+          groupId: new mongoose.Types.ObjectId(groupId)
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: '$rating' },
+          totalRatings: { $sum: 1 }
+        }
+      }
+    ]);
+
+    return {
+      ratings,
+      averageRating: ratingStats[0]?.averageRating || 0,
+      totalRatings: ratingStats[0]?.totalRatings || 0
+    };
+  }
 }
 
 export default new RatingService();
