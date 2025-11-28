@@ -9,38 +9,38 @@ taskRouter.use(protect);
 
 // @desc    Create a new task
 // @route   POST /api/task
-taskRouter.post('/', (req, res) => TaskController.createTask(req, res));
+taskRouter.post('/', TaskController.createTask);
 
 // @desc    Get tasks for current group
 // @route   GET /api/task
-taskRouter.get('/', (req, res) => TaskController.getTasksForGroup(req, res));
+taskRouter.get('/', TaskController.getTasksForGroup);
 
 // @desc    Get tasks assigned to current user
 // @route   GET /api/task/my-tasks
-taskRouter.get('/my-tasks', (req, res) => TaskController.getMyTasks(req, res));
+taskRouter.get('/my-tasks', TaskController.getMyTasks);
 
 // @desc    Update task status
 // @route   PUT /api/task/:id/status
-taskRouter.put('/:id/status', (req, res) => TaskController.updateTaskStatus(req, res));
+taskRouter.put('/:id/status', TaskController.updateTaskStatus);
 
 // @desc    Assign task to users for current week
 // @route   POST /api/task/:id/assign
-taskRouter.post('/:id/assign', (req, res) => TaskController.assignTask(req, res));
+taskRouter.post('/:id/assign', TaskController.assignTask);
 
 // @desc    Algorithmically assign all tasks for current week
 // @route   POST /api/task/assign-weekly
-taskRouter.post('/assign-weekly', (req, res) => TaskController.assignWeeklyTasks(req, res));
+taskRouter.post('/assign-weekly', TaskController.assignWeeklyTasks);
 
 // @desc    Get tasks for a specific week
 // @route   GET /api/task/week/:weekStart
-taskRouter.get('/week/:weekStart', (req, res) => TaskController.getTasksForWeek(req, res));
+taskRouter.get('/week/:weekStart', TaskController.getTasksForWeek);
 
 // @desc    Delete task
 // @route   DELETE /api/task/:id
-taskRouter.delete('/:id', (req, res) => TaskController.deleteTask(req, res));
+taskRouter.delete('/:id', TaskController.deleteTask);
 
 // @desc    Get tasks for a specific date
 // @route   GET /api/task/date/:date
-taskRouter.get('/date/:date', (req, res) => TaskController.getTasksForDate(req, res));
+taskRouter.get('/date/:date', TaskController.getTasksForDate);
 
 export default taskRouter;

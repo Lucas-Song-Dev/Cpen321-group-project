@@ -142,7 +142,7 @@ export const TaskController = {
         });
       }
 
-      const task = await taskService.updateTaskStatus(id, userId, status);
+      const task = await taskService.updateTaskStatus(id, userId, status as 'incomplete' | 'in-progress' | 'completed');
 
       return res.status(200).json({
         success: true,
@@ -196,7 +196,10 @@ export const TaskController = {
         });
       }
 
-      const task = await taskService.assignTask(id, userId, assignedUserIds);
+      // Validate and convert to string array
+      const validatedUserIds: string[] = assignedUserIds.map(id => String(id));
+
+      const task = await taskService.assignTask(id, userId, validatedUserIds);
 
       return res.status(200).json({
         success: true,
