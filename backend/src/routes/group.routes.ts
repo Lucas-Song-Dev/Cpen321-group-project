@@ -41,56 +41,9 @@ router.put('/transfer-ownership/:newOwnerId', asyncHandler(groupController.trans
 // @route   DELETE /api/group/member/:memberId
 router.delete('/member/:memberId', asyncHandler(groupController.removeMember.bind(groupController)));
 
-
-
-
-
 // @desc    Leave current group
 // @route   DELETE /api/group/leave
-router.delete('/leave', asyncHandler(async (req: Request, res: Response) => {
-  const group = await Group.findOne({ 
-    'members.userId': new mongoose.Types.ObjectId(req.user?._id) 
-  });
-
-  if (!group) {
-    return res.status(404).json({
-      success: false,
-      message: 'User is not a member of any group'
-    });
-  }
-
-  const isOwner = group.owner.toString() === req.user?._id.toString();
-
-  // Remove user from group members
-  group.members = group.members.filter(member => 
-    member.userId.toString() !== req.user?._id.toString()
-  );
-
-  if (isOwner) {
-    if (group.members.length > 0) {
-      // Transfer ownership to the first remaining member
-      group.owner = group.members[0].userId;
-    } else {
-      // No members left; delete the group and clear user groupName
-      await group.deleteOne();
-      await UserModel.findByIdAndUpdate(req.user?._id, { groupName: "" });
-      return res.status(200).json({
-        success: true,
-        message: 'Successfully left the group and deleted empty group'
-      });
-    }
-  }
-
-  await group.save();
-
-  // Update user's groupName
-  await UserModel.findByIdAndUpdate(req.user?._id, { groupName: "" });
-
-  res.status(200).json({
-    success: true,
-    message: 'Successfully left the group'
-  });
-}));
+router.delete('/leave', asyncHandler(groupController.leaveGroup.bind(groupController)));
 
 
 export default router;

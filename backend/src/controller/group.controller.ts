@@ -320,6 +320,43 @@ class GroupController {
       throw error;
     }
   }
+
+  async leaveGroup(req: Request, res: Response) {
+    try {
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const result = await groupService.leaveGroup(userId);
+
+      res.status(200).json({
+        success: true,
+        message: result.message
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'USER_NOT_IN_GROUP') {
+        return res.status(404).json({
+          success: false,
+          message: 'User is not a member of any group'
+        });
+      }
+
+      throw error;
+    }
+  }
 }
 
 export default new GroupController();

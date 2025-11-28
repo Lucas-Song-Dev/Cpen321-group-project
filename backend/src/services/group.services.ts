@@ -326,6 +326,43 @@ class GroupService {
 
     return group;
   }
+
+  async leaveGroup(userId: string): Promise<{ message: string; deletedGroup?: boolean }> {
+    const group = await Group.findOne({
+      'members.userId': new mongoose.Types.ObjectId(userId)
+    });
+
+    if (!group) {
+      throw new Error('USER_NOT_IN_GROUP');
+    }
+
+    const isOwner = group.owner.toString() === userId;
+
+    // Remove user from group members
+    group.members = group.members.filter(member =>
+      member.userId.toString() !== userId
+    );
+
+    if (isOwner) {
+      if (group.members.length > 0) {
+        // Transfer ownership to the first remaining member
+        group.owner = group.members[0].userId;
+        await group.save();
+      } else {
+        // No members left; delete the group and clear user groupName
+        await group.deleteOne();
+        await UserModel.findByIdAndUpdate(userId, { groupName: "" });
+        return { message: 'Successfully left the group and deleted empty group', deletedGroup: true };
+      }
+    } else {
+      await group.save();
+    }
+
+    // Update user's groupName
+    await UserModel.findByIdAndUpdate(userId, { groupName: "" });
+
+    return { message: 'Successfully left the group' };
+  }
 }
 
 export default new GroupService();
