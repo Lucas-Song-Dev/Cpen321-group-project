@@ -40,7 +40,6 @@ export const AuthService = {
 
   login: async (email: string) => {
     try {
-      console.log('Logging in user with email:', email);
       const user = await UserModel.findOne({ email });
       if (!user) {
         return { success: false, message: "User does not exist. Please sign up first." };

@@ -16,19 +16,12 @@ router.use(protect);
 // @access  Private
 router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response) => {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] CHAT GET MESSAGES: Starting get messages for group`);
-  console.log(`[${timestamp}] CHAT GET MESSAGES: User:`, req.user);
-  console.log(`[${timestamp}] CHAT GET MESSAGES: Group ID:`, req.params.groupId);
-  console.log(`[${timestamp}] CHAT GET MESSAGES: Query params:`, req.query);
-  
+
   const { groupId } = req.params;
   const { page = 1, limit = 50 } = req.query;
-
-  console.log(`[${timestamp}] CHAT GET MESSAGES: Looking for group with ID:`, groupId);
   
   // Validate ObjectId format
   if (!mongoose.Types.ObjectId.isValid(groupId)) {
-    console.log(`[${timestamp}] CHAT GET MESSAGES: Invalid ObjectId format:`, groupId);
     return res.status(400).json({
       success: false,
       message: 'Invalid group ID format'
@@ -38,27 +31,23 @@ router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response
   // Verify user is member of the group
   const group = await Group.findById(groupId);
   if (!group) {
-    console.log(`[${timestamp}] CHAT GET MESSAGES: Group not found:`, groupId);
     return res.status(404).json({
       success: false,
       message: 'Group not found'
     });
   }
 
-  console.log(`[${timestamp}] CHAT GET MESSAGES: Group found, checking membership`);
   const isMember = group.members.some(member => 
     member.userId.toString() === req.user!._id.toString()
   );
 
   if (!isMember) {
-    console.log(`[${timestamp}] CHAT GET MESSAGES: User is not a member of group:`, groupId);
     return res.status(403).json({
       success: false,
       message: 'Access denied. You are not a member of this group.'
     });
   }
 
-  console.log(`[${timestamp}] CHAT GET MESSAGES: User is member, fetching messages`);
   // Get messages with pagination
   const messages = await Message.find({ groupId })
     .populate('senderId', 'name')
@@ -66,7 +55,6 @@ router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response
     .limit(Number(limit) * 1)
     .skip((Number(page) - 1) * Number(limit));
 
-  console.log(`[${timestamp}] CHAT GET MESSAGES: Found ${messages.length} messages`);
   res.status(200).json({
     success: true,
     data: {
@@ -85,16 +73,10 @@ router.get('/:groupId/messages', asyncHandler(async (req: Request, res: Response
 // @access  Private
 router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response) => {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] CHAT SEND MESSAGE: Starting send message`);
-  console.log(`[${timestamp}] CHAT SEND MESSAGE: User:`, req.user);
-  console.log(`[${timestamp}] CHAT SEND MESSAGE: Group ID:`, req.params.groupId);
-  console.log(`[${timestamp}] CHAT SEND MESSAGE: Request body:`, req.body);
-  
   const { groupId } = req.params;
   const { content } = req.body;
 
   if (!content || content.trim().length === 0) {
-    console.log(`[${timestamp}] CHAT SEND MESSAGE: Message content is required`);
     return res.status(400).json({
       success: false,
       message: 'Message content is required'
@@ -102,7 +84,6 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
   }
 
   if (content.length > 1000) {
-    console.log(`[${timestamp}] CHAT SEND MESSAGE: Message content too long:`, content.length);
     return res.status(400).json({
       success: false,
       message: 'Message content too long (max 1000 characters)'
@@ -111,14 +92,12 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
 
   // Validate ObjectId format
   if (!mongoose.Types.ObjectId.isValid(groupId)) {
-    console.log(`[${timestamp}] CHAT SEND MESSAGE: Invalid ObjectId format:`, groupId);
     return res.status(400).json({
       success: false,
       message: 'Invalid group ID format'
     });
   }
 
-  console.log(`[${timestamp}] CHAT SEND MESSAGE: Looking for group with ID:`, groupId);
   // Verify user is member of the group
   const group = await Group.findById(groupId);
   if (!group) {
@@ -162,14 +141,11 @@ router.post('/:groupId/message', asyncHandler(async (req: Request, res: Response
       timestamp: message.createdAt.getTime(),
       type: message.type
     };
-    console.log(`[${timestamp}] CHAT SEND MESSAGE: Broadcasting to group ${groupId} with data:`, messageData);
     
     // Get all sockets in the room
     const socketsInRoom = await io.in(groupId).fetchSockets();
-    console.log(`[${timestamp}] CHAT SEND MESSAGE: Sockets in room ${groupId}:`, socketsInRoom.length);
     
     io.to(groupId).emit('new-message', messageData);
-    console.log(`[${timestamp}] CHAT SEND MESSAGE: Broadcasted message to group ${groupId}`);
   } catch (socketError) {
     console.error(`[${timestamp}] CHAT SEND MESSAGE: Socket broadcast error:`, socketError);
   }

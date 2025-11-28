@@ -126,18 +126,13 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 // @desc    Get tasks for current group
 // @route   GET /api/task
 // @access  Private
-router.get('/', asyncHandler(async (req: Request, res: Response) => {
-  console.log(`[${new Date().toISOString()}] GET /api/task - User:`, req.user?._id);
-  
+router.get('/', asyncHandler(async (req: Request, res: Response) => {  
   // Get user's current group
   const group = await Group.findOne({ 
     'members.userId': req.user!._id 
   });
 
-  console.log(`[${new Date().toISOString()}] GET /api/task - Group found:`, group ? group._id : 'null');
-
   if (!group) {
-    console.log(`[${new Date().toISOString()}] GET /api/task - User not in any group`);
     return res.status(404).json({
       success: false,
       message: 'User is not a member of any group'
@@ -149,8 +144,6 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     .populate('createdBy', 'name email')
     .populate('assignments.userId', 'name email')
     .sort({ createdAt: -1 });
-
-  console.log(`[${new Date().toISOString()}] GET /api/task - Found ${tasks.length} tasks`);
 
   res.status(200).json({
     success: true,
@@ -392,7 +385,6 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     
     // Skip if already assigned for this week
     if (hasAssignmentForThisWeek) {
-      console.log(`[${new Date().toISOString()}] Skipping task "${task.name}" - already assigned for this week`);
       continue;
     }
 
@@ -404,8 +396,6 @@ router.post('/assign-weekly', asyncHandler(async (req: Request, res: Response) =
     // Shuffle members for fair distribution
     const shuffledMembers = [...allMembers].sort(() => Math.random() - 0.5);
     const selectedMembers = shuffledMembers.slice(0, actualNumAssignees);
-
-    console.log(`[${new Date().toISOString()}] Auto-assigning task "${task.name}" (required: ${requiredPeople}) to ${selectedMembers.length} members`);
 
     // Ensure requiredPeople is set (fallback for existing tasks)
     if (!task.requiredPeople) {
