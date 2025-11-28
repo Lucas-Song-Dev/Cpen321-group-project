@@ -207,7 +207,7 @@ class GroupController {
 
   async transferOwnership(req: Request, res: Response) {
     try {
-      const newOwnerId = String(req.body.params);
+      const newOwnerId = String(req.params.newOwnerId);
 
       // Check if user exists first
       if (!req.user?._id) {
@@ -265,7 +265,7 @@ class GroupController {
 
   async removeMember(req: Request, res: Response) {
     try {
-      const memberId = String(req.body.params);
+      const memberId = String(req.params.memberId);
 
       // Check if user exists first
       if (!req.user?._id) {
