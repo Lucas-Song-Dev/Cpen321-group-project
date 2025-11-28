@@ -1,7 +1,7 @@
-import mongoose from 'mongoose';
-import Group from '../models/group.models';
 import Rating from '../models/rating.models';
 import { UserModel } from '../models/user.models';
+import Group from '../models/group.models';
+import mongoose from 'mongoose';
 
 class RatingService {
   async rateRoommate(raterUserId: string, ratedUserId: string, groupId: string, rating: number, testimonial?: string) {
