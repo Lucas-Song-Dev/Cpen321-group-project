@@ -253,13 +253,12 @@ fun OptionalProfileScreen(
 
                     if (selectedImageUri != null || user.profilePicture != null) {
                         OutlinedButton(
-                            onClick = { selectedImageUri = null },
-                            modifier = Modifier.height(40.dp),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.7f)),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color.White,
-                                containerColor = Color.Transparent
-                            )
+                            onClick = { 
+                                selectedImageUri = null
+                                hasNewImageSelected = true
+                                imageRemoved = true
+                            },
+                            modifier = Modifier.height(40.dp)
                         ) {
                             Text("Remove", fontSize = 12.sp, color = Color.White)
                         }

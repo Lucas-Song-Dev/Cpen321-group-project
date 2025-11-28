@@ -94,8 +94,11 @@ export const UserReporter = {
       // const analysis = JSON.parse(analysisContent);
       // console.log('OpenAI Analysis:', analysis);
 
+      // TODO CHANGE LATER TO USE OPENAI ANALYSIS
+      const forceOffensive = process.env.TEST_REPORT_OFFENSIVE === 'true';
       const analysis = {
-          isOffensive: false  // Temporary: always return non-offensive to avoid breaking the feature
+        // Default to non-offensive unless explicitly forced (e.g., in tests)
+        isOffensive: forceOffensive
       };
 
       // If the message is offensive, mark the user as offensive

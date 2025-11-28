@@ -155,7 +155,7 @@ export const UserController = {
 
       await user.save();
 
-      return res.json({
+      return res.status(200).json({
         success: true,
         message: 'Optional profile updated successfully',
         user: {
