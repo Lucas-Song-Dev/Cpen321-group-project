@@ -97,7 +97,8 @@ export const UserReporter = {
       // TODO CHANGE LATER TO USE OPENAI ANALYSIS
       const forceOffensive = process.env.TEST_REPORT_OFFENSIVE === 'true';
       const analysis = {
-        isOffensive: forceOffensive ? true : false // Default to non-offensive unless explicitly forced (e.g., in tests)
+        // Default to non-offensive unless explicitly forced (e.g., in tests)
+        isOffensive: forceOffensive
       };
 
       // If the message is offensive, mark the user as offensive
