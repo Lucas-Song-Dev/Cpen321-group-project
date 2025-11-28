@@ -52,7 +52,9 @@ data class TaskUiState(
 // Helper function to get current week start (Monday)
 fun getCurrentWeekStart(): Date {
     val calendar = Calendar.getInstance()
-    calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+    // Align start of week with backend (Sunday 00:00) so date filtering matches assignments
+    calendar.firstDayOfWeek = Calendar.SUNDAY
+    calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
     calendar.set(Calendar.HOUR_OF_DAY, 0)
     calendar.set(Calendar.MINUTE, 0)
     calendar.set(Calendar.SECOND, 0)
@@ -273,8 +275,17 @@ class TaskViewModel(
                             assignedTo = task.assignments.mapNotNull { it.userId?.name ?: "Unknown" }
                         )
                     }
+                    
+                    // Update weekly/calendar view immediately using the freshly loaded tasks,
+                    // so new tasks appear even before assignments exist.
+                    val currentWeekStart = _uiState.value.currentWeekStart
+                    val tasksForCurrentWeek = getTasksForCurrentWeek(tasks, currentWeekStart)
+                    val groupedByDayForWeek = groupTasksByDayForWeek(tasksForCurrentWeek, currentWeekStart)
+                    
                     _uiState.value = _uiState.value.copy(
                         tasks = tasks,
+                        weeklyTasks = tasksForCurrentWeek,
+                        allTasksGroupedByDay = groupedByDayForWeek,
                         isLoading = false
                     )
                 } else {
@@ -616,14 +627,13 @@ class TaskViewModel(
                 // Load tasks specifically for this week
                 val response = taskRepository.getTasksForWeek(weekStartString)
                 println("TaskViewModel: Load weekly tasks - weekStart: $weekStartString, response success: ${response.success}, data count: ${response.data?.size ?: 0}")
-                if (response.success && response.data != null) {
+                val fallbackTasks = getTasksForCurrentWeek(_uiState.value.tasks, normalizedWeekStart)
+
+                if (response.success && response.data != null && response.data.isNotEmpty()) {
                     println("TaskViewModel: Backend returned ${response.data.size} tasks for week")
-                    // Log all tasks returned by backend for debugging
                     response.data.forEach { task ->
                         println("TaskViewModel: Task from backend - name: ${task.name}, recurrence: ${task.recurrence}, deadline: ${task.deadline}")
                     }
-                    // Backend already filters tasks for this week, so use all tasks returned
-                    // We just need to filter assignments to show only ones for this week
                     val tasksForThisWeek = response.data.map { task ->
                         // Get assignments for this week only
                         val assignmentsThisWeek = task.assignments.filter { assignment ->
@@ -681,9 +691,18 @@ class TaskViewModel(
                         weeklyTasks = tasksForThisWeek,
                         allTasksGroupedByDay = allTasksGrouped
                     )
+                } else if (fallbackTasks.isNotEmpty()) {
+                    println("TaskViewModel: Backend returned no tasks, using fallback list of ${fallbackTasks.size} tasks")
+                    val groupedFallback = groupTasksByDayForWeek(fallbackTasks, normalizedWeekStart)
+                    _uiState.value = _uiState.value.copy(
+                        weeklyTasks = fallbackTasks,
+                        allTasksGroupedByDay = groupedFallback
+                    )
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        error = response.message ?: "Failed to load tasks"
+                        error = response.message ?: "No tasks available for this week",
+                        weeklyTasks = emptyList(),
+                        allTasksGroupedByDay = emptyMap()
                     )
                 }
             } catch (e: Exception) {

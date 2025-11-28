@@ -1023,6 +1023,15 @@ fun AddTaskDialog(
     var requiredPeople by remember { mutableStateOf(1) }
     var deadline by remember { mutableStateOf<Date?>(null) }
     var selectedMembers by remember { mutableStateOf<List<String>>(emptyList()) }
+    val maxSelectablePeople = remember(groupMembers.size) {
+        groupMembers.size.coerceAtLeast(1).coerceAtMost(10)
+    }
+
+    LaunchedEffect(maxSelectablePeople) {
+        if (requiredPeople > maxSelectablePeople) {
+            requiredPeople = maxSelectablePeople
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1133,15 +1142,14 @@ fun AddTaskDialog(
                 
                 // Required people selector
                 Text(
-                    text = "Required People: $requiredPeople",
+                    text = "Required People: $requiredPeople (max ${groupMembers.size.coerceAtLeast(1)})",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    repeat(10) { index ->
-                        val peopleCount = index + 1
+                    for (peopleCount in 1..maxSelectablePeople) {
                         Box(
                             modifier = Modifier
                                 .size(32.dp)
