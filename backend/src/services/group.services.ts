@@ -223,11 +223,9 @@ class GroupService {
       await group.save();
 
       // Update all members' cached groupName fields
-      const memberIds = group.members
-        .map(member => {
-          return member.userId ? new mongoose.Types.ObjectId(member.userId.toString()) : null;
-        })
-        .filter((id): id is mongoose.Types.ObjectId => id !== null);
+      const memberIds = group.members.map(member => {
+        return new mongoose.Types.ObjectId(member.userId.toString());
+      });
 
       if (memberIds.length > 0) {
         await UserModel.updateMany(
