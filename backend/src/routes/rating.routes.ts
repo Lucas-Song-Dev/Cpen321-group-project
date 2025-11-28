@@ -13,7 +13,9 @@ router.use(protect);
 
 // @desc    Rate a roommate (1-5 stars, requires >= 5 minutes time spent)
 // @route   POST /api/rating
-router.post('/', asyncHandler(ratingController.rateRoommate.bind(ratingController)));
+// router.post('/', asyncHandler(ratingController.rateRoommate.bind(ratingController)));
+router.post('/', asyncHandler((req: Request, res: Response) => ratingController.rateRoommate(req, res)));
+
 
 
 

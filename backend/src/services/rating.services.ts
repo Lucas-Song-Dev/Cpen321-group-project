@@ -63,7 +63,7 @@ class RatingService {
       },
       {
         rating,
-        testimonial: testimonial || '',
+        testimonial: testimonial ?? '',
         timeSpentMinutes
       },
       {
