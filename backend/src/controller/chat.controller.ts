@@ -86,7 +86,7 @@ export const ChatController = {
         });
       }
 
-      const message = await chatService.sendMessage(userId, groupId, content);
+      const message = await chatService.sendMessage(userId, groupId, String(content));
 
       return res.status(201).json({
         success: true,
@@ -152,7 +152,11 @@ export const ChatController = {
         });
       }
 
-      const message = await chatService.createPoll(userId, groupId, question, options);
+      // Validate and convert inputs
+      const validatedQuestion = String(question);
+      const validatedOptions = Array.isArray(options) ? options.map(opt => String(opt)) : [];
+
+      const message = await chatService.createPoll(userId, groupId, validatedQuestion, validatedOptions);
 
       return res.status(201).json({
         success: true,
@@ -226,7 +230,7 @@ export const ChatController = {
         });
       }
 
-      const message = await chatService.voteOnPoll(userId, groupId, messageId, option);
+      const message = await chatService.voteOnPoll(userId, groupId, messageId, String(option));
 
       return res.status(200).json({
         success: true,

@@ -3,7 +3,7 @@ import Message from '../models/chat.models';
 import Group from '../models/group.models';
 
 class ChatService {
-  async getGroupMessages(userId: string, groupId: string, page: number = 1, limit: number = 50) {
+  async getGroupMessages(userId: string, groupId: string, page = 1, limit = 50) {
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(groupId)) {
       throw new Error('INVALID_GROUP_ID');
@@ -96,7 +96,7 @@ class ChatService {
       throw new Error('QUESTION_TOO_LONG');
     }
 
-    if (!options || options.length < 2 || options.length > 10) {
+    if (options.length < 2 || options.length > 10) {
       throw new Error('INVALID_POLL_OPTIONS');
     }
 
