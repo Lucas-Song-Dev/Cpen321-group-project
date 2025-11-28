@@ -192,6 +192,56 @@ class GroupService {
 
     return group;
   }
+  
+  async updateGroupName(userId: string, newName: string) {
+    // Validate name
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+      throw new Error('GROUP_NAME_REQUIRED');
+    }
+
+    if (trimmedName.length > 100) {
+      throw new Error('GROUP_NAME_TOO_LONG');
+    }
+
+    // Find user's group
+    const group = await Group.findOne({
+      'members.userId': new mongoose.Types.ObjectId(userId)
+    });
+
+    if (!group) {
+      throw new Error('USER_NOT_IN_GROUP');
+    }
+
+    // Check if user is the owner
+    if (group.owner.toString() !== userId) {
+      throw new Error('NOT_GROUP_OWNER');
+    }
+
+    // Update name only if it has changed
+    if (group.name !== trimmedName) {
+      group.name = trimmedName;
+      await group.save();
+
+      // Update all members' cached groupName fields
+      const memberIds = group.members.map(member => {
+        return new mongoose.Types.ObjectId(member.userId.toString());
+      });
+
+      if (memberIds.length > 0) {
+        await UserModel.updateMany(
+          { _id: { $in: memberIds } },
+          { $set: { groupName: trimmedName } }
+        );
+      }
+    }
+
+    // Populate owner and members information
+    await group.populate('owner', 'name email bio averageRating');
+    await group.populate('members.userId', 'name email bio averageRating');
+
+    return group;
+  }
 
 }
 
