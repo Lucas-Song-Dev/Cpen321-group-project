@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -72,6 +73,9 @@ fun OptionalProfileScreen(
     viewModel: OptionalProfileViewModel,
     onComplete: () -> Unit = {}
 ) {
+    BackHandler(enabled = true) {
+        // Block the system back button so the user deliberately finishes or skips
+    }
     var bio by remember { mutableStateOf(user.bio ?: "") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var hasNewImageSelected by remember { mutableStateOf(false) }

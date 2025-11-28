@@ -9,6 +9,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
@@ -36,6 +37,9 @@ fun PersonalProfileScreen(
     viewModel: PersonalProfileViewModel,
     onProfileComplete: () -> Unit
 ) {
+    BackHandler(enabled = true) {
+        // Swallow system back presses on this screen to prevent leaving before completion
+    }
     // Initialize with existing user data if available
     val dateFormatter = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
     
@@ -123,7 +127,7 @@ fun PersonalProfileScreen(
         ) {
             // Glass top header
             Box(
-                modifier = Modifier
+            modifier = Modifier
                     .fillMaxWidth()
                     .background(
                         color = Color.White.copy(alpha = 0.15f),
@@ -135,10 +139,10 @@ fun PersonalProfileScreen(
                         shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
                     )
             ) {
-                Text(
-                    text = "Personal Profile",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
+            Text(
+                text = "Personal Profile",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
                     color = Color.White,
                     modifier = Modifier
                         .padding(horizontal = 24.dp, vertical = 32.dp)
@@ -226,8 +230,8 @@ fun PersonalProfileScreen(
                                 imageVector = Icons.Filled.DateRange,
                                 contentDescription = "Select date",
                                 tint = Color.White
-                            )
-                        }
+                )
+            }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = Color.White,
@@ -267,14 +271,14 @@ fun PersonalProfileScreen(
                         "Female",
                         "Prefer-not-to-say"
                     ).forEach { option ->
-                        FilterChip(
+                    FilterChip(
                             onClick = { gender = option },
                             label = { Text(option) },
                             selected = gender == option,
-                            modifier = Modifier.selectable(
+                        modifier = Modifier.selectable(
                                 selected = gender == option,
                                 onClick = { gender = option },
-                                role = Role.RadioButton
+                            role = Role.RadioButton
                             ),
                             colors = chipColors,
                             border = FilterChipDefaults.filterChipBorder(
@@ -284,16 +288,16 @@ fun PersonalProfileScreen(
                                 selectedBorderColor = Color.White,
                                 selectedBorderWidth = 1.dp,
                                 borderWidth = 1.dp
-                            )
                         )
-                    }
+                    )
                 }
+            }
 
-                Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
 
                 // Continue button
-                Button(
-                    onClick = {
+            Button(
+                onClick = {
                     viewModel.updateProfile(
                         originalEmail = user.email,
                         name = nameInput,
@@ -301,9 +305,9 @@ fun PersonalProfileScreen(
                         gender = gender,
                         updatedEmail = emailInput
                     )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
                         .height(52.dp)
                         .border(
                             width = 1.dp,
@@ -321,13 +325,13 @@ fun PersonalProfileScreen(
                         disabledContentColor = Color.White.copy(alpha = 0.4f)
                     ),
                     shape = RoundedCornerShape(30.dp)
-                ) {
-                    Text(
-                        text = "Continue",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+            ) {
+                Text(
+                    text = "Continue",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
             }
         }
     }
