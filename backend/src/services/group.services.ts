@@ -243,6 +243,126 @@ class GroupService {
     return group;
   }
 
+  async transferOwnership(userId: string, newOwnerId: string) {
+    // Find user's current group
+    const group = await Group.findOne({
+      'members.userId': new mongoose.Types.ObjectId(userId)
+    });
+
+    if (!group) {
+      throw new Error('USER_NOT_IN_GROUP');
+    }
+
+    // Check if user is the owner
+    if (group.owner.toString() !== userId) {
+      throw new Error('NOT_GROUP_OWNER');
+    }
+
+    // Check if trying to transfer to the same person
+    if (newOwnerId === group.owner.toString()) {
+      throw new Error('ALREADY_OWNER');
+    }
+
+    // Check if new owner is a member of the group
+    const newOwnerIsMember = group.members.some(member =>
+      member.userId.toString() === newOwnerId
+    );
+
+    if (!newOwnerIsMember) {
+      throw new Error('NEW_OWNER_NOT_MEMBER');
+    }
+
+    // Transfer ownership
+    group.owner = new mongoose.Types.ObjectId(newOwnerId);
+    await group.save();
+
+    // Populate group with updated member information
+    await group.populate('owner', 'name email bio averageRating');
+    await group.populate('members.userId', 'name email bio averageRating');
+
+    return group;
+  }
+
+  async removeMember(userId: string, memberIdToRemove: string) {
+    // Get user's current group
+    const group = await Group.findOne({
+      'members.userId': new mongoose.Types.ObjectId(userId)
+    });
+
+    if (!group) {
+      throw new Error('USER_NOT_IN_GROUP');
+    }
+
+    // Check if user is the owner
+    if (group.owner.toString() !== userId) {
+      throw new Error('NOT_GROUP_OWNER');
+    }
+
+    // Check if trying to remove the owner
+    if (memberIdToRemove === group.owner.toString()) {
+      throw new Error('CANNOT_REMOVE_OWNER');
+    }
+
+    // Remove member from group
+    const initialMemberCount = group.members.length;
+    group.members = group.members.filter(member =>
+      member.userId.toString() !== memberIdToRemove
+    );
+
+    if (group.members.length === initialMemberCount) {
+      throw new Error('MEMBER_NOT_FOUND');
+    }
+
+    await group.save();
+
+    // Update user's groupName to null
+    await UserModel.findByIdAndUpdate(memberIdToRemove, {
+      groupName: null
+    });
+
+    // Populate group with updated member information
+    await group.populate('owner', 'name email bio averageRating');
+    await group.populate('members.userId', 'name email bio averageRating');
+
+    return group;
+  }
+
+  async leaveGroup(userId: string): Promise<{ message: string; deletedGroup?: boolean }> {
+    const group = await Group.findOne({
+      'members.userId': new mongoose.Types.ObjectId(userId)
+    });
+
+    if (!group) {
+      throw new Error('USER_NOT_IN_GROUP');
+    }
+
+    const isOwner = group.owner.toString() === userId;
+
+    // Remove user from group members
+    group.members = group.members.filter(member =>
+      member.userId.toString() !== userId
+    );
+
+    if (isOwner) {
+      if (group.members.length > 0) {
+        // Transfer ownership to the first remaining member
+        group.owner = group.members[0].userId;
+        await group.save();
+      } else {
+        // No members left; delete the group and clear user groupName
+        await group.deleteOne();
+        await UserModel.findByIdAndUpdate(userId, { groupName: "" });
+        return { message: 'Successfully left the group and deleted empty group', deletedGroup: true };
+      }
+    } else {
+      await group.save();
+    }
+
+    // Update user's groupName
+    await UserModel.findByIdAndUpdate(userId, { groupName: "" });
+
+    return { message: 'Successfully left the group' };
+  }
 }
 
 export default new GroupService();
