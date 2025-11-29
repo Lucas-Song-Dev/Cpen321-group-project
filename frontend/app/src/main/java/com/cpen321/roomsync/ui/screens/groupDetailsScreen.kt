@@ -808,7 +808,7 @@ fun MemberDetailDialog(
                                 isReporting = true
                                 errorMessage = null
                                 try {
-                                    val response = RetrofitInstance.api.reportUser(
+                                    val response = RetrofitInstance.reportApi.reportUser(
                                         ReportUserRequest(
                                             reportedUserId = member.id,
                                             reporterId = currentUserId,

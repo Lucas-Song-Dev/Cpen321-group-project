@@ -288,6 +288,33 @@ class ChatViewModel(
             }
         }
     }
+
+    fun reportMessage(messageId: String, reason: String?) {
+        viewModelScope.launch {
+            try {
+                val response = chatRepository.reportMessage(groupId, messageId, reason)
+                if (!response.success) {
+                    _uiState.value = _uiState.value.copy(
+                        error = response.message ?: "Failed to report message"
+                    )
+                    return@launch
+                }
+
+                // If moderation deemed it offensive and action deleted the message, remove it locally
+                val data = response.data
+                if (data?.isOffensive == true &&
+                    (data.actionTaken?.contains("deleted", ignoreCase = true) == true)
+                ) {
+                    val updatedMessages = _uiState.value.messages.filterNot { it.id == messageId }
+                    _uiState.value = _uiState.value.copy(messages = updatedMessages)
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Failed to report message: ${e.message}"
+                )
+            }
+        }
+    }
     
     fun createPoll(question: String, options: List<String>) {
         if (question.trim().isEmpty() || options.size < 2) return

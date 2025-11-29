@@ -119,6 +119,14 @@ interface ApiService {
     @PUT("api/users/report")
     suspend fun reportUser(@Body request: ReportUserRequest): Response<ReportUserResponse>
 
+    // Chat message report endpoint
+    @POST("api/chat/{groupId}/message/{messageId}/report")
+    suspend fun reportMessage(
+        @Path("groupId") groupId: String,
+        @Path("messageId") messageId: String,
+        @Body request: ReportMessageRequest
+    ): Response<ReportMessageResponse>
+
 //    @GET("api/users/{userId}/status")
 //    suspend fun getUserStatus(@Path("userId") userId: String): Response<UserStatusResponse>
 }

@@ -31,4 +31,8 @@ chatRouter.post('/:groupId/poll/:messageId/vote', ChatController.voteOnPoll);
 // @route   DELETE /api/chat/:groupId/message/:messageId
 chatRouter.delete('/:groupId/message/:messageId', ChatController.deleteMessage);
 
+// @desc    Report a message for moderation
+// @route   POST /api/chat/:groupId/message/:messageId/report
+chatRouter.post('/:groupId/message/:messageId/report', ChatController.reportMessage);
+
 export default chatRouter;

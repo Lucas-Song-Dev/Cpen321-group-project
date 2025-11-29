@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import chatService from '../services/chat.services';
+import Message from '../models/chat.models';
+import Group from '../models/group.models';
+import moderationService from '../services/moderation.service';
 
 export const ChatController = {
   getGroupMessages: async (req: Request, res: Response) => {
@@ -316,6 +319,100 @@ export const ChatController = {
       }
 
       throw error;
+    }
+  },
+
+  reportMessage: async (req: Request, res: Response) => {
+    try {
+      const { groupId, messageId } = req.params;
+      const { reason } = req.body as { reason?: string };
+
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      // Validate IDs
+      if (!mongoose.Types.ObjectId.isValid(groupId) || !mongoose.Types.ObjectId.isValid(messageId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid group or message ID'
+        });
+      }
+
+      // Verify user is member of the group
+      const group = await Group.findById(groupId);
+      if (!group) {
+        return res.status(404).json({
+          success: false,
+          message: 'Group not found'
+        });
+      }
+
+      const isMember = group.members.some(member =>
+        member.userId.toString() === userId
+      );
+
+      if (!isMember) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You are not a member of this group.'
+        });
+      }
+
+      // Find the message to report
+      const message = await Message.findById(messageId);
+      if (!message) {
+        return res.status(404).json({
+          success: false,
+          message: 'Message not found'
+        });
+      }
+
+      // Ensure the message belongs to the specified group
+      if (message.groupId.toString() !== groupId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Message does not belong to this group'
+        });
+      }
+
+      // Run GPT moderation on the message content
+      const moderationResult = await moderationService.moderateContent(
+        message.content,
+        `Reported chat message in group ${groupId}.\nReporter userId: ${userId}.\nReason: ${reason ?? 'No reason provided.'}`
+      );
+
+      let actionTaken: string | null = null;
+
+      if (moderationResult.isOffensive) {
+        // Delete the message regardless of who sent it (system moderation)
+        await Message.findByIdAndDelete(messageId);
+        actionTaken = 'Message deleted due to offensive content';
+      } else {
+        actionTaken = 'No action taken; message considered acceptable';
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Report processed successfully',
+        data: {
+          isOffensive: moderationResult.isOffensive,
+          actionTaken,
+          moderationReason: moderationResult.reason
+        }
+      });
+    } catch (error) {
+      console.error('Error reporting message:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to process message report'
+      });
     }
   },
 
