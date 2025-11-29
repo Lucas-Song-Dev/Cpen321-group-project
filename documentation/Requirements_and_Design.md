@@ -8,7 +8,8 @@
 | October 10, 2025 | Section 3.2, 3.7  | Fixed use case diagram according to feedback in M2 and non-function requirements section with concrete research to back up requirements |
 | October 28, 2025 | Added section 4.4, 4.6, 4.7, Modified section 3.1, 4.1, 4.2, 4.3, 4.5 | Implemented M3 Requirements, fixed document according to app implementation and made further M2 feedback changes |
 | November 9, 2025 | Section 3.4, 4.1 | Added missing endpoints (health check, transfer ownership, get profile, get tasks by date), corrected API endpoint paths and parameters, added transfer ownership use case |
-| November 28, 2025 | Section 3.1, 3.2, 3.4, 4.5 | Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram. Updated dependencies diagram to match current code |
+| November 28, 2025 | Section 3.1, 3.2, 3.3, 3.4, 4.5 | Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram. Updated dependencies diagram to match current code |
+| November 28, 2025 | Section 3.5 | Fixed use case numbering issues and names based on changes |
 
 
 ---
@@ -35,7 +36,6 @@ The application targets university students, young professionals, and anyone see
   - Gender
   - Email (this will be automatically filled out after creating an account through Google user authentication)
 - **Optional/editable**
-  - Nickname
   - Bio
   - Profile picture
   - Living preference/expectations (ex. morning/night person, drinking, partying, noise, profession/student)
@@ -89,7 +89,8 @@ The application targets university students, young professionals, and anyone see
 
 **External System Actors:**
 
-4. **Google OAuth 2.0 API**: External authentication service that verifies user identity during account creation (use case 1) and login (use case 2). The system interacts with this API to validate Google ID tokens and retrieve user email and name information. This is a required external dependency for user authentication.
+4. **Google OAuth 2.0 API**: External authentication service that verifies user identity during account creation sign up (use case 1) and login (use case 2). The system interacts with this API to validate Google ID tokens and retrieve user email and name information. This is a required external dependency for user authentication.
+5. **Socket.IO API**: External service that helps implement real-time live commnuication tools for sending messages (use case 13) and sending polls (use case 14).
 
 ### **3.4. Use Case Description**
 
@@ -132,7 +133,7 @@ The application targets university students, young professionals, and anyone see
 ### **3.5. Formal Use Case Specifications (5 Most Major Use Cases)**
 
 <a name="uc1"></a>
-#### Use Case 1: Create account
+#### Use Case 1: Sign Up
 
 **Description**: Secure account creation process using Google OAuth. User profiles will also be created.
 
@@ -142,26 +143,26 @@ The application targets university students, young professionals, and anyone see
 1. A person with an existing google account clicks 'Sign Up'
 2. Selects the google account they want to use to create account in pop-up
 3. System checks if account with that google account can be created
-4. User is shown Personal Profile screen. Name and email are pre-filled from Google (read-only). User must fill out date of birth and select gender (Male/Female/Prefer-not-to-say).
+4. User is shown Mandatory Personal Profile screen. Name and email are pre-filled from Google authentication(read-only). User must fill out date of birth and select gender (Male/Female/Prefer-not-to-say).
 5. User clicks 'Continue'
-6. User is shown Optional Profile screen. Can fill out bio, select living preferences (schedule, drinking, partying, noise, profession), and upload a profile picture.
+6. User is shown Optional Personal Profile screen. User can optionally fill out their bio, select living preferences (schedule, drinking, partying, noise, and profession), and upload a profile picture.
 7. User clicks 'Continue' or skips
 8. User is navigated to home screen
 
 **Failure scenario(s)**:
 - 3a. A user who has an existing account tries to create an account
-  - System displays an error message saying that an account associated with that google account already exists and suggests logging in instead
+  - 3a1. System displays an error message saying that an account associated with that google account already exists and suggests logging in instead
 - 5a. User clicks Continue but date of birth or gender is not filled
-  - Continue button is disabled until both fields are completed
+  - 5a1. Continue button is disabled until both fields are completed
 - 5b. User enters invalid date of birth
-  - System displays an error message during profile update
+  - 5b1. System displays an error message during profile update
 - 6a. User uploads profile picture file that is too large
-  - System displays an error message saying that the file is too large
+  - 6a1. System displays an error message saying that the file is too large
 - 7a. Bio exceeds character limit
-  - System displays an error message or truncates input
+  - 7a1. System displays an error message or truncates input
 
 <a name="uc9"></a>
-#### Use Case 9: Create Group
+#### Use Case 6: Create Group
 
 **Description**: Non-Group Member establishes a new roommate group and receives invitation code to share with potential roommates.
 
@@ -178,17 +179,17 @@ The application targets university students, young professionals, and anyone see
 
 **Failure Scenarios**:
 - 2a. Group name is left empty
-  - 'Create Group' button is disabled until group name is entered
+  - 2a1. 'Create Group' button is disabled until group name is entered
 - 3a. User already belongs to a group
-  - System displays error that user must leave current group first to create a group
-  - User is redirected to current group dashboard
+  - 3a1. System displays error that user must leave current group first to create a group
+  - 3a2. User is redirected to current group dashboard
 - 3b. Network error during group creation
-  - System displays error message
-  - User can retry creating the group
+  - 3b1. System displays error message
+  - 3b2. User can retry creating the group
 
 <a name="uc14"></a>
 <a name="uc15"></a>
-#### Use Case 15: Create Poll
+#### Use Case 14: Send Polls
 
 **Description**: Group members can create and send polls for household decisions in group chat.
 
@@ -209,18 +210,18 @@ The application targets university students, young professionals, and anyone see
 
 **Failure Scenarios**:
 - 7a. Poll created with empty question or less than 2 options
-  - 'Create Poll' button may be disabled, or system displays validation error
+  - 7a1. 'Create Poll' button may be disabled, or system displays validation error
 - 7b. Poll question or options exceed character limits
-  - System may truncate or display error message
+  - 7ab. System may truncate or display error message
 - 8a. Network error when creating poll
-  - System displays error message
-  - User can retry creating the poll
+  - 8a1. System displays error message
+  - 8a2. User can retry creating the poll
 - 9a. Real-time connection lost while voting
-  - System attempts to reconnect automatically
-  - User sees "reconnecting" status until connection restored
+  - 9a1. System attempts to reconnect automatically
+  - 9a2. User sees "reconnecting" status until connection restored
 
 <a name="uc16"></a>
-#### Use Case 16: Add Task
+#### Use Case 15: Add Tasks
 
 **Description**: A household task that will be equally distributed among all roommates is created. The system assigns tasks to group members using a fair allocation algorithm.
 
@@ -238,17 +239,17 @@ The application targets university students, young professionals, and anyone see
 
 **Extensions/Failure Scenarios**:
 - 2a. Task name is empty
-  - System displays error and disables 'Create Task' button until name is provided
+  - 2a1. System displays error and disables 'Create Task' button until name is provided
 - 4a. One-time task created without deadline
-  - System requires deadline before allowing task creation
-  - 'Create Task' button remains disabled until deadline is set
+  - 4a1. System requires deadline before allowing task creation
+  - 4a2. 'Create Task' button remains disabled until deadline is set
 - 7a. Algorithm fails to distribute tasks fairly
-  - System falls back to round-robin assignment method
-  - System notifies group owner of algorithm failure
+  - 7a1. System falls back to round-robin assignment method
+  - 7a2. System notifies group owner of algorithm failure
 
 <a name="uc19"></a>
 <a name="uc20"></a>
-#### Use Case 19-20: Rate Roommate and Write Testimonial
+#### Use Case 18-19: Rate Roommate and Write Testimonial
 
 **Description**: Group members provide numerical rating and optional written feedback on roommate performance after living together for a minimum of 30 days.
 
@@ -269,24 +270,22 @@ The application targets university students, young professionals, and anyone see
 12. Rating dialog closes and member details refresh to show new rating
 
 **Extensions/Failure Scenarios**:
-- 10a. Minimum cohabitation period not met (less than 30 days)
-  - System displays error message indicating insufficient time in group
-  - Rating is not submitted
-- 10b. User attempts to rate same roommate multiple times
-  - System detects existing rating from user
-  - System offers option to update existing rating instead
-- 10c. User tries to rate themselves
-  - System prevents self-rating with error message
-- 9a. User clicks Submit without selecting a rating
-  - Submit button is disabled until rating (1-5 stars) is selected
 - 7a. Testimonial exceeds 500 characters
-  - Input field prevents typing beyond 500 characters
-  - Character counter shows limit
+  - 7a1. Input field prevents typing beyond 500 characters
+  - 7a2. Character counter shows limit
+- 10a. Minimum cohabitation period not met (less than 30 days)
+  - 10a1. System displays error message indicating insufficient time in group
+  - 10a2. Rating is not submitted
+- 10b. User attempts to rate same roommate multiple times
+  - 10b1. System detects existing rating from user
+  - 10b2. System offers option to update existing rating instead
+- 10c. User tries to rate themselves
+  - 10c1. System prevents self-rating with error message
+- 9a. User clicks Submit without selecting a rating
+  - 9a1. Submit button is disabled until rating (1-5 stars) is selected
 - 11a. Network error during rating submission
-  - System displays error message
-  - User can retry submitting the rating
-
-### **3.6. Screen Mock-ups**
+  - 11a1. System displays error message
+  - 11a2. User can retry submitting the rating
 
 ### **3.7. Non-Functional Requirements**
 
@@ -499,7 +498,7 @@ The application targets university students, young professionals, and anyone see
    - **Collections**:
      - **Users**: email (unique), name, googleId (unique), dob, gender (Male/Female/Prefer-not-to-say), profileComplete (boolean), bio (max 500 chars), profilePicture (URL), averageRating (0-5), livingPreferences (schedule: Morning/Night/Flexible, drinking: None/Occasional/Regular, partying: None/Occasional/Regular, noise: Quiet/Moderate/Loud, profession: Student/Worker/Unemployed), groupName, isOffensive (boolean for moderation flag)
      - **Groups**: name (max 100 chars), groupCode (unique 4-char alphanumeric), owner (User reference), members (array of {userId: User reference, joinDate: Date, moveInDate: Date})
-     - **Messages**: groupId (Group reference), senderId (User reference), content (max 1000 chars), type (text/poll), pollData (for polls: question max 200 chars, options array max 100 chars each, votes array with {userId, option, timestamp}, expiresAt: Date default 7 days), createdAt timestamp.
+     - **Chats**: groupId (Group reference), senderId (User reference), content (max 1000 chars), type (text/poll), pollData (for polls: question max 200 chars, options array max 100 chars each, votes array with {userId, option, timestamp}, expiresAt: Date default 7 days), createdAt timestamp.
      - **Tasks**: name (max 100 chars), description (max 500 chars), groupId (Group reference), createdBy (User reference), difficulty (1-5 integer), recurrence (daily/weekly/bi-weekly/monthly/one-time), requiredPeople (1-10 integer), deadline (Date, required for one-time tasks), assignments (array of {userId: User reference, weekStart: Date, status: incomplete/in-progress/completed, completedAt: Date}).
      - **Ratings**: ratedUserId (User reference), raterUserId (User reference), groupId (Group reference), rating (1-5 integer), testimonial (max 500 chars), timeSpentMinutes (auto-calculated from group join dates), createdAt timestamp. Unique constraint on (ratedUserId, raterUserId, groupId) to prevent duplicate ratings.
 
