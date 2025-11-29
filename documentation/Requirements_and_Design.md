@@ -8,8 +8,8 @@
 | October 10, 2025 | Section 3.2, 3.7  | Fixed use case diagram according to feedback in M2 and non-function requirements section with concrete research to back up requirements |
 | October 28, 2025 | Added section 4.4, 4.6, 4.7, Modified section 3.1, 4.1, 4.2, 4.3, 4.5 | Implemented M3 Requirements, fixed document according to app implementation and made further M2 feedback changes |
 | November 9, 2025 | Section 3.4, 4.1 | Added missing endpoints (health check, transfer ownership, get profile, get tasks by date), corrected API endpoint paths and parameters, added transfer ownership use case |
-| November 28, 2025 | Section 3.1, 3.2, 3.3, 3.4, 4.5 | Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram. Updated dependencies diagram to match current code |
-| November 28, 2025 | Section 3.5 | Fixed use case numbering issues and names based on changes |
+| November 28, 2025 | Section 3.1, 3.2, 3.3, 3.4, 4.5 | Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram. Added additional external system actors based on changes to code. Updated dependencies diagram to match current code |
+| November 28, 2025 | Section 3.5 | Fixed use case numbering issues and names based on above changes |
 
 
 ---
@@ -102,7 +102,7 @@ The application targets university students, young professionals, and anyone see
 3. **Logout** – User logs out of the application, clearing locally stored authentication tokens
 4. **Delete Account** – User logs out of the application, clearing locally stored authentication tokens  
 
-#### 2. **User Profile **
+#### 2. **User Profile**
 5. **Update Optional Profile Fields: nickname, bio, living preferences and profile picture** – Users can choose a nickname, update their bio text, indicate living preferences by selecting pre-determined options regarding their schedule, drinking, partying, noise, and profession descriptions and users can add, change, or remove their profile picture
 
 #### 3. **Group Management**
@@ -289,25 +289,21 @@ The application targets university students, young professionals, and anyone see
   - 11a1. System displays error message
   - 11a2. User can retry submitting the rating
 
+### **3.6. Screen Mock-ups**
+![Use Case Diagram](./images/mockupScreens.jpg)
+![Use Case Diagram](./images/mockupScreens2.jpg)
+
 ### **3.7. Non-Functional Requirements**
 
 <a name="nfr1"></a>
 1. **API Response Time Requirement**
    - **Description**: API response times for login, signup (with all required data entered), message send (not downstream message delivery), and user profile fetch must be under 200ms on Wi-Fi 5+ connection on a 16GB Android phone running Android API 33.
    - **Justification**: According to [UPCore Technologies' mobile app performance research](https://www.upcoretech.com/insights/top-mobile-app-performance-metrics/), "Slow response times are universally detrimental to sentiment, engagement, conversions, and churn. Leading apps deliver response times under 300 ms consistently, with 100 ms or less optimal for interactions. Degraded response times are symptoms of sluggish code and infrastructure." To ensure end-to-end user experience remains under the 300ms threshold for perceived responsiveness, API latency must be kept under 200ms to account for network overhead, client-side rendering, and processing time.
-   - **Testing Method**: Use cURL or Postman to send API requests and measure response time from request to 200 OK response.
-
-<a name="nfr2"></a>
-2. **Application Load Time Requirement**
-   - **Description**: The application cold start (launching app when not in memory) must complete within 5 seconds on a 16GB Android phone running Android API 33 on Wi-Fi 5-7 connection.
-   - **Justification**: According to [App Institute's responsiveness research](https://appinstitute.com/improving-app-responsiveness-key-metrics-to-track/), app load time is a critical metric for user retention. Users expect immediate access to functionality, and delays during cold start create negative first impressions and increase abandonment rates. The 5-second threshold ensures users can access core features (group chat, tasks) quickly for time-sensitive household coordination.
-   - **Testing Method**: Force stop the app, then use a stopwatch to measure time from tapping the app icon until the first screen is interactive and responsive.
 
 <a name="nfr3"></a>
-3. **UI Accessibility Requirement**
+2. **UI Accessibility Requirement**
    - **Description**: All interactive buttons and touch targets must have a minimum touch target size of 40x40 pixels to ensure accessibility and ease of use.
    - **Justification**: According to [UX Movement's research on optimal button sizing and spacing](https://uxmovement.com/mobile/optimal-size-and-spacing-for-mobile-buttons/), smaller buttons increase error rates and user frustration, particularly for users with motor impairments or when using the app in motion. The 40-pixel minimum provides adequate touch accuracy without requiring excessive screen space.
-   - **Testing Method**: Use Android Accessibility Scanner to verify button components meet the 40x40 pixel minimum touch target size.
 
 ---
 
@@ -807,7 +803,6 @@ sequenceDiagram
     end
 ```
 
-
 ### **4.7. Design of Non-Functional Requirements**
 
 1. [**API Response Time Requirement**](#nfr1)
@@ -815,6 +810,3 @@ sequenceDiagram
 
 2. [**UI Accessibility Requirement**](#nfr3)
    - **Implementation**: We use three types of buttons in our code, Button, IconButton, and FloatingActionButton. Each button has a size of 40 or 56 dp/pixels which ensures that the button is visible to the user at all times, even on smaller screens, making the buttons easy to access and meeting the requirement that all buttons should be at least 40 pixels.
-
-3. [**Application Load Time Requirement**](#nfr2)
-   - **Implementation**: To ensure the app loads within 5 seconds, we organized and sectioned off our code so that only critical screens are loaded first while non essential resources such as images are loaded asynchronously. By making sure we have minimal startup dependencies, such that onCreate(), only essential tasks are loaded. This ensures efficient cold start performance.
