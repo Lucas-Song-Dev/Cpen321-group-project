@@ -83,6 +83,7 @@ jobs:
           working-directory: frontend
           script: ./gradlew :app:connectedAndroidTest --stacktrace
       
+      
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
