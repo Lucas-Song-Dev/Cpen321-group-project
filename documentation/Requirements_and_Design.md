@@ -11,6 +11,8 @@
 | November 28, 2025 | Section 3.1, 3.2, 3.3, 3.4, 4.5 | Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram. Added additional external system actors based on changes to code. Updated dependencies diagram to match current code |
 | November 28, 2025 | Section 3.5, 3.6, 3.7 | Fixed use case numbering issues and names based on above changes. Added mock-up screens we initally created. Edited non-functional requirements to match our existing tests |
 | November 28, 2025 | Section 4.3, 4.4, 4.5 | Rename headers to specific names like OpenAI API not LLM Moderation. Got rid of Kotlin and Typescript as libraries and other unnecessary test as per TA feedback. Deleted unnecessary text for dependency diagram section and updated diagram to mirror current code. |
+| November 28, 2025 | Section 4.1 | Updated backend and llm interfaces due to changes in code |
+
 
 
 ---
@@ -441,49 +443,219 @@ The application targets university students, young professionals, and anyone see
           - Returns: Report submission confirmation
 
 2. **Back-End Server (Node.js/TypeScript)**
-   - **Purpose**: Manages business logic, authentication, database interactions, group algorithms, and communication between front-end and database.
-   - **Internal Component Interfaces**:
-     1. **Authentication Service (AuthService)**
-        - signup(email: String, name: String, googleId: String): Promise<AuthResult>
-          - Purpose: Creates new user account and generates JWT token
-          - Validates Google credentials and ensures unique user
-        - login(email: String): Promise<AuthResult>
-          - Purpose: Authenticates existing user and generates JWT token
-          - Verifies user exists and returns user data with token
-        - protect(req: Request, res: Response, next: NextFunction): void
-          - Purpose: Middleware to verify JWT token and authenticate requests
-          - Decodes token and attaches user data to request object
-     2. **Database Access Layer (MongoDB/Mongoose Models)**
-        - User.create(userData: UserData): Promise<User>
-          - Purpose: Creates new user document in database
-        - User.findById(id: String): Promise<User>
-          - Purpose: Retrieves user by ID
-        - Group.create(groupData: GroupData): Promise<Group>
-          - Purpose: Creates new group with auto-generated unique code
-        - Group.findOne(query: Object): Promise<Group>
-          - Purpose: Finds single group matching query criteria
-        - Task.find(query: Object): Promise<Task[]>
-          - Purpose: Retrieves tasks matching query criteria
-        - Message.create(messageData: MessageData): Promise<Message>
-          - Purpose: Creates new message document
-        - Rating.getAverageRating(userId: String): Promise<RatingStats>
-          - Purpose: Calculates average rating for a user
-     3. **WebSocket Service (Socket.IO)**
-        - getIO(): Server
-          - Purpose: Returns Socket.IO server instance for real-time communication
-        - joinRoom(socket: Socket, groupId: String): void
-          - Purpose: Adds socket connection to group room for message broadcasting
-        - emit(event: String, data: Object): void
-          - Purpose: Broadcasts real-time events to connected clients
-     4. **Task Assignment Algorithm**
-        - assignTasksWeekly(groupId: String): Promise<Task[]>
-          - Purpose: Fairly distributes tasks among group members for current week
-          - Uses randomization and required people count for balanced allocation
+   - 1. Authentication
+     - Purpose: Handles user authentication through Google OAuth, providing secure login/signup with JWT tokens for session management. Chosen over custom username/password for simplicity and security, leveraging Google's robust authentication infrastructure instead of implementing our own password management system.
+     - Interfaces:
+         - 1. HTTP/REST Interfaces:
+              - POST /signup
+                - Purpose: Creates new user account from Google OAuth credentials
+                - Parameters: { token: string } (Google OAuth ID token)
+                - Returns: { success: boolean, user: User, token: string }
+              - POST /login
+                - Purpose: Authenticates existing user with Google OAuth token
+                - Parameters: { token: string } (Google OAuth ID token)
+                - Returns: { success: boolean, user: User, token: string }
+        - 2. Internal Service Interfaces:
+              - verifyGoogleToken(idToken: string): Promise<GoogleTokenPayload>
+                - Purpose: Validates Google OAuth token and extracts user information
+              - generateTokens(user: IUser): AuthTokens
+                - Purpose: Creates JWT access tokens for authenticated sessions
+              - findOrCreateUser(payload: GoogleTokenPayload): Promise<IUser>
+                - Purpose: Links Google account to existing user or creates new user profile
+              - verifyJWT(token: string): { userId: string; email: string; name: string }
+                - Purpose: Validates JWT tokens for protected endpoints
+   - 2. User Management
+     - Purpose: Manages user profiles, mandatory/optional profile completion, and user reporting functionality. Provides comprehensive user data management with profile completion tracking, chosen over simpler profile systems to ensure roommates have sufficient information for informed group decisions.
+     - Interfaces:
+         - 1. HTTP/REST Interfaces:
+              - PUT /users/profile
+                - Purpose: Sets mandatory profile fields (name, email, etc.)
+                - Parameters: { dob: string, gender: string, bio: string, profilePicture: string, livingPreferences: object }
+                - Returns: { success: boolean, user: User }
+              - PUT /users/optionalProfile
+                - Purpose: Updates optional profile fields
+                - Parameters: { bio?: string, profilePicture?: string, livingPreferences?: object }
+                - Returns: { success: boolean, user: User }
+              - DELETE /users/me
+                - Purpose: Permanently deletes user account
+                - Parameters: JWT token (userId from auth)
+                - Returns: { success: boolean, data: User }
+              - PUT /users/report
+                - Purpose: Reports another user for inappropriate content
+                - Parameters: { reportedUserId: string, reporterId: string, groupId: string, reason?: string }
+                - Returns: { success: boolean, message: string, data: { isOffensive: boolean, actionTaken: string } }
+   - 3. Chat
+     - Purpose: Provides real-time messaging functionality with poll support for group communication. Uses Socket.io for real-time updates instead of REST polling to enable instant messaging, chosen over simpler chat implementations for better user experience in roommate coordination.
+     - Interfaces:
+         - 1. HTTP/REST Interfaces:
+              - GET /api/chat/:groupId/messages
+                - Purpose: Retrieves paginated message history for a group
+                - Parameters: groupId (path), page?: number, limit?: number (query)
+                - Returns: { messages: Message[], pagination: object }
+              - POST /api/chat/:groupId/message
+                - Purpose: Sends a text message to group chat
+                - Parameters: { content: string }
+                - Returns: { message: Message }
+              - POST /api/chat/:groupId/poll
+                - Purpose: Creates a poll in group chat
+                - Parameters: { question: string, options: string[] }
+                - Returns: { message: Message }
+              - POST /api/chat/:groupId/poll/:messageId/vote
+                - Purpose: Votes on an existing poll
+                - Parameters: { option: string }
+                - Returns: { message: Message }
+              - DELETE /api/chat/:groupId/message/:messageId
+                - Purpose: Deletes user's own message
+                - Parameters: groupId, messageId (path)
+                - Returns: { message: string }
+        - 2. Internal Service Interfaces:
+              - getGroupMessages(userId: string, groupId: string, page?: number, limit?: number)
+                - Purpose: Fetches paginated messages with access control
+              - sendMessage(userId: string, groupId: string, content: string)
+                - Purpose: Creates and validates new text messages
+              - createPoll(userId: string, groupId: string, question: string, options: string[])
+                - Purpose: Creates poll messages with voting options
+              - voteOnPoll(userId: string, groupId: string, messageId: string, option: string)
+                - Purpose: Processes poll votes with validation
+              - deleteMessage(userId: string, groupId: string, messageId: string)
+                - Purpose: Removes messages with ownership verification
+   - 4. Group Management
+     - Purpose: Handles group creation, membership management, and ownership transfer. Uses unique group codes for joining instead of invitations to simplify the roommate matching process, chosen over more complex invitation systems for ease of use.
+     - Interfaces:
+         - 1. HTTP/REST Interfaces:
+              - POST /api/group
+                - Purpose: Creates new roommate group
+                - Parameters: { name: string }
+                - Returns: { group: Group }
+              - POST /api/group/join
+                - Purpose: Joins existing group using group code
+                - Parameters: { groupCode: string }
+                - Returns: { group: Group }
+              - GET /api/group
+                - Purpose: Retrieves current user's group information
+                - Returns: { group: Group }
+              - PUT /api/group/name
+                - Purpose: Updates group name (owner only)
+                - Parameters: { name: string }
+                - Returns: { group: Group }
+              - PUT /api/group/transfer-ownership/:newOwnerId
+                - Purpose: Transfers group ownership to another member
+                - Parameters: newOwnerId (path)
+                - Returns: { group: Group }
+              - DELETE /api/group/member/:memberId
+                - Purpose: Removes member from group (owner only)
+                - Parameters: memberId (path)
+                - Returns: { group: Group }
+              - DELETE /api/group/leave
+                - Purpose: Leaves current group
+                - Returns: { message: string, deletedGroup?: boolean }
+        - 2. Internal Service Interfaces:
+              - createGroup(userId: string, name: string)
+                - Purpose: Creates new group with user as owner
+              - joinGroup(userId: string, groupCode: string)
+                - Purpose: Adds user to existing group with validation
+              - getCurrentGroup(userId: string)
+                - Purpose: Retrieves user's group with populated member data
+              - updateGroupName(userId: string, newName: string)
+                - Purpose: Updates group name with ownership verification
+              - transferOwnership(userId: string, newOwnerId: string)
+                - Purpose: Changes group ownership with validation
+              - removeMember(userId: string, memberIdToRemove: string)
+                - Purpose: Removes members with ownership checks
+              - leaveGroup(userId: string)
+                - Purpose: Handles user departure and group cleanup
+   - 5. Rating
+     - Purpose: Enables roommate rating system with time-based restrictions to ensure meaningful feedback. Requires minimum 30 days cohabitation before rating, chosen over unrestricted rating to prevent premature judgments and encourage genuine roommate relationships.
+     - Interfaces:
+         - 1. HTTP/REST Interfaces:
+              - POST /api/rating
+                - Purpose: Rates a roommate (1-5 stars) with optional testimonial
+                - Parameters: { ratedUserId: string, groupId: string, rating: number, testimonial?: string }
+                - Returns: { rating: Rating }
+              - GET /api/rating/:userId
+                - Purpose: Gets all ratings for a specific user
+                - Parameters: userId (path)
+                - Returns: { ratings: Rating[], averageRating: number, totalRatings: number }
+              - GET /api/rating/user/:userId/group/:groupId
+                - Purpose: Gets ratings for user within specific group
+                - Parameters: userId, groupId (path)
+                - Returns: { ratings: Rating[], averageRating: number, totalRatings: number }
+        - 2. Internal Service Interfaces:
+              - rateRoommate(raterUserId: string, ratedUserId: string, groupId: string, rating: number, testimonial?: string)
+                - Purpose: Creates or updates ratings with time validation
+              - getRatingsForUser(userId: string)
+                - Purpose: Aggregates all ratings and calculates averages
+              - getRatingsForUserInGroup(userId: string, groupId: string)
+                - Purpose: Gets group-specific ratings and statistics
+   - 6. Report
+     - Purpose: Provides content moderation through AI-powered message analysis (currently disabled). Uses OpenAI/OpenRouter for automated content analysis instead of manual moderation, chosen over human moderation for scalability and consistency in detecting inappropriate content.
+     - Interfaces:
+         - 1. HTTP/REST Interfaces:
+              - PUT /users/report
+                - Purpose: Analyzes user's messages for inappropriate content
+                - Parameters: { reportedUserId: string, reporterId: string, groupId: string, reason?: string }
+                - Returns: { success: boolean, message: string, data: { isOffensive: boolean, actionTaken: string } }
+   - 7. Task Management
+     - Purpose: Manages chore assignment and tracking with algorithmic weekly distribution. Supports both one-time and recurring tasks with fair assignment algorithms, chosen over manual assignment to reduce conflicts and ensure equitable workload distribution.
+     - Interfaces:
+         - 1. HTTP/REST Interfaces:
+              - POST /api/task
+                - Purpose: Creates new task (one-time or recurring)
+                - Parameters: { name: string, description?: string, difficulty: number, recurrence: string, requiredPeople: number, deadline?: Date }
+                - Returns: { task: Task }
+              - GET /api/task
+                - Purpose: Gets all tasks for current group
+                - Returns: { tasks: Task[] }
+              - GET /api/task/my-tasks
+                - Purpose: Gets tasks assigned to current user
+                - Returns: { tasks: Task[] }
+              - PUT /api/task/:id/status
+                - Purpose: Updates task completion status
+                - Parameters: { status: string } (incomplete/in-progress/completed)
+                - Returns: { task: Task }
+              - POST /api/task/:id/assign
+                - Purpose: Manually assigns task to specific users for current week
+                - Parameters: { assignedUserIds: string[] }
+                - Returns: { task: Task }
+              - POST /api/task/assign-weekly
+                - Purpose: Algorithmically assigns all weekly tasks
+                - Returns: { assignments: Task[] }
+              - GET /api/task/week/:weekStart
+                - Purpose: Gets tasks for specific week
+                - Parameters: weekStart (date string)
+                - Returns: { tasks: Task[] }
+              - DELETE /api/task/:id
+                - Purpose: Deletes task (creator only)
+                - Parameters: id (path)
+                - Returns: { message: string }
+              - GET /api/task/date/:date
+                - Purpose: Gets tasks for specific date
+                - Parameters: date (date string)
+                - Returns: { tasks: Task[] }
+        - 2. Internal Service Interfaces:
+              - createTask(userId: string, taskData: object)
+                - Purpose: Creates and validates new tasks
+              - getTasksForGroup(userId: string)
+                - Purpose: Retrieves group tasks with population
+              - getMyTasks(userId: string)
+                - Purpose: Gets user's assigned tasks
+              - updateTaskStatus(taskId: string, userId: string, status: string)
+                - Purpose: Updates assignment status with validation
+              - assignTask(taskId: string, userId: string, assignedUserIds: string[])
+                - Purpose: Manually assigns users to tasks
+              - assignWeeklyTasks(userId: string)
+                - Purpose: Automatically distributes weekly tasks fairly
+              - getTasksForWeek(userId: string, weekStart: string)
+                - Purpose: Retrieves tasks for specific week range
+              - deleteTask(taskId: string, userId: string)
+                - Purpose: Removes tasks with ownership verification
+              - getTasksForDate(userId: string, date: string)
+                - Purpose: Gets tasks for specific date
 
 3. **LLM Moderation Integration**
    - **Purpose**: Provides automated content moderation for reported user behavior via OpenAI API.
    - **Current Implementation**:
-     - Analyzes reported users' message history (up to 100 messages) to detect policy violations
+     - Analyzes reported users' message history (up to 50 messages) to detect policy violations
      - Returns isOffensive boolean flag via JSON response
      - Triggers database update to mark offensive users
    - **Future Enhancements**:
