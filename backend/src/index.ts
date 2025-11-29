@@ -28,7 +28,8 @@ app.use((req, res, next) => {
 });
 
 app.use(cors());
-app.use(bodyParser.json());
+// Increase JSON body size limit to support base64-encoded profile pictures
+app.use(bodyParser.json({ limit: '5mb' }));
 
 // Response logging middleware
 app.use((req, res, next) => {
