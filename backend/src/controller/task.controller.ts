@@ -29,7 +29,7 @@ export const TaskController = {
       return res.status(201).json({
         success: true,
         message: 'Task created successfully',
-        data: task
+        data: { task }
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -102,22 +102,33 @@ export const TaskController = {
   },
 
   getMyTasks: async (req: Request, res: Response) => {
-      // Check if user exists first
-      if (!req.user?._id) {
-        return res.status(401).json({
-          success: false,
-          message: 'User not authenticated'
+      try {
+        // Check if user exists first
+        if (!req.user?._id) {
+          return res.status(401).json({
+            success: false,
+            message: 'User not authenticated'
+          });
+        }
+
+        const userId = String(req.user._id);
+
+        const tasks = await taskService.getMyTasks(userId);
+
+        return res.status(200).json({
+          success: true,
+          data: tasks
         });
+      } catch (error) {
+        if (error instanceof Error && error.message === 'USER_NOT_IN_GROUP') {
+          return res.status(404).json({
+            success: false,
+            message: 'User is not a member of any group'
+          });
+        }
+
+        throw error;
       }
-
-      const userId = String(req.user._id);
-
-      const tasks = await taskService.getMyTasks(userId);
-
-      return res.status(200).json({
-        success: true,
-        data: tasks
-      });
   },
 
   updateTaskStatus: async (req: Request, res: Response) => {
@@ -147,7 +158,7 @@ export const TaskController = {
       return res.status(200).json({
         success: true,
         message: 'Task status updated successfully',
-        data: task
+        data: { task }
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -163,9 +174,9 @@ export const TaskController = {
               message: 'Task not found'
             });
           case 'USER_NOT_ASSIGNED_TO_TASK':
-            return res.status(403).json({
+            return res.status(404).json({
               success: false,
-              message: 'You are not assigned to this task'
+              message: 'Assignment not found'
             });
         }
       }
@@ -177,7 +188,7 @@ export const TaskController = {
   assignTask: async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const { assignedUserIds } = req.body;
+      const { assignedUserIds, userIds } = req.body;
 
       // Check if user exists first
       if (!req.user?._id) {
@@ -189,22 +200,25 @@ export const TaskController = {
 
       const userId = String(req.user._id);
 
-      if (!Array.isArray(assignedUserIds)) {
+      // Support both assignedUserIds (service) and userIds (tests/client)
+      const ids = Array.isArray(assignedUserIds) ? assignedUserIds : userIds;
+
+      if (!Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'assignedUserIds must be an array'
+          message: 'assignedUserIds must be a non-empty array'
         });
       }
 
       // Validate and convert to string array
-      const validatedUserIds: string[] = assignedUserIds.map(id => String(id));
+      const validatedUserIds: string[] = ids.map((id: unknown) => String(id));
 
       const task = await taskService.assignTask(id, userId, validatedUserIds);
 
       return res.status(200).json({
         success: true,
         message: 'Task assigned successfully',
-        data: task
+        data: { task }
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -218,6 +232,11 @@ export const TaskController = {
             return res.status(404).json({
               success: false,
               message: 'Group not found'
+            });
+          case 'USER_NOT_IN_GROUP':
+            return res.status(404).json({
+              success: false,
+              message: 'User is not a member of any group'
             });
           case 'INSUFFICIENT_PERMISSIONS':
             return res.status(403).json({
@@ -255,9 +274,14 @@ export const TaskController = {
 
       const assignments = await taskService.assignWeeklyTasks(userId);
 
+      const message =
+        assignments.length === 0
+          ? 'No tasks to assign for this week'
+          : `Assigned ${assignments.length} tasks for this week`;
+
       return res.status(200).json({
         success: true,
-        message: `Assigned ${assignments.length} tasks for this week`,
+        message,
         data: assignments
       });
     } catch (error) {
@@ -300,11 +324,19 @@ export const TaskController = {
         data: tasks
       });
     } catch (error) {
-      if (error instanceof Error && error.message === 'USER_NOT_IN_GROUP') {
-        return res.status(404).json({
-          success: false,
-          message: 'User is not a member of any group'
-        });
+      if (error instanceof Error) {
+        if (error.message === 'USER_NOT_IN_GROUP') {
+          return res.status(404).json({
+            success: false,
+            message: 'User is not a member of any group'
+          });
+        }
+        if (error.message === 'INVALID_WEEK_START') {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid week start'
+          });
+        }
       }
 
       throw error;
@@ -339,10 +371,15 @@ export const TaskController = {
               success: false,
               message: 'Task not found'
             });
+          case 'USER_NOT_IN_GROUP':
+            return res.status(404).json({
+              success: false,
+              message: 'User is not a member of any group'
+            });
           case 'INSUFFICIENT_PERMISSIONS':
             return res.status(403).json({
               success: false,
-              message: 'You can only delete tasks you created'
+              message: 'You do not have permission to delete this task'
             });
         }
       }
@@ -379,11 +416,19 @@ export const TaskController = {
         data: tasks
       });
     } catch (error) {
-      if (error instanceof Error && error.message === 'USER_NOT_IN_GROUP') {
-        return res.status(404).json({
-          success: false,
-          message: 'User is not a member of any group'
-        });
+      if (error instanceof Error) {
+        if (error.message === 'USER_NOT_IN_GROUP') {
+          return res.status(404).json({
+            success: false,
+            message: 'User is not a member of any group'
+          });
+        }
+        if (error.message === 'INVALID_DATE') {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid date'
+          });
+        }
       }
 
       throw error;
