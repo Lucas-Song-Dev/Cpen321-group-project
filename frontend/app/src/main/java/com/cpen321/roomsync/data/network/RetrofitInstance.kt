@@ -19,6 +19,9 @@ object RetrofitInstance {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
+        
+    
+
     // Main API for login, tasks, chat, etc.
     val api: ApiService by lazy {
         Retrofit.Builder()
