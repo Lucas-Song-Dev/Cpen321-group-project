@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">RoomSync</string>
-    <string name="checking_authentication">Checking authentication...</string>
     <string name="default_web_client_id">445076519627-97j67dhhi8pqvkqsts8luanr6pttltbv.apps.googleusercontent.com</string>
 
 </resources>
