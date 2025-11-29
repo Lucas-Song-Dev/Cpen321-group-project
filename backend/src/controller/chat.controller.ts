@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import chatService from '../services/chat.services';
 
 export const ChatController = {
@@ -37,7 +38,17 @@ export const ChatController = {
 
       return res.status(200).json({
         success: true,
-        data: result
+        data: {
+          messages: result.messages,
+          pagination: {
+            page: result.pagination.currentPage,
+            limit: limitNum,
+            totalPages: result.pagination.totalPages,
+            totalMessages: result.pagination.totalMessages,
+            hasNext: result.pagination.hasNext,
+            hasPrev: result.pagination.hasPrev
+          }
+        }
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -79,6 +90,14 @@ export const ChatController = {
 
       const userId = String(req.user._id);
 
+      // Validate groupId format
+      if (!mongoose.Types.ObjectId.isValid(groupId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid group ID format'
+        });
+      }
+
       if (!content) {
         return res.status(400).json({
           success: false,
@@ -91,7 +110,7 @@ export const ChatController = {
       return res.status(201).json({
         success: true,
         message: 'Message sent successfully',
-        data: message
+        data: { message }
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -104,7 +123,7 @@ export const ChatController = {
           case 'MESSAGE_TOO_LONG':
             return res.status(400).json({
               success: false,
-              message: 'Message must be 1000 characters or less'
+              message: 'Message is too long (max 1000 characters)'
             });
           case 'GROUP_NOT_FOUND':
             return res.status(404).json({
@@ -161,7 +180,7 @@ export const ChatController = {
       return res.status(201).json({
         success: true,
         message: 'Poll created successfully',
-        data: message
+        data: { message }
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -179,7 +198,7 @@ export const ChatController = {
           case 'INVALID_POLL_OPTIONS':
             return res.status(400).json({
               success: false,
-              message: 'Poll must have 2-10 options'
+              message: 'Poll must have 2-10 options (Maximum 10)'
             });
           case 'EMPTY_POLL_OPTION':
             return res.status(400).json({
@@ -223,6 +242,14 @@ export const ChatController = {
 
       const userId = String(req.user._id);
 
+      // Validate groupId format
+      if (!mongoose.Types.ObjectId.isValid(groupId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid group ID format'
+        });
+      }
+
       if (!option) {
         return res.status(400).json({
           success: false,
@@ -235,7 +262,7 @@ export const ChatController = {
       return res.status(200).json({
         success: true,
         message: 'Vote recorded successfully',
-        data: message
+        data: { message }
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -258,7 +285,7 @@ export const ChatController = {
           case 'MESSAGE_NOT_FOUND':
             return res.status(404).json({
               success: false,
-              message: 'Message not found'
+              message: 'Poll not found'
             });
           case 'NOT_A_POLL':
             return res.status(400).json({
@@ -279,6 +306,11 @@ export const ChatController = {
             return res.status(400).json({
               success: false,
               message: 'Invalid poll option'
+            });
+          case 'POLL_NOT_IN_GROUP':
+            return res.status(400).json({
+              success: false,
+              message: 'Poll does not belong to this group'
             });
         }
       }
@@ -329,6 +361,11 @@ export const ChatController = {
             return res.status(403).json({
               success: false,
               message: 'You can only delete your own messages'
+            });
+          case 'MESSAGE_NOT_IN_GROUP':
+            return res.status(400).json({
+              success: false,
+              message: 'Message does not belong to this group'
             });
         }
       }

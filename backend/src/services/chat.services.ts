@@ -170,6 +170,11 @@ class ChatService {
       throw new Error('MESSAGE_NOT_FOUND');
     }
 
+    // Ensure the poll belongs to the specified group
+    if (message.groupId.toString() !== groupId) {
+      throw new Error('POLL_NOT_IN_GROUP');
+    }
+
     if (message.type !== 'poll') {
       throw new Error('NOT_A_POLL');
     }
@@ -227,6 +232,11 @@ class ChatService {
     const message = await Message.findById(messageId);
     if (!message) {
       throw new Error('MESSAGE_NOT_FOUND');
+    }
+
+    // Ensure the message belongs to the specified group
+    if (message.groupId.toString() !== groupId) {
+      throw new Error('MESSAGE_NOT_IN_GROUP');
     }
 
     // Check if user is the sender
