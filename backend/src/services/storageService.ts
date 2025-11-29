@@ -15,8 +15,6 @@ export const uploadProfilePicture = async (
     throw new Error('GCS bucket name is not configured');
   }
 
-  console.log('Uploading profile picture to bucket:', config.GCS_BUCKET_NAME);
-
   const matches = dataUri.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
   if (!matches) {
     throw new Error('Invalid image data URI');
@@ -42,7 +40,6 @@ export const uploadProfilePicture = async (
   await file.makePublic();
 
   const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
-  console.log('Profile picture uploaded to:', publicUrl);
   return publicUrl;
 };
 

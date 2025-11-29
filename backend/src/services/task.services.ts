@@ -105,7 +105,7 @@ class TaskService {
     });
 
     // Explicitly save so tests can mock save() failures separately from create()
-    await (task as any).save?.();
+    await task.save();
 
     return task;
   }
@@ -203,7 +203,7 @@ class TaskService {
     }
 
     const isCreator = task.createdBy.toString() === userId;
-    const isOwner = group.owner && group.owner.toString() === userId;
+    const isOwner = group.owner.toString() === userId;
 
     // Ensure calling user is a member of the group
     const isMember = group.members.some(member => member.userId.toString() === userId);
@@ -282,7 +282,7 @@ class TaskService {
     // Fallback for legacy tasks without requiredPeople
     weeklyTasks.forEach(task => {
       if (!task.requiredPeople || task.requiredPeople < 1) {
-        (task as any).requiredPeople = 1;
+        (task as unknown as { requiredPeople: number }).requiredPeople = 1;
       }
     });
 
@@ -296,7 +296,7 @@ class TaskService {
       // Fallback for tasks without requiredPeople (old data)
       if (!task.requiredPeople || task.requiredPeople < 1) {
         // Set in-memory; caller tests rely on this even if save fails
-        (task as any).requiredPeople = 1;
+        (task as unknown as { requiredPeople: number }).requiredPeople = 1;
       }
 
       const requiredPeople = task.requiredPeople;
