@@ -49,6 +49,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
+import com.cpen321.roomsync.data.repository.GroupRepository
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 //screen destinations
 object NavRoutes {
@@ -76,22 +81,54 @@ fun AppNavigation() {
         startDestination = NavRoutes.AUTH
     ) {
         composable(NavRoutes.AUTH) {
+            val authState by authViewModel.authState.collectAsState()
+            val groupRepository = GroupRepository()
+            var hasCheckedGroup by remember { mutableStateOf(false) }
+            
+            // Handle navigation after successful auth
+            LaunchedEffect(authState) {
+                if (authState?.success == true && !hasCheckedGroup) {
+                    val user = authState?.user
+                    hasCheckedGroup = true
+                    
+                    // If profile is incomplete, navigate to profile creation (for both signup and login)
+                    if (user?.profileComplete != true) {
+                        navController.navigate(NavRoutes.PERSONAL_PROFILE) {
+                            popUpTo(NavRoutes.AUTH) { inclusive = true }
+                        }
+                    } else {
+                        // Profile is complete, check group and navigate accordingly
+                        try {
+                            val groupResponse = groupRepository.getGroup()
+                            if (groupResponse.success && groupResponse.data != null) {
+                                // User has a group, navigate to HOME
+                                navController.navigate(NavRoutes.HOME) {
+                                    popUpTo(NavRoutes.AUTH) { inclusive = true }
+                                }
+                            } else {
+                                // User doesn't have a group, navigate to GROUP_SELECTION
+                                navController.navigate(NavRoutes.GROUP_SELECTION) {
+                                    popUpTo(NavRoutes.AUTH) { inclusive = true }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            // On error, navigate to GROUP_SELECTION as fallback
+                            navController.navigate(NavRoutes.GROUP_SELECTION) {
+                                popUpTo(NavRoutes.AUTH) { inclusive = true }
+                            }
+                        }
+                    }
+                }
+            }
+            
             AuthScreenModern(
                 viewModel = authViewModel, // Pass the shared instance
                 onSignUp = {
                     navController.navigate(NavRoutes.PERSONAL_PROFILE)
                 },
                 onLogin = { userGroupName ->
-                    // Check if user has a group
-                    if (userGroupName.isNotEmpty()) {
-                        navController.navigate(NavRoutes.HOME) {
-                            popUpTo(NavRoutes.AUTH) { inclusive = true }
-                        }
-                    } else {
-                        navController.navigate(NavRoutes.GROUP_SELECTION) {
-                            popUpTo(NavRoutes.AUTH) { inclusive = true }
-                        }
-                    }
+                    // This callback is now handled by LaunchedEffect above
+                    // We keep it for compatibility but the actual navigation happens in LaunchedEffect
                 }
             )
         }
@@ -183,6 +220,23 @@ fun AppNavigation() {
         }
 
                 composable(NavRoutes.GROUP_SELECTION) {
+                    val groupViewModel: GroupViewModel = viewModel()
+                    val groupUiState by groupViewModel.uiState.collectAsState()
+                    
+                    // Check if user already has a group when this screen loads
+                    LaunchedEffect(Unit) {
+                        groupViewModel.loadGroup()
+                    }
+                    
+                    // If user has a group, navigate to HOME
+                    LaunchedEffect(groupUiState.group) {
+                        if (groupUiState.group != null && !groupUiState.isLoading) {
+                            navController.navigate(NavRoutes.HOME) {
+                                popUpTo(NavRoutes.GROUP_SELECTION) { inclusive = true }
+                            }
+                        }
+                    }
+                    
                     GroupSelectionScreen(
                         onCreateGroup = {
                             navController.navigate(NavRoutes.CREATE_GROUP)

@@ -68,9 +68,11 @@ fun PersonalProfileScreen(
     }
 
     val profileSetState by viewModel.profileSetState.collectAsState()
+    // Current time in millis, used to prevent selecting future dates
+    val todayMillis = remember { System.currentTimeMillis() }
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = runCatching { dateFormatter.parse(dob)?.time }
-            .getOrNull() ?: System.currentTimeMillis()
+            .getOrNull() ?: todayMillis
     )
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -183,7 +185,7 @@ fun PersonalProfileScreen(
                     )
                 )
 
-                // Email field (read-only)
+                // Email field (Google account email - not editable)
                 Text(
                     text = "Email:",
                     fontSize = 16.sp,
@@ -192,10 +194,14 @@ fun PersonalProfileScreen(
                 )
                 OutlinedTextField(
                     value = emailInput,
-                    onValueChange = { emailInput = it },
+                    onValueChange = { /* read-only, do nothing */ },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    enabled = false,
                     colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = Color.White,
+                        disabledBorderColor = Color.White.copy(alpha = 0.6f),
+                        disabledContainerColor = Color.Transparent,
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White,
                         focusedBorderColor = Color.White,
@@ -343,7 +349,10 @@ fun PersonalProfileScreen(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
-                            dob = dateFormatter.format(Date(millis))
+                            // Prevent selecting a date later than today
+                            if (millis <= todayMillis) {
+                                dob = dateFormatter.format(Date(millis))
+                            }
                         }
                         showDatePicker = false
                     }
@@ -357,6 +366,8 @@ fun PersonalProfileScreen(
                 }
             }
         ) {
+            // Older Material3 DatePicker in your project doesn't support dateValidator,
+            // so we rely on the confirm-button check above to block future dates.
             DatePicker(state = datePickerState)
         }
     }
