@@ -9,7 +9,8 @@
 | October 28, 2025 | Added section 4.4, 4.6, 4.7, Modified section 3.1, 4.1, 4.2, 4.3, 4.5 | Implemented M3 Requirements, fixed document according to app implementation and made further M2 feedback changes |
 | November 9, 2025 | Section 3.4, 4.1 | Added missing endpoints (health check, transfer ownership, get profile, get tasks by date), corrected API endpoint paths and parameters, added transfer ownership use case |
 | November 28, 2025 | Section 3.1, 3.2, 3.3, 3.4, 4.5 | Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram. Added additional external system actors based on changes to code. Updated dependencies diagram to match current code |
-| November 28, 2025 | Section 3.5 | Fixed use case numbering issues and names based on above changes |
+| November 28, 2025 | Section 3.5, 3.6, 3.7 | Fixed use case numbering issues and names based on above changes. Added mock-up screens we initally created. Edited non-functional requirements to match our existing tests |
+| November 28, 2025 | Section 4.3, 4.4, 4.5 | Rename headers to specific names like OpenAI API not LLM Moderation. Got rid of Kotlin and Typescript as libraries and other unnecessary test as per TA feedback. Deleted unnecessary text for dependency diagram section and updated diagram to mirror current code. |
 
 
 ---
@@ -314,11 +315,11 @@ The application targets university students, young professionals, and anyone see
 1. **Front-End Mobile Application (Android/Kotlin)**
    - **Purpose**: Provides the user interface and handles all user interactions. It enables authentication, profile management, group management, messaging, task management, and roommate rating.
    - **Interfaces**: The front-end communicates with the back-end via HTTP/REST endpoints.
-     0. **Health Check Interface**
+     1. **Health Check Interface**
         - GET /api/health(): HealthResponse
           - Purpose: Checks backend server and database connection status
           - Returns: Server status, database connection status, timestamp, and version information
-     1. **Authentication Interface**
+     2. **Authentication Interface**
         - POST /api/auth/signup(token: String): AuthResponse
           - Purpose: Creates a new user account using Google OAuth token
           - Parameters: Google ID token from OAuth
@@ -327,7 +328,7 @@ The application targets university students, young professionals, and anyone see
           - Purpose: Authenticates existing user with Google OAuth token
           - Parameters: Google ID token from OAuth
           - Returns: Success status, user data, and JWT authentication token
-     2. **Profile Management Interface**
+     3. **Profile Management Interface**
         - PUT /api/users/profile(name: String, dob: Date, gender: String): UserResponse
           - Purpose: Sets mandatory user profile fields (non-editable after creation)
           - Parameters: Legal name, date of birth, gender
@@ -339,7 +340,7 @@ The application targets university students, young professionals, and anyone see
         - DELETE /api/users/me(): SuccessResponse
           - Purpose: Deletes the current user's account
           - Returns: Success confirmation
-     3. **Group Management Interface**
+     4. **Group Management Interface**
         - POST /api/group(name: String): GroupResponse
           - Purpose: Creates a new roommate group with unique invitation code
           - Parameters: Group name (max 100 characters)
@@ -362,7 +363,7 @@ The application targets university students, young professionals, and anyone see
         - DELETE /api/group/leave(): SuccessResponse
           - Purpose: Allows member to leave the group. If owner leaves with other members present, transfers ownership to oldest member (by join date). If owner is alone, deletes the group.
           - Returns: Success confirmation with ownership transfer notification if applicable
-     4. **Messaging & Polling Interface**
+     5. **Messaging & Polling Interface**
         - GET /api/chat/:groupId/messages(page?: Number, limit?: Number): MessageListResponse
           - Purpose: Retrieves paginated message history for a group
           - Parameters: Group ID, optional page and limit
@@ -383,7 +384,7 @@ The application targets university students, young professionals, and anyone see
           - Purpose: Deletes own message from chat
           - Parameters: Message ID
           - Returns: Success confirmation
-     5. **Task Management Interface**
+     6. **Task Management Interface**
         - POST /api/task(name: String, difficulty: Number, recurrence: String, requiredPeople: Number, description?: String, deadline?: Date, assignedUserIds?: String[]): TaskResponse
           - Purpose: Creates a new household task
           - Parameters: Task name, difficulty (1-5), recurrence pattern, number of people required, optional description, deadline, assigned users
@@ -421,7 +422,7 @@ The application targets university students, young professionals, and anyone see
           - Purpose: Deletes a task (creator or owner only)
           - Parameters: Task ID
           - Returns: Success confirmation
-     6. **Rating & Moderation Interface**
+     7. **Rating & Moderation Interface**
         - POST /api/rating(ratedUserId: String, groupId: String, rating: Number, testimonial?: String): RatingResponse
           - Purpose: Submits or updates rating for a roommate (requires 30 days cohabitation)
           - Parameters: User ID to rate, group ID, rating (1-5), optional testimonial (max 500 chars)
@@ -479,7 +480,7 @@ The application targets university students, young professionals, and anyone see
           - Purpose: Fairly distributes tasks among group members for current week
           - Uses randomization and required people count for balanced allocation
 
-3. **LLM Moderation Integration (External Module - MVP)**
+3. **LLM Moderation Integration**
    - **Purpose**: Provides automated content moderation for reported user behavior via OpenAI API.
    - **Current Implementation**:
      - Analyzes reported users' message history (up to 100 messages) to detect policy violations
@@ -510,7 +511,7 @@ External modules are third-party services accessed over the internet that provid
    - **Integration**: Used via google-auth-library npm package. The Android client obtains an ID token from Google Sign-In, which is sent to the Node.js backend for verification against Google's servers.
    - **Data Exchanged**: Receives user's email, name, and unique Google ID upon successful authentication.
 
-2. **LLM Moderation System (MVP Feature)**
+2. **OpenAI API**
    - **Provider**: OpenAI API (accessed via OpenRouter)
    - **Purpose**: Analyzes reported user behavior by reviewing message history to detect harassment, hate speech, threats, sexual harassment, and other violations.
    - **Integration**: Used via OpenAI npm package with OpenRouter proxy. When a user is reported, the system fetches up to 100 recent messages from the reported user and sends them to GPT-3.5-turbo with a moderation prompt. The LLM returns a JSON response indicating whether the content is offensive.
@@ -533,119 +534,61 @@ Frameworks and libraries are software packages that provide reusable functionali
    - **Purpose**: Type-safe REST client for Android that handles HTTP requests to the Node.js backend. Converts API responses to Kotlin data classes automatically.
    - **Usage**: Defines interface (ApiService.kt) with annotations like @POST("api/auth/login") to call backend endpoints.
 
-3. **Kotlin Coroutines**
-   - **Type**: Concurrency Library
-   - **Purpose**: Manages asynchronous operations (network calls, database queries) without blocking the UI thread. All Retrofit API calls use suspend functions for non-blocking execution.
-
-4. **Navigation Compose**
+3. **Navigation Compose**
    - **Type**: Navigation Framework
    - **Purpose**: Handles screen navigation and routing in Jetpack Compose. Manages navigation graph and backstack.
    - **Usage**: Defines routes (NavRoutes.AUTH, NavRoutes.HOME, etc.) and handles navigation between screens with type-safe arguments.
 
-5. **Socket.IO Client**
+4. **Socket.IO Client**
    - **Type**: Real-Time Communication Library
    - **Purpose**: Enables WebSocket connections from Android client to backend server for real-time chat message delivery.
    - **Usage**: Connects to backend Socket.IO server, listens for "new-message" events, and updates UI in real-time.
 
-6. **Coil**
+5. **Coil**
    - **Type**: Image Loading Library
    - **Purpose**: Asynchronously loads and caches images (profile pictures) in Compose UI. Kotlin-first library optimized for Jetpack Compose.
    - **Usage**: AsyncImage composable to load profile pictures from URLs with placeholder and error handling.
 
-7. **Google Play Services Auth**
+6. **Google Play Services Auth**
    - **Type**: Authentication Library
    - **Purpose**: Provides Google Sign-In functionality on Android. Generates Google ID tokens for OAuth authentication.
    - **Usage**: Launches Google Sign-In intent, receives ID token, and sends to backend for verification.
 
 **Back-End (Node.js/TypeScript):**
 
-8. **Express.js**
+7. **Express.js**
    - **Type**: Web Application Framework
    - **Purpose**: Lightweight framework for building RESTful APIs in Node.js. Handles routing, middleware, request/response processing, and HTTP server management.
    - **Usage**: All API routes (/api/auth, /api/group, /api/task, etc.) are defined using Express routers.
 
-9. **Mongoose**
+8. **Mongoose**
    - **Type**: Object Document Mapper (ODM) Library
    - **Purpose**: Provides schema-based modeling layer for MongoDB. Defines data structures, validation rules, and relationships between collections. Integrates TypeScript types with database operations.
    - **Usage**: Models for User, Group, Task, Message, and Rating define the database schema and provide query methods.
 
-10. **Socket.IO**
+9. **Socket.IO**
    - **Type**: Real-Time Communication Library
    - **Purpose**: Enables bidirectional WebSocket connections between server and Android clients for instant message delivery. Automatically falls back to HTTP long-polling if WebSockets are unavailable.
    - **Usage**: Broadcasts new messages to all clients in a group room using io.to(groupId).emit('new-message', data).
 
-11. **JSON Web Token (jsonwebtoken)**
+10. **JSON Web Token (jsonwebtoken)**
    - **Type**: Authentication Library
    - **Purpose**: Generates and verifies JWT tokens for stateless authentication. Tokens are signed with HS256 algorithm and include user ID payload.
    - **Usage**: After Google OAuth verification, server issues a JWT that clients include in the Authorization header for protected routes.
 
-12. **google-auth-library**
+11. **google-auth-library**
    - **Type**: Google Authentication Client Library
    - **Purpose**: Verifies Google OAuth ID tokens received from the Android client. Validates token signatures against Google's public keys.
    - **Usage**: verifyIdToken() method extracts user email, name, and Google ID from tokens.
 
-13. **OpenAI**
+12. **OpenAI**
    - **Type**: AI/LLM Integration Library
    - **Purpose**: Provides access to OpenAI's GPT models for content moderation. Analyzes reported user messages to detect violations.
    - **Usage**: Used via OpenRouter proxy to send message batches to GPT-3.5-turbo for automated moderation analysis, returns JSON with isOffensive boolean.
 
-**Programming Languages:**
-
-- **Kotlin**: Statically-typed JVM language for Android development. Required by course assignment. Provides null safety, coroutines, and modern functional programming features.
-- **TypeScript**: Strongly-typed superset of JavaScript for backend development. Required by course assignment. Provides compile-time type checking and enhanced IDE support.
-
-**Runtime Environments:**
-
-- **Android Runtime (ART)**: Executes Kotlin bytecode on Android devices (API 33 minimum).
-- **Node.js v18+**: JavaScript runtime for executing TypeScript (compiled to JavaScript) on the server.
-
-**Database:**
-
-- **MongoDB**: NoSQL document database storing all persistent application data in JSON-like BSON format. Collections include Users, Groups, Messages, Tasks, and Ratings. On Atlas exactly like localhost ie no other features being used.
-
-**Cloud Infrastructure:**
-
-- **Google Cloud Platform (GCP)**: Cloud infrastructure provider hosting the Node.js backend and MongoDB database on Compute Engine VMs. Provides scalable, reliable infrastructure with 99.95% uptime SLA. Required by course assignment.
-
 ### **4.5. Dependencies Diagram**
 
 ![Dependencies Diagram](./images/dependenciesDiagram.png)
-
-**System Architecture:** The RoomSync system follows a client-server architecture with three main tiers:
-
-1. **Presentation Tier**: Android mobile application (Kotlin/Jetpack Compose)
-2. **Application Tier**: Node.js/TypeScript backend server with decomposed service modules
-3. **Data Tier**: MongoDB database and Google Cloud infrastructure
-
-**Backend Component Decomposition:** The server is organized into domain-specific modules:
-
-- **Authentication Service** (src/services/auth.ts, src/controller/auth.ts): Handles Google OAuth verification, JWT generation, and user session management
-- **User Management Service** (src/controller/user.ts, src/routes/user.ts): Manages user profiles, preferences, and account operations
-- **Group Management Service** (src/routes/group.ts): Handles group creation, joining, member management, and ownership transfers
-- **Chat Service** (src/routes/chat.ts, src/socket/socketHandler.ts): Manages real-time messaging, message history, polls, and WebSocket connections
-- **Task Management Service** (src/routes/task.ts): Handles task creation, assignment algorithms, status tracking, and weekly scheduling
-- **Rating Service** (src/routes/rating.ts): Manages roommate ratings, testimonials, and average rating calculations
-- **Moderation Service** (src/controller/report.ts): Handles user reporting (LLM integration planned but not yet active in MVP)
-
-**Component Dependencies:**
-
-- **Frontend** → Google OAuth 2.0 API (for authentication)
-- **Frontend** → Backend Services (via REST API and WebSocket)
-- **Authentication Service** → Google OAuth 2.0 API (token verification)
-- **Authentication Service** → MongoDB User Collection
-- **All Backend Services** → Authentication Middleware (protect) for request authorization
-- **Chat Service** → Socket.IO for real-time message broadcasting
-- **Chat Service** → MongoDB Message Collection
-- **Group Management** → MongoDB Group Collection
-- **Group Management** → User Management (to update user.groupName)
-- **Task Management** → MongoDB Task Collection
-- **Task Management** → Group Management (to retrieve member lists for assignment algorithm)
-- **Rating Service** → MongoDB Rating Collection
-- **Rating Service** → User Management (to update user.averageRating)
-- **Moderation Service** → Chat Service (to review reported messages)
-- **All Services** → MongoDB via Mongoose ODM
-- **Backend Server** → Google Cloud Compute Engine (deployment)
-- **MongoDB** → Google Cloud Compute Engine (hosted on same or separate VM)
 
 ### **4.6. Use Case Sequence Diagram (5 Most Major Use Cases)**
 
