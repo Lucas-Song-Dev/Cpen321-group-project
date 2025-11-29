@@ -80,29 +80,37 @@ export const UserController = {
 
     // Validate livingPreferences if provided
     if (livingPreferences) {
-      const validSchedules = ['Morning', 'Night', 'Flexible'];
-      const validFrequencies =  ['None', 'Occasional', 'Regular'];
-      const validNoise = ['Quiet', 'Moderate', 'Loud'];
-      const validProfessions = ['Student', 'Worker', 'Unemployed'];
+      const validSchedules: string[] = ['Morning', 'Night', 'Flexible'];
+      const validFrequencies: string[] = ['None', 'Occasional', 'Regular'];
+      const validNoise: string[] = ['Quiet', 'Moderate', 'Loud'];
+      const validProfessions: string[] = ['Student', 'Worker', 'Unemployed'];
 
-
-      if (typeof livingPreferences.schedule === 'string' && !validSchedules.includes(livingPreferences.schedule)) {
+      const schedule = livingPreferences.schedule;
+      if (typeof schedule === 'string' && !validSchedules.includes(schedule)) {
         res.status(400).json({ success: false, message: 'Invalid schedule value' });
         return;
       }
-      if (typeof livingPreferences.drinking === 'string' && !validFrequencies.includes(livingPreferences.drinking)) {
+
+      const drinkingPref = livingPreferences.drinking;
+      if (typeof drinkingPref === 'string' && !validFrequencies.includes(drinkingPref)) {
         res.status(400).json({ success: false, message: 'Invalid drinking value' });
         return;
       }
-      if (typeof livingPreferences.partying === 'string' && !validFrequencies.includes(livingPreferences.partying)) {
+
+      const partyingPref = livingPreferences.partying;
+      if (typeof partyingPref === 'string' && !validFrequencies.includes(partyingPref)) {
         res.status(400).json({ success: false, message: 'Invalid partying value' });
         return;
       }
-      if (typeof livingPreferences.noise === 'string' && !validNoise.includes(livingPreferences.noise)) {
+
+      const noisePref = livingPreferences.noise;
+      if (typeof noisePref === 'string' && !validNoise.includes(noisePref)) {
         res.status(400).json({ success: false, message: 'Invalid noise value' });
         return;
       }
-      if (typeof livingPreferences.profession === 'string' && !validProfessions.includes(livingPreferences.profession)) {
+
+      const professionPref = livingPreferences.profession;
+      if (typeof professionPref === 'string' && !validProfessions.includes(professionPref)) {
         res.status(400).json({ success: false, message: 'Invalid profession value' });
         return;
       }
@@ -148,7 +156,7 @@ export const UserController = {
           // Upload base64-encoded image and store public URL
           const uploadedUrl = await uploadProfilePicture(
             trimmed,
-            (user._id as unknown as string)  // cast to string for Storage path
+            (user as any)._id.toString()
           );
           user.profilePicture = uploadedUrl;
         } else {
