@@ -32,9 +32,25 @@ export const AuthService = {
         },
         token,
       };
-    } catch (err) {
-      console.error(err);
-      return { success: false, message: "Signup failed due to server error" };
+    } catch (err: any) {
+      console.error("AuthService.signup error:", err);
+
+      // Handle common Mongo duplicate key errors more clearly
+      if (err?.code === 11000) {
+        // Duplicate key on email or googleId
+        return {
+          success: false,
+          message: "User already exists. Please log in instead.",
+        };
+      }
+
+      // Surface the actual error message to help debugging instead of a generic one
+      const errorMessage =
+        typeof err?.message === "string" && err.message.trim().length > 0
+          ? err.message
+          : "Signup failed due to server error";
+
+      return { success: false, message: `Signup failed: ${errorMessage}` };
     }
   },
 

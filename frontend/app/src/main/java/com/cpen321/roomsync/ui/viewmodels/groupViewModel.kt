@@ -67,7 +67,7 @@ class GroupViewModel(
         }
     }
     
-    private fun loadGroup() {
+    fun loadGroup() {
         viewModelScope.launch {
             try {
                 println("GroupViewModel: Loading group...")
@@ -148,10 +148,23 @@ class GroupViewModel(
                     loadGroup() // Refresh group data
                 } else {
                     println("GroupViewModel: Group creation failed: ${response.message}")
-                    _uiState.value = _uiState.value.copy(
-                        error = response.message ?: "Failed to create group",
-                        isLoading = false
-                    )
+                    val errorMessage = response.message ?: "Failed to create group"
+                    
+                    // If user is already in a group, load their current group
+                    if (errorMessage.contains("already a member", ignoreCase = true)) {
+                        println("GroupViewModel: User already in group, loading current group")
+                        // Clear error and load existing group
+                        _uiState.value = _uiState.value.copy(
+                            error = null,
+                            isLoading = true
+                        )
+                        loadGroup() // This will load their existing group
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            error = errorMessage,
+                            isLoading = false
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 println("GroupViewModel: Exception during group creation: ${e.message}")
