@@ -8,6 +8,8 @@
 | October 10, 2025 | Section 3.2, 3.7  | Fixed use case diagram according to feedback in M2 and non-function requirements section with concrete research to back up requirements |
 | October 28, 2025 | Added section 4.4, 4.6, 4.7, Modified section 3.1, 4.1, 4.2, 4.3, 4.5 | Implemented M3 Requirements, fixed document according to app implementation and made further M2 feedback changes |
 | November 9, 2025 | Section 3.4, 4.1 | Added missing endpoints (health check, transfer ownership, get profile, get tasks by date), corrected API endpoint paths and parameters, added transfer ownership use case |
+| November 28, 2025 | Section 3.4| Edit use case names to match with use case diagram |
+
 
 ---
 
@@ -85,41 +87,40 @@ The application targets university students, young professionals, and anyone see
 ### **3.4. Use Case Description**
 
 #### **Use cases for User Authentication**
-1. **Create account** – Secure account creation using Google OAuth (interaction with Google OAuth 2.0 API)  
-2. **Login** – Secure account login using Google OAuth (interaction with Google OAuth 2.0 API)  
-3. **Logout** – User logs out of the application, clearing locally stored authentication tokens  
+1. **Sign Up** – Secure account creation using Google OAuth (interaction with Google OAuth 2.0 API)  
+2. **Login** – Secure account login using Google OAuth (interaction with Google OAuth 2.0 API)
+3. **Logout** – User logs out of the application, clearing locally stored authentication tokens
+4. **Delete Account** – User logs out of the application, clearing locally stored authentication tokens  
 
 #### **Use cases for User Profile Management**
-4. **Set mandatory profile fields** – Users must provide legal name, date of birth, and gender upon account creation (one-time, non-editable)  
-5. **Update nickname and bio** – Users can choose a nickname and update their bio text  
-6. **Update living preferences** – Users can indicate living preferences by selecting schedule, drinking, partying, noise, and profession descriptions  
-7. **Update profile picture** – Users can add, change, or remove their profile picture  
-8. **Delete account** – Users can permanently delete their account and all associated data  
+5. **Update Optional Profile Fields: nickname, bio, living preferences and profile picture** – Users can choose a nickname, update their bio text, indicate living preferences by selecting pre-determined options regarding their schedule, drinking, partying, noise, and profession descriptions and users can add, change, or remove their profile picture
 
 #### **Use cases for Group Management**
-9. **Create group** – Establish a new living group and generate a unique invitation code for prospective roommates
-10. **Join group** – Join an existing roommate group by entering a unique 4 digit alphanumeric invitation code
-11. **View group** – View members of the group, group name, and member join dates
-12. **Leave group** – Group members can leave a group they are a part of (owner leaving transfers to oldest member; if alone, deletes group)
-13. **Remove group member** – Group owner can remove group members
-14. **Transfer group ownership** – Group owner can transfer ownership to another group member
+6. **Create Group** – Establish a new living group and generate a unique invitation code for prospective roommates
+7. **Join Group** – Join an existing roommate group by entering a unique 4 digit alphanumeric invitation code
+8. **View Group** – View members of the group, group name, and member join dates
+9. **Leave Group** – Group members can leave a group they are a part of (owner leaving transfers to oldest member; if alone, deletes group)
+10. **Delete Group** – Owner of group cab delete group which gets rid of all group chats, tasks, and other group related features
+11. **Remove Group Member** – Group owner can remove group members
+12. **Transfer Group Ownership** – Group owner can transfer ownership to another group member
 
 #### **Use cases for Group Communication**
-14. **Send message** – Real-time messaging system for communication between all group members  
-15. **Create poll** – A voting mechanism for group decisions regarding household policies and activities  
+13. **Send Messages** – Real-time messaging system for communication between all group members
+14. **Send Polls** – A voting mechanism for group decisions regarding household policies and activities  
 
 #### **Use cases for Group Task Management**
-16. **Add task** – Create tasks with name, description, difficulty (1-5), recurrence, deadline (for one-time tasks), and optional member assignment. View tasks in Calendar, Weekly, or My Tasks views  
-17. **Delete task** – Delete tasks if a task is no longer needed  
-18. **Set task status** – Update task status to *in-progress* or *completed* for assigned tasks  
+15.  **Add Tasks** – Create tasks with name, description, difficulty (1-5), recurrence, deadline (for one-time tasks), and optional member assignment. View tasks in Calendar, Weekly, or My Tasks views
+16.  **Auto-Assign Tasks** – After creating task, user who created task can press button to automatically distribute tasks to other users based on task parameters previously inputed.
+17.  **Delete Tasks** – Delete tasks if a task is no longer needed
+18.  **Set Task Status** – Update task status to *in-progress* or *completed* for assigned tasks  
 
 #### **Use cases for Roommate Rating System**
-19. **Rate roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days  
-20. **Write testimonial** – Add optional written feedback about roommate experience  
-21. **View ratings** – View user profiles, average ratings, and testimonials from previous roommates  
+18. **Rate Roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days
+19. **Write Testimonial** – Add optional written feedback about roommate experience
+20. **View Roommate Ratings** – View user profiles, average ratings, and testimonials from previous roommates  
 
 #### **Use cases for User Moderation**
-22. **Report user** – Report inappropriate user behavior for review  
+21. **Report User** – Report inappropriate user behavior for review  
 
 ### **3.5. Formal Use Case Specifications (5 Most Major Use Cases)**
 
