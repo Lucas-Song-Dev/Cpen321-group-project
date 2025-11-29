@@ -19,3 +19,19 @@ data class ReportData(
     @SerializedName("isOffensive") val isOffensive: Boolean,
     @SerializedName("actionTaken") val actionTaken: String?  // Added String? type
 )
+
+data class ReportMessageRequest(
+    @SerializedName("reason") val reason: String? = null
+)
+
+data class ReportMessageData(
+    @SerializedName("isOffensive") val isOffensive: Boolean,
+    @SerializedName("actionTaken") val actionTaken: String?,
+    @SerializedName("moderationReason") val moderationReason: String?
+)
+
+data class ReportMessageResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("message") val message: String?,
+    @SerializedName("data") val data: ReportMessageData?
+)

@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import OpenAI, { type ClientOptions } from 'openai';
 
 interface ModerationResult {
   isOffensive: boolean;
@@ -11,23 +11,36 @@ class ModerationService {
 
   constructor() {
     // Initialize OpenAI client if API key is available
-    const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    const openAiKey = process.env.OPENAI_API_KEY;
+
+    // Prefer OpenAI key, fall back to OpenRouter if provided
+    const apiKey = openAiKey ?? openRouterKey ?? null;
+    const useOpenRouter = !openAiKey && !!openRouterKey;
+
     if (apiKey) {
       try {
-        this.openai = new OpenAI({
-          baseURL: process.env.OPENROUTER_API_KEY 
-            ? "https://openrouter.ai/api/v1" 
-            : undefined,
-          apiKey: apiKey,
-        });
+        const config: ClientOptions = {
+          apiKey
+        };
+        
+        // Only set baseURL if explicitly using OpenRouter
+        if (useOpenRouter) {
+          (config as ClientOptions & { baseURL?: string; defaultHeaders?: Record<string, string> }).baseURL =
+            'https://openrouter.ai/api/v1';
+          (config as ClientOptions & { baseURL?: string; defaultHeaders?: Record<string, string> }).defaultHeaders = {
+            'HTTP-Referer': process.env.YOUR_SITE_URL ?? 'http://localhost:3000',
+            'X-Title': process.env.YOUR_SITE_NAME ?? 'Roommate Chat App'
+          };
+        }
+        
+        this.openai = new OpenAI(config);
         this.isEnabled = true;
-        console.log('GPT Moderation Service: Enabled');
       } catch (error) {
         console.error('GPT Moderation Service: Failed to initialize', error);
         this.isEnabled = false;
       }
     } else {
-      console.warn('GPT Moderation Service: No API key found. Moderation disabled.');
       this.isEnabled = false;
     }
   }
@@ -65,12 +78,12 @@ class ModerationService {
         ? content.join('\n') 
         : content;
 
-      // Truncate if too long (GPT-3.5-turbo has token limits)
-      const maxLength = 8000; // Conservative limit
+      // Truncate if too long
+      const maxLength = 8000;
       const truncatedContent = messageTexts.length > maxLength
         ? messageTexts.substring(0, maxLength) + '... [truncated]'
         : messageTexts;
-
+      
       const systemPrompt = `You are a strict content moderation assistant for a roommate group chat application. Your job is to flag inappropriate content including profanity and swear words.
 
 Flag messages as offensive if they contain ANY of the following:
@@ -97,7 +110,7 @@ Be strict about profanity - even casual use of swear words should be flagged. On
         : `Messages to analyze:\n${truncatedContent}`;
 
       const completion = await this.openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+        model: process.env.OPENAI_MODEL ?? 'gpt-3.5-turbo',
         messages: [
           {
             role: "system",
@@ -119,13 +132,10 @@ Be strict about profanity - even casual use of swear words should be flagged. On
       }
 
       const analysis = JSON.parse(analysisContent) as ModerationResult;
-      console.log('GPT Moderation Analysis:', analysis);
-      
       return analysis;
     } catch (error: any) {
       console.error('Error in GPT moderation:', error);
       // On error, default to non-offensive to avoid blocking legitimate messages
-      // In production, you might want to log this and have a fallback strategy
       return {
         isOffensive: false,
         reason: `Moderation error: ${error.message}`
@@ -158,4 +168,3 @@ Be strict about profanity - even casual use of swear words should be flagged. On
 // Export singleton instance
 export const moderationService = new ModerationService();
 export default moderationService;
-

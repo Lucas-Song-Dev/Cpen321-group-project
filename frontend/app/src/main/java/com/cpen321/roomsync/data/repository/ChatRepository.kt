@@ -104,4 +104,26 @@ class ChatRepository {
             ApiResponse(false, "Unexpected error: ${e.message}")
         }
     }
+
+    suspend fun reportMessage(groupId: String, messageId: String, reason: String?): ReportMessageResponse {
+        return try {
+            val response = RetrofitInstance.reportApi.reportMessage(
+                groupId,
+                messageId,
+                ReportMessageRequest(reason)
+            )
+            if (response.isSuccessful) {
+                response.body() ?: ReportMessageResponse(false, "Empty response from server", null)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                ReportMessageResponse(false, errorBody ?: "Report message failed: ${response.code()}", null)
+            }
+        } catch (e: IOException) {
+            ReportMessageResponse(false, "Network error: ${e.message}", null)
+        } catch (e: HttpException) {
+            ReportMessageResponse(false, "HTTP error: ${e.code()} - ${e.message()}", null)
+        } catch (e: Exception) {
+            ReportMessageResponse(false, "Unexpected error: ${e.message}", null)
+        }
+    }
 }

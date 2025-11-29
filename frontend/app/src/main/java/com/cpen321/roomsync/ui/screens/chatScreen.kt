@@ -82,7 +82,8 @@ fun convertViewModelMessage(viewModelMessage: ViewModelChatMessage): ChatMessage
 @Composable
 fun MessageBubble(
     message: ChatMessage,
-    onPollClick: () -> Unit = {}
+    onPollClick: () -> Unit = {},
+    onReportClick: (() -> Unit)? = null
 ) {
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     
@@ -127,12 +128,30 @@ fun MessageBubble(
             
             Spacer(modifier = Modifier.height(4.dp))
             
-            Text(
-                text = timeFormat.format(message.timestamp),
-                fontSize = 10.sp,
-                color = ComposeColor.White.copy(alpha = 0.7f),
-                modifier = Modifier.padding(horizontal = 4.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = timeFormat.format(message.timestamp),
+                    fontSize = 10.sp,
+                    color = ComposeColor.White.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+
+                if (!message.isOwnMessage && onReportClick != null && message.type == MessageType.TEXT) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = onReportClick,
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(
+                            text = "Report",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
         }
 
         if (message.isOwnMessage) {
@@ -615,6 +634,10 @@ fun ChatScreen(
     }
     val uiState by viewModel.uiState.collectAsState()
 
+    var showReportDialog by remember { mutableStateOf(false) }
+    var reportReason by remember { mutableStateOf("") }
+    var selectedMessageId by remember { mutableStateOf<String?>(null) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -624,7 +647,15 @@ fun ChatScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             ChatScreenPart2(groupName, onBack, { showPollDialog = true }, { showMenu = true })
-            ChatScreenPart3(uiState, listState, onNavigateToPolls)
+            ChatScreenPart3(
+                uiState,
+                listState,
+                onNavigateToPolls,
+                onReportMessage = { messageId ->
+                    selectedMessageId = messageId
+                    showReportDialog = true
+                }
+            )
             MessageInput(
                 messageText = messageText,
                 onMessageTextChange = { messageText = it },
@@ -654,6 +685,60 @@ fun ChatScreen(
 
         if (showMenu) {
             ChatScreenPart4({ showMenu = false })
+        }
+
+        if (showReportDialog && selectedMessageId != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    showReportDialog = false
+                    reportReason = ""
+                    selectedMessageId = null
+                },
+                title = { Text("Report Message") },
+                text = {
+                    Column {
+                        Text(
+                            text = "Tell us briefly why you are reporting this message (optional).",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = reportReason,
+                            onValueChange = { reportReason = it },
+                            label = { Text("Reason (optional)") },
+                            singleLine = false,
+                            maxLines = 3,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            selectedMessageId?.let { id ->
+                                val reason = reportReason.ifBlank { null }
+                                viewModel.reportMessage(id, reason)
+                            }
+                            showReportDialog = false
+                            reportReason = ""
+                            selectedMessageId = null
+                        }
+                    ) {
+                        Text("Submit")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showReportDialog = false
+                            reportReason = ""
+                            selectedMessageId = null
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
 
         uiState.error?.let { error ->
@@ -740,7 +825,8 @@ private fun ChatScreenPart2(
 private fun ColumnScope.ChatScreenPart3(
     uiState: com.cpen321.roomsync.ui.viewmodels.ChatUiState,
     listState: androidx.compose.foundation.lazy.LazyListState,
-    onNavigateToPolls: () -> Unit
+    onNavigateToPolls: () -> Unit,
+    onReportMessage: (String) -> Unit
 ) {
     println("ChatScreen: Current UI state: $uiState")
     LazyColumn(
@@ -755,9 +841,13 @@ private fun ColumnScope.ChatScreenPart3(
         println("ChatScreen: Displaying ${reversedMessages.size} messages")
         items(reversedMessages) { message ->
             println("ChatScreen: Displaying message: $message")
+            val uiMessage = convertViewModelMessage(message)
             MessageBubble(
-                message = convertViewModelMessage(message),
-                onPollClick = onNavigateToPolls
+                message = uiMessage,
+                onPollClick = onNavigateToPolls,
+                onReportClick = {
+                    onReportMessage(uiMessage.id)
+                }
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
