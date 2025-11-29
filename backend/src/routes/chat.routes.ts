@@ -1,48 +1,40 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import { ChatController } from '../controller/chat.controller';
 import { protect } from '../middleware/auth.middleware';
 
 const chatRouter = express.Router();
 
 // All routes below this middleware are protected
-chatRouter.use((req: Request, res: Response, next: NextFunction) => {
-  protect(req, res, next);
+chatRouter.use(async (req, res, next) => {
+  try {
+    await protect(req, res, next);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // @desc    Get messages for a group
 // @route   GET /api/chat/:groupId/messages
-chatRouter.get('/:groupId/messages', (req: Request, res: Response) => {
-  ChatController.getGroupMessages(req, res);
-});
+chatRouter.get('/:groupId/messages', ChatController.getGroupMessages);
 
 // @desc    Send a message to a group
 // @route   POST /api/chat/:groupId/message
-chatRouter.post('/:groupId/message', (req: Request, res: Response) => {
-  ChatController.sendMessage(req, res);
-});
+chatRouter.post('/:groupId/message', ChatController.sendMessage);
 
 // @desc    Create a poll in a group
 // @route   POST /api/chat/:groupId/poll
-chatRouter.post('/:groupId/poll', (req: Request, res: Response) => {
-  ChatController.createPoll(req, res);
-});
+chatRouter.post('/:groupId/poll', ChatController.createPoll);
 
 // @desc    Vote on a poll
 // @route   POST /api/chat/:groupId/poll/:messageId/vote
-chatRouter.post('/:groupId/poll/:messageId/vote', (req: Request, res: Response) => {
-  ChatController.voteOnPoll(req, res);
-});
+chatRouter.post('/:groupId/poll/:messageId/vote', ChatController.voteOnPoll);
 
 // @desc    Delete a message
 // @route   DELETE /api/chat/:groupId/message/:messageId
-chatRouter.delete('/:groupId/message/:messageId', (req: Request, res: Response) => {
-  ChatController.deleteMessage(req, res);
-});
+chatRouter.delete('/:groupId/message/:messageId', ChatController.deleteMessage);
 
 // @desc    Report a message for moderation
 // @route   POST /api/chat/:groupId/message/:messageId/report
-chatRouter.post('/:groupId/message/:messageId/report', (req: Request, res: Response) => {
-  ChatController.reportMessage(req, res);
-});
+chatRouter.post('/:groupId/message/:messageId/report', ChatController.reportMessage);
 
 export default chatRouter;
