@@ -156,7 +156,7 @@ export const UserController = {
           // Upload base64-encoded image and store public URL
           const uploadedUrl = await uploadProfilePicture(
             trimmed,
-            String(user._id)
+            user.email  // use stable, typed identifier for storage path
           );
           user.profilePicture = uploadedUrl;
         } else {
