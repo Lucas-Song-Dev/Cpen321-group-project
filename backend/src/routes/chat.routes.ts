@@ -33,6 +33,8 @@ chatRouter.delete('/:groupId/message/:messageId', ChatController.deleteMessage);
 
 // @desc    Report a message for moderation
 // @route   POST /api/chat/:groupId/message/:messageId/report
-chatRouter.post('/:groupId/message/:messageId/report', ChatController.reportMessage);
+chatRouter.post('/:groupId/message/:messageId/report', (req, res, next) => {
+  ChatController.reportMessage(req, res, next).catch(next);
+});
 
 export default chatRouter;

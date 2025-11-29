@@ -7,6 +7,10 @@ import Group from '../../models/group.models';
 import { UserModel } from '../../models/user.models';
 import jwt from 'jsonwebtoken';
 import { config } from '../../config';
+import moderationService from '../../services/moderation.service';
+
+// Mock the moderation service
+jest.mock('../../services/moderation.service');
 
 const app = express();
 app.use(express.json());
@@ -54,8 +58,11 @@ describe('Chat message report moderation', () => {
       { expiresIn: '1h' }
     );
 
-    // Enable test moderation flag so moderation service always flags as offensive
-    process.env.TEST_REPORT_OFFENSIVE = 'true';
+    // Mock moderation service to return offensive
+    (moderationService.moderateUserMessages as jest.Mock).mockResolvedValue({
+      isOffensive: true,
+      reason: 'Test: flagged as offensive'
+    });
   });
 
   afterAll(async () => {
@@ -87,8 +94,10 @@ describe('Chat message report moderation', () => {
       type: 'text'
     });
 
-    // Disable forced offensive flag
-    process.env.TEST_REPORT_OFFENSIVE = 'false';
+    // Mock moderation service to return not offensive
+    (moderationService.moderateUserMessages as jest.Mock).mockResolvedValueOnce({
+      isOffensive: false
+    });
 
     const res = await request(app)
       .post(`/api/chat/${groupId.toString()}/message/${cleanMessage._id.toString()}/report`)
