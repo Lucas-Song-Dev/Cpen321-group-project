@@ -11,7 +11,7 @@
 | November 28, 2025 | Section 3.1, 3.2, 3.3, 3.4, 4.5 | Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram. Added additional external system actors based on changes to code. Updated dependencies diagram to match current code |
 | November 28, 2025 | Section 3.5, 3.6, 3.7 | Fixed use case numbering issues and names based on above changes. Added mock-up screens we initally created. Edited non-functional requirements to match our existing tests |
 | November 28, 2025 | Section 4.3, 4.4, 4.5 | Rename headers to specific names like OpenAI API not LLM Moderation. Got rid of Kotlin and Typescript as libraries and other unnecessary test as per TA feedback. Deleted unnecessary text for dependency diagram section and updated diagram to mirror current code. |
-| November 28, 2025 | Section 4.1 | Updated backend and llm interfaces due to changes in code |
+| November 28, 2025 | Section 4.1 | Updated due to changes in code and general structure of answer|
 
 
 
@@ -313,137 +313,7 @@ The application targets university students, young professionals, and anyone see
 ## 4. Designs Specification
 
 ### **4.1. Main Components**
-
-1. **Front-End Mobile Application (Android/Kotlin)**
-   - **Purpose**: Provides the user interface and handles all user interactions. It enables authentication, profile management, group management, messaging, task management, and roommate rating.
-   - **Interfaces**: The front-end communicates with the back-end via HTTP/REST endpoints.
-     1. **Health Check Interface**
-        - GET /api/health(): HealthResponse
-          - Purpose: Checks backend server and database connection status
-          - Returns: Server status, database connection status, timestamp, and version information
-     2. **Authentication Interface**
-        - POST /api/auth/signup(token: String): AuthResponse
-          - Purpose: Creates a new user account using Google OAuth token
-          - Parameters: Google ID token from OAuth
-          - Returns: Success status, user data, and JWT authentication token
-        - POST /api/auth/login(token: String): AuthResponse
-          - Purpose: Authenticates existing user with Google OAuth token
-          - Parameters: Google ID token from OAuth
-          - Returns: Success status, user data, and JWT authentication token
-     3. **Profile Management Interface**
-        - PUT /api/users/profile(name: String, dob: Date, gender: String): UserResponse
-          - Purpose: Sets mandatory user profile fields (non-editable after creation)
-          - Parameters: Legal name, date of birth, gender
-          - Returns: Updated user profile
-        - PUT /api/users/optionalProfile(bio?: String, profilePicture?: String, livingPreferences?: LivingPreferences): UserResponse
-          - Purpose: Updates optional profile fields (editable anytime)
-          - Parameters: Optional bio, profile picture URL, living preferences
-          - Returns: Updated user profile
-        - DELETE /api/users/me(): SuccessResponse
-          - Purpose: Deletes the current user's account
-          - Returns: Success confirmation
-     4. **Group Management Interface**
-        - POST /api/group(name: String): GroupResponse
-          - Purpose: Creates a new roommate group with unique invitation code
-          - Parameters: Group name (max 100 characters)
-          - Returns: Group data including generated group code
-        - POST /api/group/join(groupCode: String): GroupResponse
-          - Purpose: Joins an existing group using invitation code (validates maximum 8 members)
-          - Parameters: 4-character alphanumeric group code
-          - Returns: Updated group data with all members, or 400 error if group is full
-        - GET /api/group(): GroupResponse
-          - Purpose: Retrieves current user's group information
-          - Returns: Group data with member details and ratings
-        - PUT /api/group/transfer-ownership/:newOwnerId(): GroupResponse
-          - Purpose: Transfers group ownership to another member (owner only)
-          - Parameters: User ID of new owner
-          - Returns: Updated group data with new owner
-        - DELETE /api/group/member/:memberId(): GroupResponse
-          - Purpose: Removes a member from group (owner only)
-          - Parameters: User ID of member to remove
-          - Returns: Updated group data
-        - DELETE /api/group/leave(): SuccessResponse
-          - Purpose: Allows member to leave the group. If owner leaves with other members present, transfers ownership to oldest member (by join date). If owner is alone, deletes the group.
-          - Returns: Success confirmation with ownership transfer notification if applicable
-     5. **Messaging & Polling Interface**
-        - GET /api/chat/:groupId/messages(page?: Number, limit?: Number): MessageListResponse
-          - Purpose: Retrieves paginated message history for a group
-          - Parameters: Group ID, optional page and limit
-          - Returns: Array of messages with pagination info
-        - POST /api/chat/:groupId/message(content: String): MessageResponse
-          - Purpose: Sends a text message to group chat
-          - Parameters: Message content (max 1000 characters)
-          - Returns: Created message with sender info
-        - POST /api/chat/:groupId/poll(question: String, options: String[], expiresInDays?: Number): MessageResponse
-          - Purpose: Creates and sends a poll to group chat
-          - Parameters: Poll question, 2-10 answer options, optional expiration days
-          - Returns: Created poll message
-        - POST /api/chat/:groupId/poll/:messageId/vote(option: String): MessageResponse
-          - Purpose: Casts or updates vote on a poll
-          - Parameters: Selected option from poll
-          - Returns: Updated poll with vote counts
-        - DELETE /api/chat/:groupId/message/:messageId(): SuccessResponse
-          - Purpose: Deletes own message from chat
-          - Parameters: Message ID
-          - Returns: Success confirmation
-     6. **Task Management Interface**
-        - POST /api/task(name: String, difficulty: Number, recurrence: String, requiredPeople: Number, description?: String, deadline?: Date, assignedUserIds?: String[]): TaskResponse
-          - Purpose: Creates a new household task
-          - Parameters: Task name, difficulty (1-5), recurrence pattern, number of people required, optional description, deadline, assigned users
-          - Returns: Created task with assignments
-        - GET /api/task(): TaskListResponse
-          - Purpose: Retrieves all tasks for current user's group
-          - Returns: Array of tasks with assignment details
-        - GET /api/task/my-tasks(): TaskListResponse
-          - Purpose: Retrieves tasks assigned to current user for current week
-          - Returns: Array of assigned tasks
-        - GET /api/task/date/:date(): TaskListResponse
-          - Purpose: Retrieves tasks for a specific date (for calendar view)
-          - Parameters: Date string (ISO format)
-          - Returns: Tasks with assignments for that date
-        - GET /api/task/week/:weekStart(): TaskListResponse
-          - Purpose: Retrieves tasks for a specific week
-          - Parameters: Week start date
-          - Returns: Tasks with assignments for that week
-        - PUT /api/task/:id/status(status: String): TaskResponse
-          - Purpose: Updates status of assigned task
-          - Parameters: Task status (incomplete, in-progress, completed)
-          - Returns: Updated task
-        - POST /api/task/:id/assign(userIds: String[]): TaskResponse
-          - Purpose: Manually assigns task to specific users for current week
-          - Parameters: Array of user IDs
-          - Returns: Task with updated assignments
-        - POST /api/task/assign-weekly(): TaskAssignmentResponse
-          - Purpose: Algorithmically assigns all tasks for the current week
-          - Returns: All tasks with new weekly assignments
-        - GET /api/task/week/:weekStart(): TaskListResponse
-          - Purpose: Retrieves tasks for a specific week
-          - Parameters: Week start date
-          - Returns: Tasks with assignments for that week
-        - DELETE /api/task/:id(): SuccessResponse
-          - Purpose: Deletes a task (creator or owner only)
-          - Parameters: Task ID
-          - Returns: Success confirmation
-     7. **Rating & Moderation Interface**
-        - POST /api/rating(ratedUserId: String, groupId: String, rating: Number, testimonial?: String): RatingResponse
-          - Purpose: Submits or updates rating for a roommate (requires 30 days cohabitation)
-          - Parameters: User ID to rate, group ID, rating (1-5), optional testimonial (max 500 chars)
-          - Returns: Created/updated rating
-        - GET /api/rating/:userId(): RatingStatsResponse
-          - Purpose: Retrieves all ratings for a user
-          - Parameters: User ID
-          - Returns: Array of ratings with average rating and total count
-        - GET /api/rating/user/:userId/group/:groupId(): RatingStatsResponse
-          - Purpose: Retrieves ratings for a user in a specific group
-          - Parameters: User ID, group ID
-          - Returns: Group-specific ratings and average
-        - PUT /api/users/report(reportedUserId: String, reason: String, context?: String): ReportResponse
-          - Purpose: Reports inappropriate user behavior for LLM review
-          - Parameters: Reported user ID, reason for report, optional context
-          - Returns: Report submission confirmation
-
-2. **Back-End Server (Node.js/TypeScript)**
-   - 1. Authentication
+1. Authentication
      - Purpose: Handles user authentication through Google OAuth, providing secure login/signup with JWT tokens for session management. Chosen over custom username/password for simplicity and security, leveraging Google's robust authentication infrastructure instead of implementing our own password management system.
      - Interfaces:
          - 1. HTTP/REST Interfaces:
@@ -464,7 +334,7 @@ The application targets university students, young professionals, and anyone see
                 - Purpose: Links Google account to existing user or creates new user profile
               - verifyJWT(token: string): { userId: string; email: string; name: string }
                 - Purpose: Validates JWT tokens for protected endpoints
-   - 2. User Management
+2. User Management & Profiles
      - Purpose: Manages user profiles, mandatory/optional profile completion, and user reporting functionality. Provides comprehensive user data management with profile completion tracking, chosen over simpler profile systems to ensure roommates have sufficient information for informed group decisions.
      - Interfaces:
          - 1. HTTP/REST Interfaces:
@@ -484,7 +354,7 @@ The application targets university students, young professionals, and anyone see
                 - Purpose: Reports another user for inappropriate content
                 - Parameters: { reportedUserId: string, reporterId: string, groupId: string, reason?: string }
                 - Returns: { success: boolean, message: string, data: { isOffensive: boolean, actionTaken: string } }
-   - 3. Chat
+3. Chat
      - Purpose: Provides real-time messaging functionality with poll support for group communication. Uses Socket.io for real-time updates instead of REST polling to enable instant messaging, chosen over simpler chat implementations for better user experience in roommate coordination.
      - Interfaces:
          - 1. HTTP/REST Interfaces:
@@ -519,7 +389,7 @@ The application targets university students, young professionals, and anyone see
                 - Purpose: Processes poll votes with validation
               - deleteMessage(userId: string, groupId: string, messageId: string)
                 - Purpose: Removes messages with ownership verification
-   - 4. Group Management
+4. Group Management
      - Purpose: Handles group creation, membership management, and ownership transfer. Uses unique group codes for joining instead of invitations to simplify the roommate matching process, chosen over more complex invitation systems for ease of use.
      - Interfaces:
          - 1. HTTP/REST Interfaces:
@@ -564,7 +434,7 @@ The application targets university students, young professionals, and anyone see
                 - Purpose: Removes members with ownership checks
               - leaveGroup(userId: string)
                 - Purpose: Handles user departure and group cleanup
-   - 5. Rating
+5. Rating
      - Purpose: Enables roommate rating system with time-based restrictions to ensure meaningful feedback. Requires minimum 30 days cohabitation before rating, chosen over unrestricted rating to prevent premature judgments and encourage genuine roommate relationships.
      - Interfaces:
          - 1. HTTP/REST Interfaces:
@@ -587,15 +457,22 @@ The application targets university students, young professionals, and anyone see
                 - Purpose: Aggregates all ratings and calculates averages
               - getRatingsForUserInGroup(userId: string, groupId: string)
                 - Purpose: Gets group-specific ratings and statistics
-   - 6. Report
-     - Purpose: Provides content moderation through AI-powered message analysis (currently disabled). Uses OpenAI/OpenRouter for automated content analysis instead of manual moderation, chosen over human moderation for scalability and consistency in detecting inappropriate content.
+6. Report User
+     - Purpose: Provides content moderation through AI-powered message analysis (currently disabled). Uses OpenAI/OpenRouter for automated content analysis instead of manual moderation, chosen over human moderation for scalability and consistency in detecting inappropriate contents
+     - Current Implementation:
+     - Analyzes reported users' message history (up to 50 messages) to detect policy violations
+     - Returns isOffensive boolean flag via JSON response
+     - Triggers database update to mark offensive user
+     - Future Enhancements:
+     - Automatic testimonial review on creation
+     - Automated profile content scanning
      - Interfaces:
          - 1. HTTP/REST Interfaces:
               - PUT /users/report
                 - Purpose: Analyzes user's messages for inappropriate content
                 - Parameters: { reportedUserId: string, reporterId: string, groupId: string, reason?: string }
                 - Returns: { success: boolean, message: string, data: { isOffensive: boolean, actionTaken: string } }
-   - 7. Task Management
+7. Task Management
      - Purpose: Manages chore assignment and tracking with algorithmic weekly distribution. Supports both one-time and recurring tasks with fair assignment algorithms, chosen over manual assignment to reduce conflicts and ensure equitable workload distribution.
      - Interfaces:
          - 1. HTTP/REST Interfaces:
@@ -651,16 +528,6 @@ The application targets university students, young professionals, and anyone see
                 - Purpose: Removes tasks with ownership verification
               - getTasksForDate(userId: string, date: string)
                 - Purpose: Gets tasks for specific date
-
-3. **LLM Moderation Integration**
-   - **Purpose**: Provides automated content moderation for reported user behavior via OpenAI API.
-   - **Current Implementation**:
-     - Analyzes reported users' message history (up to 50 messages) to detect policy violations
-     - Returns isOffensive boolean flag via JSON response
-     - Triggers database update to mark offensive users
-   - **Future Enhancements**:
-     - Automatic testimonial review on creation
-     - Automated profile content scanning
 
 ### **4.2. Databases**
 
