@@ -26,15 +26,13 @@ class ModerationService {
         
         // Only set baseURL if explicitly using OpenRouter
         if (useOpenRouter) {
-          const extendedConfig = config as ClientOptions & { 
-            baseURL?: string; 
-            defaultHeaders?: Record<string, string> 
-          };
-          extendedConfig.baseURL = 'https://openrouter.ai/api/v1';
-          extendedConfig.defaultHeaders = {
-            'HTTP-Referer': process.env.YOUR_SITE_URL ?? 'http://localhost:3000',
-            'X-Title': process.env.YOUR_SITE_NAME ?? 'Roommate Chat App'
-          };
+          Object.assign(config, {
+            baseURL: 'https://openrouter.ai/api/v1',
+            defaultHeaders: {
+              'HTTP-Referer': process.env.YOUR_SITE_URL ?? 'http://localhost:3000',
+              'X-Title': process.env.YOUR_SITE_NAME ?? 'Roommate Chat App'
+            }
+          });
         }
         
         this.openai = new OpenAI(config);

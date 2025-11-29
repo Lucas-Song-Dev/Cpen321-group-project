@@ -1,9 +1,16 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
-import app from '../../src/index'; // assuming default export is the Express app
-import Message from '../../src/models/chat.models';
-import Group from '../../src/models/group.models';
-import { UserModel } from '../../src/models/user.models';
+import express from 'express';
+import chatRouter from '../../routes/chat.routes';
+import Message from '../../models/chat.models';
+import Group from '../../models/group.models';
+import { UserModel } from '../../models/user.models';
+import jwt from 'jsonwebtoken';
+import { config } from '../../config';
+
+const app = express();
+app.use(express.json());
+app.use('/api/chat', chatRouter);
 
 describe('Chat message report moderation', () => {
   let userId: mongoose.Types.ObjectId;
@@ -12,6 +19,11 @@ describe('Chat message report moderation', () => {
   let authToken: string;
 
   beforeAll(async () => {
+    // Ensure mongoose connection is ready before creating records
+    if (mongoose.connection.readyState !== 1) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
     // Create a user, group, and message directly in the DB
     const user = await UserModel.create({
       email: 'reporter@example.com',
@@ -22,7 +34,7 @@ describe('Chat message report moderation', () => {
 
     const group = await Group.create({
       name: 'Test Group',
-      ownerId: userId,
+      owner: userId,
       members: [{ userId }]
     });
     groupId = group._id;
@@ -35,12 +47,12 @@ describe('Chat message report moderation', () => {
     });
     messageId = message._id;
 
-    // Log in to get auth token
-    const loginRes = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'reporter@example.com', password: 'password123' });
-
-    authToken = loginRes.body?.token;
+    // Generate auth token
+    authToken = jwt.sign(
+      { email: user.email, id: user._id.toString() },
+      config.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
     // Enable test moderation flag so moderation service always flags as offensive
     process.env.TEST_REPORT_OFFENSIVE = 'true';
@@ -91,6 +103,4 @@ describe('Chat message report moderation', () => {
     // Message should remain if not flagged as offensive
     expect(messageInDb).not.toBeNull();
   });
-}
-
-
+});
