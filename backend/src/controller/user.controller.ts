@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { UserModel } from '../models/user.models';
+import { uploadProfilePicture } from '../services/storageService';
 import Group from '../models/group.models';
 
 export const UserController = {
@@ -131,7 +132,30 @@ export const UserController = {
 
       // Update optional fields (only update fields that are provided)
       if (bio !== undefined) user.bio = bio;
-      if (profilePicture !== undefined) user.profilePicture = profilePicture;
+
+      // Handle profile picture updates:
+      // - If profilePicture is undefined, leave existing value unchanged
+      // - If it's an empty string, treat it as a request to remove the picture
+      // - If it's a data URI, upload to GCS and store the public URL
+      // - Otherwise, store the provided value (assumed to be a URL)
+      if (profilePicture !== undefined) {
+        const trimmed = profilePicture.trim();
+
+        if (trimmed === '') {
+          // Explicit remove
+          user.profilePicture = undefined;
+        } else if (trimmed.startsWith('data:')) {
+          // Upload base64-encoded image and store public URL
+          const uploadedUrl = await uploadProfilePicture(
+            trimmed,
+            (user._id as unknown as string)  // cast to string for Storage path
+          );
+          user.profilePicture = uploadedUrl;
+        } else {
+          // Assume this is already a URL
+          user.profilePicture = trimmed;
+        }
+      }
       
       if (livingPreferences) {
         if (!user.livingPreferences) {
