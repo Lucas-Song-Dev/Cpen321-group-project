@@ -1,15 +1,20 @@
 import { Request, Response } from 'express';
-// import OpenAI from 'openai';
 import Message from '../models/chat.models';
 import { UserModel } from '../models/user.models';
+import { moderationService } from '../services/moderation.service';
 
 export const UserReporter = {
   report: async (req: Request, res: Response) => {
+    const timestamp = new Date().toISOString();
     try {
+      console.log(`[${timestamp}] USER REPORT: Starting report process`);
       const { reportedUserId, reporterId, groupId, reason } = req.body;
+
+      console.log(`[${timestamp}] USER REPORT: Request data - reportedUserId: ${reportedUserId}, reporterId: ${reporterId}, groupId: ${groupId}, reason: ${reason || 'none'}`);
 
       // Validate input
       if (!reportedUserId || !reporterId || !groupId) {
+        console.log(`[${timestamp}] USER REPORT: Missing required fields`);
         return res.status(400).json({
           success: false,
           message: 'Missing required fields'
@@ -17,17 +22,22 @@ export const UserReporter = {
       }
 
       // Check if users exist
+      console.log(`[${timestamp}] USER REPORT: Looking up users...`);
       const reportedUser = await UserModel.findById(reportedUserId);
       const reporter = await UserModel.findById(reporterId);
 
       if (!reportedUser || !reporter) {
+        console.log(`[${timestamp}] USER REPORT: User not found - reportedUser: ${!!reportedUser}, reporter: ${!!reporter}`);
         return res.status(404).json({
           success: false,
           message: 'User not found'
         });
       }
 
+      console.log(`[${timestamp}] USER REPORT: Users found - reportedUser: ${reportedUser.name}, reporter: ${reporter.name}`);
+
       // Fetch all messages from the reported user in this group
+      console.log(`[${timestamp}] USER REPORT: Fetching messages from user ${reportedUserId} in group ${groupId}`);
       const messages = await Message.find({
         groupId: groupId,
         senderId: reportedUserId,
@@ -37,69 +47,22 @@ export const UserReporter = {
         .limit(100)
         .lean();
 
-      console.log(`Found ${messages.length} messages from user ${reportedUserId}`);
+      console.log(`[${timestamp}] USER REPORT: Found ${messages.length} messages from user ${reportedUserId}`);
 
       if (messages.length === 0) {
+        console.log(`[${timestamp}] USER REPORT: No messages found for user`);
         return res.status(400).json({
           success: false,
           message: 'No messages found for this user'
         });
       }
 
-      // const openai = new OpenAI({
-      //   baseURL: "https://openrouter.ai/api/v1",
-      //   apiKey: process.env.OPENROUTER_API_KEY,
-      // });
-
-      // Prepare messages for OpenAI analysis
-      const messageTexts = messages.map((msg: any) => msg.content).join('\n');
-
-      // Call OpenAI to analyze messages (disabled for now)
-      // const completion = await openai.chat.completions.create({
-      //   model: "gpt-3.5-turbo",
-      //   messages: [
-      //     {
-      //       role: "system",
-      //       content: `You are a content moderation assistant. Analyze the following messages from a user in a roommate group chat app. 
-      //           
-      //       Determine if the messages contain:
-      //       - Harassment or bullying
-      //       - Hate speech or discrimination
-      //       - Threats or violence
-      //       - Sexual harassment
-      //       - Persistent offensive language
-      //       - Spam or malicious content
-
-      //       Respond with a JSON object containing only:
-      //       {
-      //       "isOffensive": boolean
-      //       }
-
-      //       Be fair and consider context. Casual banter between friends should not be flagged. Focus on genuinely harmful, offensive, or inappropriate content.`
-      //      },
-      //     {
-      //       role: "user",
-      //       content: `Reporter's reason: ${reason || 'No reason provided'}\n\nMessages to analyze:\n${messageTexts}`
-      //     }
-      //   ],
-      //   response_format: { type: "json_object" },
-      //   temperature: 0.3
-      // });
-
-      // const analysisContent = completion.choices[0].message.content;
-      // if (!analysisContent) {
-      //   throw new Error('No analysis content received from OpenAI');
-      // }
-
-      // const analysis = JSON.parse(analysisContent);
-      // console.log('OpenAI Analysis:', analysis);
-
-      // TODO CHANGE LATER TO USE OPENAI ANALYSIS
-      const forceOffensive = process.env.TEST_REPORT_OFFENSIVE === 'true';
-      const analysis = {
-        // Default to non-offensive unless explicitly forced (e.g., in tests)
-        isOffensive: forceOffensive
-      };
+      // Use moderation service to analyze messages
+      console.log(`[${timestamp}] USER REPORT: Starting moderation analysis...`);
+      const messageContents = messages.map((msg: any) => msg.content);
+      const analysis = await moderationService.moderateUserMessages(messageContents, reason);
+      
+      console.log(`[${timestamp}] USER REPORT: Moderation result - isOffensive: ${analysis.isOffensive}, reason: ${analysis.reason || 'none'}`);
 
       // If the message is offensive, mark the user as offensive
       let actionTaken: string | null = null;
@@ -108,22 +71,26 @@ export const UserReporter = {
         await reportedUser.save();
         actionTaken = 'User has been marked as offensive';
         
-        console.log(`User ${reportedUserId} marked as offensive`);
+        console.log(`[${timestamp}] USER REPORT: User ${reportedUserId} marked as offensive - Reason: ${analysis.reason || 'N/A'}`);
       } else {
-        console.log(`User ${reportedUserId} not marked as offensive - messages deemed acceptable`);
+        console.log(`[${timestamp}] USER REPORT: User ${reportedUserId} not marked as offensive - messages deemed acceptable`);
       }
 
+      console.log(`[${timestamp}] USER REPORT: Report processed successfully`);
       return res.status(200).json({
         success: true,
         message: 'Report submitted successfully',
         data: {
           isOffensive: analysis.isOffensive,
-          actionTaken: actionTaken
+          actionTaken: actionTaken,
+          reason: analysis.reason
         }
       });
 
     } catch (error: any) {
-      console.error('Error processing report:', error);
+      const timestamp = new Date().toISOString();
+      console.error(`[${timestamp}] USER REPORT: Error processing report:`, error);
+      console.error(`[${timestamp}] USER REPORT: Error stack:`, error.stack);
       return res.status(500).json({
         success: false,
         message: 'Failed to process report',

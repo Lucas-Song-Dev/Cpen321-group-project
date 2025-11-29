@@ -666,7 +666,8 @@ describe('User API Tests - With Mocking', () => {
         message: 'Report submitted successfully',
         data: {
           isOffensive: true,
-          actionTaken: 'User has been marked as offensive'
+          actionTaken: 'User has been marked as offensive',
+          reason: 'Test mode: flagged as offensive'
         }
       });
 

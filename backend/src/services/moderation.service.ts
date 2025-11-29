@@ -37,6 +37,7 @@ class ModerationService {
         
         this.openai = new OpenAI(config);
         this.isEnabled = true;
+        console.log('GPT Moderation Service: Enabled and initialized successfully');
       } catch (error) {
         console.error('GPT Moderation Service: Failed to initialize', error);
         this.isEnabled = false;
