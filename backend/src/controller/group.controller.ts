@@ -1,0 +1,360 @@
+import { Request, Response } from 'express';
+import groupService from '../services/group.services';
+
+export const GroupController = {
+  createGroup: async (req: Request, res: Response) => {
+    try {
+      const name = String(req.body.name);
+
+      if (!name || name.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Group name is required'
+        });
+      }
+
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+      const group = await groupService.createGroup(userId, name);
+
+      return res.status(201).json({
+        success: true,
+        message: 'Group created successfully',
+        data: group
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'USER_ALREADY_IN_GROUP') {
+        return res.status(400).json({
+          success: false,
+          message: 'User is already a member of a group'
+        });
+      }
+
+      throw error;
+    }
+  },
+
+  joinGroup: async (req: Request, res: Response) => {
+    try {
+      const groupCode = String(req.body.groupCode);
+
+      if (!groupCode || groupCode.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Group code is required'
+        });
+      }
+
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const group = await groupService.joinGroup(userId, groupCode);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Joined group successfully',
+        data: group
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'GROUP_NOT_FOUND':
+            return res.status(404).json({
+              success: false,
+              message: 'Group not found'
+            });
+          case 'ALREADY_MEMBER_OF_THIS_GROUP':
+            return res.status(400).json({
+              success: false,
+              message: 'User is already a member of this group'
+            });
+          case 'USER_ALREADY_IN_GROUP':
+            return res.status(400).json({
+              success: false,
+              message: 'User is already a member of a group'
+            });
+          case 'GROUP_FULL':
+            return res.status(400).json({
+              success: false,
+              message: 'Group is full (maximum 8 members)'
+            });
+        }
+      }
+
+      throw error;
+    }
+  },
+
+  getCurrentGroup: async (req: Request, res: Response) => {
+    try {
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const group = await groupService.getCurrentGroup(userId);
+
+      return res.status(200).json({
+        success: true,
+        data: group
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'USER_NOT_IN_GROUP') {
+        return res.status(404).json({
+          success: false,
+          message: 'User is not a member of any group'
+        });
+      }
+
+      console.error(`[${new Date().toISOString()}] GROUP GET: Unexpected error:`, error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to load group data'
+      });
+    }
+  },
+
+  updateGroupName: async (req: Request, res: Response) => {
+    try {
+      const name = String(req.body.name);
+
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const group = await groupService.updateGroupName(userId, name);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Group name updated successfully',
+        data: group
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'GROUP_NAME_REQUIRED':
+            return res.status(400).json({
+              success: false,
+              message: 'Group name is required'
+            });
+          case 'GROUP_NAME_TOO_LONG':
+            return res.status(400).json({
+              success: false,
+              message: 'Group name must be 100 characters or fewer'
+            });
+          case 'USER_NOT_IN_GROUP':
+            return res.status(404).json({
+              success: false,
+              message: 'User is not a member of any group'
+            });
+          case 'NOT_GROUP_OWNER':
+            return res.status(403).json({
+              success: false,
+              message: 'Only the group owner can update the name'
+            });
+        }
+      }
+
+      throw error;
+    }
+  },
+
+  transferOwnership: async (req: Request, res: Response) => {
+    try {
+      const { newOwnerId } = req.params;
+
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const group = await groupService.transferOwnership(userId, newOwnerId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Ownership transferred successfully',
+        data: group
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'USER_NOT_IN_GROUP':
+            return res.status(404).json({
+              success: false,
+              message: 'User is not a member of any group'
+            });
+          case 'NOT_GROUP_OWNER':
+            return res.status(403).json({
+              success: false,
+              message: 'Only the group owner can transfer ownership'
+            });
+          case 'ALREADY_OWNER':
+            return res.status(400).json({
+              success: false,
+              message: 'You are already the owner of this group'
+            });
+          case 'NEW_OWNER_NOT_MEMBER':
+            return res.status(400).json({
+              success: false,
+              message: 'The specified user is not a member of this group'
+            });
+        }
+      }
+
+      throw error;
+    }
+  },
+
+  removeMember: async (req: Request, res: Response) => {
+    try {
+      const { memberId } = req.params;
+
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const group = await groupService.removeMember(userId, memberId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Member removed successfully',
+        data: group
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        switch (error.message) {
+          case 'USER_NOT_IN_GROUP':
+            return res.status(404).json({
+              success: false,
+              message: 'User is not a member of any group'
+            });
+          case 'NOT_GROUP_OWNER':
+            return res.status(403).json({
+              success: false,
+              message: 'Only the group owner can remove members'
+            });
+          case 'CANNOT_REMOVE_OWNER':
+            return res.status(400).json({
+              success: false,
+              message: 'Cannot remove the group owner'
+            });
+          case 'MEMBER_NOT_FOUND':
+            return res.status(404).json({
+              success: false,
+              message: 'Member not found in group'
+            });
+        }
+      }
+
+      throw error;
+    }
+  },
+
+  leaveGroup: async (req: Request, res: Response) => {
+    try {
+      // Check if user exists first
+      if (!req.user?._id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      const userId = String(req.user._id);
+
+      if (typeof userId !== 'string') {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+
+      const result = await groupService.leaveGroup(userId);
+
+      return res.status(200).json({
+        success: true,
+        message: result.message
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'USER_NOT_IN_GROUP') {
+        return res.status(404).json({
+          success: false,
+          message: 'User is not a member of any group'
+        });
+      }
+
+      throw error;
+    }
+  }
+};

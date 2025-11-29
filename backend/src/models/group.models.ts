@@ -13,7 +13,7 @@ const GroupSchema = new Schema<IGroup>({
     required: false, // Will be generated in pre-save hook
     unique: true,
     uppercase: true,
-    length: 4 //generated 4-character codes
+    length: 4 
   },
   owner: {
     type: Schema.Types.ObjectId,
@@ -42,24 +42,18 @@ const GroupSchema = new Schema<IGroup>({
 
 // Virtual for member count
 GroupSchema.virtual('memberCount').get(function() {
-  return this.members.length || 0;
+  return this.members?.length || 0;
 });
 
 // Virtual to check if group is full (max 8 members)
 GroupSchema.virtual('isFull').get(function() {
-  return (this.members.length || 0) >= 8;
+  return (this.members?.length || 0) >= 8;
 });
-
-//I DON'T THINK WE NEED THIS- it creates an warning when: npm run dev
-// // Index for faster queries
-// GroupSchema.index({ groupCode: 1 });
-// GroupSchema.index({ owner: 1 });
-// GroupSchema.index({ 'members.userId': 1 });
 
 // Ensure maximum 8 members
 GroupSchema.pre('save', function(next) {
   if (this.members.length > 8) {
-    next(new Error('Group cannot have more than 8 members')); return;
+    return next(new Error('Group cannot have more than 8 members'));
   }
   next();
 });

@@ -18,13 +18,21 @@ class PersonalProfileViewModel(
     private val _profileSetState = MutableStateFlow<ProfileSetState>(ProfileSetState.Idle)
     val profileSetState: StateFlow<ProfileSetState> = _profileSetState.asStateFlow()
 
-    fun updateProfile(email: String, dob: String, gender: String) {
+    fun updateProfile(
+        originalEmail: String,
+        name: String,
+        dob: String,
+        gender: String,
+        updatedEmail: String
+    ) {
         viewModelScope.launch {
             _profileSetState.value = ProfileSetState.Loading
             try {
                 val response = apiService.updateProfile(
                     ProfileSetRequest(
-                        email = email,
+                        email = originalEmail,
+                        name = name,
+                        updatedEmail = if (originalEmail != updatedEmail) updatedEmail else null,
                         dob = dob,
                         gender = gender
                     )

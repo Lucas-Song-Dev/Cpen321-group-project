@@ -8,6 +8,8 @@
 | October 10, 2025 | Section 3.2, 3.7  | Fixed use case diagram according to feedback in M2 and non-function requirements section with concrete research to back up requirements |
 | October 28, 2025 | Added section 4.4, 4.6, 4.7, Modified section 3.1, 4.1, 4.2, 4.3, 4.5 | Implemented M3 Requirements, fixed document according to app implementation and made further M2 feedback changes |
 | November 9, 2025 | Section 3.4, 4.1 | Added missing endpoints (health check, transfer ownership, get profile, get tasks by date), corrected API endpoint paths and parameters, added transfer ownership use case |
+| November 28, 2025 | Section 3.1, 3.2, 3.4| Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram |
+
 
 ---
 
@@ -23,9 +25,9 @@ The application targets university students, young professionals, and anyone see
 
 ### **3.1. List of Features**
 
-**User Authentication** - Secure user sign up or login using Google authentication service.
+**User Authentication** - For secure user sign up or login using Google OAuth 2.0. Users must have an existing google account. Users can also log out or delete their account. If they delete their account, the user can later create an account using the same google account but their previous data will not be restored.
 
-**User Profile Management** - An user must fill out all mandatory fields (section a), upon user profile creation. Users can also choose to fill out optional fields (section b). Editable fields can be changed anytime in the user management page whereas non-editable fields can't be changed after account creation. User profiles can be shared for housing/roommate applications
+**User Profile Management** - A user must fill out all mandatory fields (listed in section a), upon user profile creation. If these fields are not filled out, the user's account isn't offically created yet and the user doesn't have access to the rest of our app's features. After filling out all mandatory fields, users can choose to fill out optional fields (listed in section b). Editable fields can be changed anytime in the user management page whereas non-editable fields can't be changed after account creation. User profiles are essential as they can be shared to access compatibility for housing and roommate applications.
 
 - **Mandatory/Not editable (kept private)**
   - Name (Legal first and last name)
@@ -33,36 +35,43 @@ The application targets university students, young professionals, and anyone see
   - Gender
   - Email (this will be automatically filled out after creating an account through Google user authentication)
 - **Optional/editable**
+  - Nickname
   - Bio
   - Profile picture
   - Living preference/expectations (ex. morning/night person, drinking, partying, noise, profession/student)
 
-**Group Management** – Users have an option to either create a new group or join an existing group.
+**Group Management** – Users can either create a new group or join an existing group.
 
 - **Create Group**: Must enter group name (editable) and a unique group (not editable) code will be created. This group code can be shared.
 - **Join Group**: Users can enter a unique group code to join a group.
-- **Maximum 8 users in a group**: Additional users will be unable attempt to join group
+- **Maximum 10 users in a group**: Additional users will be unable attempt to join group
 - **View Group**: See group members profiles, name of group and each member's group join date.
 - **Leave Group**: Any user part of a group can leave the group. When the owner leaves, ownership automatically transfers to the oldest member (by join date). If the owner is the only member, the group is deleted.
+- **Delete Group** – Owner of group can delete group which gets rid of all group chats, tasks, and other group related features
+- **Remove Group Member** – Group owner can remove group members who are no longer living together
+- **Transfer Group Ownership** – Group owner can transfer ownership to another group member before they leave the group
 
-**Group Communication** - Real-time messaging system with all group members. Integrated polling functionality to block certain times on the calendar for group decisions with default options: yes or no. Polls will expire within a week.
+**Group Communication** - Real-time messaging system with live updates for seemless group messaging that includes all group members. Messages can be sent by any member within a group and is visible to everyone within the group. An integrated polling functionality is implemented where users to ask questions that require group decisions with pre-determined answering options. The polls will expire one week after it is sent to the group.
 
 **Group Task Management** - Algorithmic task assignment and tracking system for household responsibilities
 
 - **View Tasks**: Three view options - Calendar View (tasks by selected date), Weekly View (all group tasks grouped by day), My Tasks (personal tasks grouped by day).
 - **Set Task Status**: Default status is 'incomplete'. Users can update to 'in-progress' or 'completed'.
-- **Create Task**: Enter task name, optional description, difficulty (1-5), recurrence (one-time/daily/weekly/bi-weekly/monthly), required people (1-10), deadline (for one-time tasks), and optional member assignment.
-- **Task Assignment**: Tasks assigned weekly via algorithm for fair distribution, or manually assigned at creation to specific members.
+- **Add Task**: Enter task name, optional description, difficulty (1-5), recurrence (one-time/daily/weekly/bi-weekly/monthly), required people (1-10), deadline (for one-time tasks), and optional member assignment.
+- **Delete Tasks** – Delete tasks if a task is no longer needed
+- **Task Assignment**: After creating task, the task can be assigned via algorithm for fair distribution, or manually assigned at creation to specific members.
 
 **Roommate Rating System** - Users can rate roommate experience after living with them for a minimum of 30 days.
 
-- **Rating** - Reputation score: Users can give their roommates a score out of 5 and leave comments and testimonies to describe their personal living experience
+- **Rating** - Users can give their roommates a score out of 5 based on their personal living experience. This feature is unlocked after the user lived with that roommate for atleast 30 days.
+- **Write Testimonial** - Users can optionally leave comments and testimonies to describe their personal living experience.
+- **View Roommate Ratings** – View other user's average ratings and testimonials from previous roommates 
 - While bad roomates might be able to delete account or not have one, it is still a good way for good roommates to build up a track record of cleanliness for future rooms. This has been proven to work like Ebay or Facebook marketplace.
 
 **User Moderation** - Automated content moderation using LLM
 
-- Users can report inappropriate behavior. The system analyzes the reported user's recent messages (up to 100) using OpenAI to determine if content violates community standards (harassment, hate speech, threats, etc.).
-- If deemed offensive, the user is flagged in the database (isOffensive field set to true).
+- Users can report inappropriate behavior. The system analyzes the reported user's recent messages (up to 50) using OpenAI to determine if content violates community standards (harassment, hate speech, threats, etc.).
+- If deemed offensive, the user is flagged in the database (isOffensive field set to true) and is no longer allowed to acccess their account.
 
 ### **3.2. Use Case Diagram**
 
@@ -85,41 +94,40 @@ The application targets university students, young professionals, and anyone see
 ### **3.4. Use Case Description**
 
 #### **Use cases for User Authentication**
-1. **Create account** – Secure account creation using Google OAuth (interaction with Google OAuth 2.0 API)  
-2. **Login** – Secure account login using Google OAuth (interaction with Google OAuth 2.0 API)  
-3. **Logout** – User logs out of the application, clearing locally stored authentication tokens  
+1. **Sign Up** – Secure account creation using Google OAuth (interaction with Google OAuth 2.0 API)  
+2. **Login** – Secure account login using Google OAuth (interaction with Google OAuth 2.0 API)
+3. **Logout** – User logs out of the application, clearing locally stored authentication tokens
+4. **Delete Account** – User logs out of the application, clearing locally stored authentication tokens  
 
 #### **Use cases for User Profile Management**
-4. **Set mandatory profile fields** – Users must provide legal name, date of birth, and gender upon account creation (one-time, non-editable)  
-5. **Update nickname and bio** – Users can choose a nickname and update their bio text  
-6. **Update living preferences** – Users can indicate living preferences by selecting schedule, drinking, partying, noise, and profession descriptions  
-7. **Update profile picture** – Users can add, change, or remove their profile picture  
-8. **Delete account** – Users can permanently delete their account and all associated data  
+5. **Update Optional Profile Fields: nickname, bio, living preferences and profile picture** – Users can choose a nickname, update their bio text, indicate living preferences by selecting pre-determined options regarding their schedule, drinking, partying, noise, and profession descriptions and users can add, change, or remove their profile picture
 
 #### **Use cases for Group Management**
-9. **Create group** – Establish a new living group and generate a unique invitation code for prospective roommates
-10. **Join group** – Join an existing roommate group by entering a unique 4 digit alphanumeric invitation code
-11. **View group** – View members of the group, group name, and member join dates
-12. **Leave group** – Group members can leave a group they are a part of (owner leaving transfers to oldest member; if alone, deletes group)
-13. **Remove group member** – Group owner can remove group members
-14. **Transfer group ownership** – Group owner can transfer ownership to another group member
+6. **Create Group** – Establish a new living group and generate a unique invitation code for prospective roommates
+7. **Join Group** – Join an existing roommate group by entering a unique 4 digit alphanumeric invitation code
+8. **View Group** – View members of the group, group name, and member join dates
+9. **Leave Group** – Group members can leave a group they are a part of (owner leaving transfers to oldest member; if alone, deletes group)
+10. **Delete Group** – Owner of group can delete group which gets rid of all group chats, tasks, and other group related features
+11. **Remove Group Member** – Group owner can remove group members
+12. **Transfer Group Ownership** – Group owner can transfer ownership to another group member
 
 #### **Use cases for Group Communication**
-14. **Send message** – Real-time messaging system for communication between all group members  
-15. **Create poll** – A voting mechanism for group decisions regarding household policies and activities  
+13. **Send Messages** – Real-time messaging system for communication between all group members
+14. **Send Polls** – A voting mechanism for group decisions regarding household policies and activities  
 
 #### **Use cases for Group Task Management**
-16. **Add task** – Create tasks with name, description, difficulty (1-5), recurrence, deadline (for one-time tasks), and optional member assignment. View tasks in Calendar, Weekly, or My Tasks views  
-17. **Delete task** – Delete tasks if a task is no longer needed  
-18. **Set task status** – Update task status to *in-progress* or *completed* for assigned tasks  
+15.  **Add Tasks** – Create tasks with name, description, difficulty (1-5), recurrence, deadline (for one-time tasks), and optional member assignment. View tasks in Calendar, Weekly, or My Tasks views
+16.  **Auto-Assign Tasks** – After creating task, user who created task can press button to automatically distribute tasks to other users based on task parameters previously inputed.
+17.  **Delete Tasks** – Delete tasks if a task is no longer needed
+18.  **Set Task Status** – Update task status to *in-progress* or *completed* for assigned tasks  
 
 #### **Use cases for Roommate Rating System**
-19. **Rate roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days  
-20. **Write testimonial** – Add optional written feedback about roommate experience  
-21. **View ratings** – View user profiles, average ratings, and testimonials from previous roommates  
+18. **Rate Roommate** – Rate roommate performance (1–5 stars) after living together for a minimum of 30 days
+19. **Write Testimonial** – Add optional written feedback about roommate experience
+20. **View Roommate Ratings** – View user profiles, average ratings, and testimonials from previous roommates  
 
 #### **Use cases for User Moderation**
-22. **Report user** – Report inappropriate user behavior for review  
+21. **Report User** – Report inappropriate user behavior for review  
 
 ### **3.5. Formal Use Case Specifications (5 Most Major Use Cases)**
 

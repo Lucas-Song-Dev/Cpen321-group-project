@@ -113,32 +113,40 @@ fun PollingScreen(
         ) {
         // Top App Bar with extra padding
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = GlassColors.GradientMiddle.copy(alpha = 0.8f),
-            shadowElevation = 4.dp
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.25f),
+                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                ),
+            color = Color.White.copy(alpha = 0.15f),
+            shadowElevation = 0.dp,
+            shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
         ) {
             Column(
                 modifier = Modifier.padding(top = 16.dp)
             ) {
-                TopAppBar(
-                    title = { Text(groupName, color = Color.White) },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = Color.White)
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = GlassColors.GradientMiddle.copy(alpha = 0.8f),
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White,
-                        actionIconContentColor = Color.White
-                    )
-                )
+    TopAppBar(
+        title = { Text(groupName, color = Color.White) },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+        },
+        actions = {
+            IconButton(onClick = { showMenu = true }) {
+                Icon(Icons.Default.MoreVert, contentDescription = "Menu", tint = Color.White)
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.White.copy(alpha = 0.15f),
+            scrolledContainerColor = Color.White.copy(alpha = 0.15f),
+            titleContentColor = Color.White,
+            navigationIconContentColor = Color.White,
+            actionIconContentColor = Color.White
+        )
+    )
             }
         }
 
@@ -182,17 +190,12 @@ fun PollingScreen(
             ) {
                 Button(
                     onClick = { showCreatePollDialog = true },
-                    modifier = Modifier
-                        .weight(1f)
-                        .border(
-                            width = 1.dp,
-                            color = ComposeColor.White,
-                            shape = RoundedCornerShape(8.dp)
-                        ),
+                    modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ComposeColor.Transparent,
+                        containerColor = ComposeColor(0xFF2196F3),
                         contentColor = ComposeColor.White
-                    )
+                    ),
+                    shape = RoundedCornerShape(30.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, tint = ComposeColor.White)
                     Spacer(modifier = Modifier.width(8.dp))
@@ -658,20 +661,16 @@ fun CreatePollDialog(
                         onCreatePoll(question, options, pollType, duration)
                     }
                 },
-                enabled = question.isNotBlank() && 
-                         option1.isNotBlank() && 
+                enabled = question.isNotBlank() &&
+                         option1.isNotBlank() &&
                          option2.isNotBlank(),
-                modifier = Modifier.border(
-                    width = 1.dp,
-                    color = ComposeColor.White,
-                    shape = RoundedCornerShape(8.dp)
-                ),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ComposeColor.Transparent,
+                    containerColor = ComposeColor(0xFF2196F3),
                     contentColor = ComposeColor.White,
-                    disabledContainerColor = ComposeColor.Transparent.copy(alpha = 0.5f),
+                    disabledContainerColor = ComposeColor(0xFF2196F3).copy(alpha = 0.4f),
                     disabledContentColor = ComposeColor.White.copy(alpha = 0.5f)
-                )
+                ),
+                shape = RoundedCornerShape(8.dp)
             ) {
                 Text("Create Poll", color = ComposeColor.White)
             }
@@ -680,10 +679,10 @@ fun CreatePollDialog(
             TextButton(
                 onClick = onDismiss,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = ComposeColor.White
+                    contentColor = ComposeColor.Black
                 )
             ) {
-                Text("Cancel", color = ComposeColor.White)
+                Text("Cancel", color = ComposeColor.Black)
             }
         }
     )

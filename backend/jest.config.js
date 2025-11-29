@@ -21,6 +21,6 @@ module.exports = {
   verbose: true,
   testTimeout: 30000,
   maxWorkers: 1,
-  workerIdleMemoryLimit: '512MB'
+  workerIdleMemoryLimit: '2GB'
 };
 
