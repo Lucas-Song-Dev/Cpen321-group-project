@@ -26,13 +26,12 @@ class ModerationService {
         
         // Only set baseURL if explicitly using OpenRouter
         if (useOpenRouter) {
-          Object.assign(config, {
-            baseURL: 'https://openrouter.ai/api/v1',
-            defaultHeaders: {
-              'HTTP-Referer': process.env.YOUR_SITE_URL ?? 'http://localhost:3000',
-              'X-Title': process.env.YOUR_SITE_NAME ?? 'Roommate Chat App'
-            }
-          });
+          (config as ClientOptions & { baseURL?: string; defaultHeaders?: Record<string, string> }).baseURL =
+            'https://openrouter.ai/api/v1';
+          (config as ClientOptions & { baseURL?: string; defaultHeaders?: Record<string, string> }).defaultHeaders = {
+            'HTTP-Referer': process.env.YOUR_SITE_URL ?? 'http://localhost:3000',
+            'X-Title': process.env.YOUR_SITE_NAME ?? 'Roommate Chat App'
+          };
         }
         
         this.openai = new OpenAI(config);
@@ -134,13 +133,12 @@ Be strict about profanity - even casual use of swear words should be flagged. On
 
       const analysis = JSON.parse(analysisContent) as ModerationResult;
       return analysis;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    } catch (error: any) {
       console.error('Error in GPT moderation:', error);
       // On error, default to non-offensive to avoid blocking legitimate messages
       return {
         isOffensive: false,
-        reason: `Moderation error: ${errorMessage}`
+        reason: `Moderation error: ${error.message}`
       };
     }
   }
