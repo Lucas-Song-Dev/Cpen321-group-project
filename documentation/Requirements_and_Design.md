@@ -8,7 +8,7 @@
 | October 10, 2025 | Section 3.2, 3.7  | Fixed use case diagram according to feedback in M2 and non-function requirements section with concrete research to back up requirements |
 | October 28, 2025 | Added section 4.4, 4.6, 4.7, Modified section 3.1, 4.1, 4.2, 4.3, 4.5 | Implemented M3 Requirements, fixed document according to app implementation and made further M2 feedback changes |
 | November 9, 2025 | Section 3.4, 4.1 | Added missing endpoints (health check, transfer ownership, get profile, get tasks by date), corrected API endpoint paths and parameters, added transfer ownership use case |
-| November 28, 2025 | Section 3.1, 3.2, 3.4| Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram |
+| November 28, 2025 | Section 3.1, 3.2, 3.4, 4.5 | Added more specific feature descriptions based on TA feedback. Edited use case names to match with use case diagram. Updated dependencies diagram to match current code |
 
 
 ---
