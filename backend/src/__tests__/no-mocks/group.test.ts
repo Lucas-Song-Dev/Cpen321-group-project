@@ -900,11 +900,11 @@ describe('Group API - No Mocking', () => {
     // Now populate will succeed but owner will be null/undefined, triggering lines 180-190
     const response = await request(app)
       .get('/api/group')
-      .set('Authorization', jwt.sign(
+      .set('Authorization', `Bearer ${jwt.sign(
         { email: member1.email, id: member1._id.toString() },
         config.JWT_SECRET,
         { expiresIn: '1h' }
-      ));
+      )}`);
 
     // Should handle ownership transfer (lines 180-190)
     expect([200, 500]).toContain(response.status);
@@ -983,11 +983,11 @@ describe('Group API - No Mocking', () => {
 
       const response = await request(app)
         .get('/api/group')
-        .set('Authorization', jwt.sign(
+        .set('Authorization', `Bearer ${jwt.sign(
           { email: memberUser.email, id: memberUser._id.toString() },
           config.JWT_SECRET,
           { expiresIn: '1h' }
-        ));
+        )}`);
 
       // Should handle retry populate failure and create placeholder (lines 222-227)
       expect([200, 500]).toContain(response.status);

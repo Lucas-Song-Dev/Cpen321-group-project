@@ -1237,8 +1237,11 @@ describe('Task API - No Mocking', () => {
       // requiredPeople not set - line 396 will set it to 1
     });
 
+    // Remove requiredPeople to simulate old task format (model has default: 1)
+    await Task.updateOne({ _id: oldTask._id }, { $unset: { requiredPeople: '' } });
+
     // Verify it's not set initially
-    const taskBefore = await Task.findById(oldTask._id);
+    const taskBefore = await Task.findById(oldTask._id).lean();
     expect(taskBefore?.requiredPeople).toBeUndefined();
 
     const response = await request(app)

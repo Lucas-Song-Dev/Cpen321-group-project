@@ -531,7 +531,9 @@ describe('Task API Tests - With Mocking', () => {
       const originalFind = Task.find;
       Task.find = jest.fn().mockReturnValue({
         populate: jest.fn().mockReturnValue({
-          sort: jest.fn().mockRejectedValue(new Error('Query failed'))
+          populate: jest.fn().mockReturnValue({
+            sort: jest.fn().mockRejectedValue(new Error('Query failed'))
+          })
         })
       });
 
@@ -603,7 +605,9 @@ describe('Task API Tests - With Mocking', () => {
       const originalFind = Task.find;
       Task.find = jest.fn().mockReturnValue({
         populate: jest.fn().mockReturnValue({
-          sort: jest.fn().mockRejectedValue(new Error('Query failed'))
+          populate: jest.fn().mockReturnValue({
+            sort: jest.fn().mockRejectedValue(new Error('Query failed'))
+          })
         })
       });
 
@@ -673,7 +677,9 @@ describe('Task API Tests - With Mocking', () => {
       const originalFind = Task.find;
       Task.find = jest.fn().mockReturnValue({
         populate: jest.fn().mockReturnValue({
-          sort: jest.fn().mockRejectedValue(new Error('Query failed'))
+          populate: jest.fn().mockReturnValue({
+            sort: jest.fn().mockRejectedValue(new Error('Query failed'))
+          })
         })
       });
 
@@ -788,16 +794,32 @@ describe('Task API Tests - With Mocking', () => {
       );
       
       // Mock Task.find to return task with requiredPeople undefined
-      // This ensures line 396 executes (Mongoose might apply defaults otherwise)
+      // This ensures line 401-402 executes (Mongoose might apply defaults otherwise)
       const originalFind = Task.find;
       const allTasks = await Task.find({ groupId: testGroup._id });
       const mockTask = allTasks.find(t => t._id.toString() === oldTask._id.toString());
       
       if (mockTask) {
-        // Manually set requiredPeople to undefined to trigger line 396
+        // Manually set requiredPeople to undefined to trigger line 401-402
         (mockTask as any).requiredPeople = undefined;
-        // Mock Task.find to return array directly (route uses Task.find() not Task.find().populate())
-        Task.find = jest.fn().mockResolvedValue([mockTask]);
+        
+        // Create a mock that works for both calls:
+        // 1. Line 355: Task.find() - returns array directly
+        // 2. Line 419: Task.find().populate().populate() - returns populated array
+        let callCount = 0;
+        Task.find = jest.fn().mockImplementation(() => {
+          callCount++;
+          // First call (line 355) - return array directly
+          if (callCount === 1) {
+            return Promise.resolve([mockTask]);
+          }
+          // Second call (line 419) - return object with populate chain
+          return {
+            populate: jest.fn().mockReturnValue({
+              populate: jest.fn().mockResolvedValue([mockTask])
+            })
+          };
+        });
       }
 
       try {
@@ -808,7 +830,7 @@ describe('Task API Tests - With Mocking', () => {
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         
-        // Verify requiredPeople was set to 1 (line 396)
+        // Verify requiredPeople was set to 1 (line 401-402)
         // The task should have requiredPeople set in memory even if not saved
         expect(mockTask?.requiredPeople).toBe(1);
       } finally {

@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 // import OpenAI from 'openai';
-import { UserModel } from '../models/user.models';
 import Message from '../models/chat.models';
+import { UserModel } from '../models/user.models';
 
 export const UserReporter = {
-  report: async (req: Request, res: Response): Promise<any> => {
+  report: async (req: Request, res: Response) => {
     try {
       const { reportedUserId, reporterId, groupId, reason } = req.body;
 
@@ -29,7 +29,7 @@ export const UserReporter = {
 
       // Fetch all messages from the reported user in this group
       const messages = await Message.find({
-        groupId,
+        groupId: groupId,
         senderId: reportedUserId,
         type: 'text'
       })
@@ -37,7 +37,8 @@ export const UserReporter = {
         .limit(100)
         .lean();
 
-    
+      console.log(`Found ${messages.length} messages from user ${reportedUserId}`);
+
       if (messages.length === 0) {
         return res.status(400).json({
           success: false,
@@ -93,10 +94,11 @@ export const UserReporter = {
       // const analysis = JSON.parse(analysisContent);
       // console.log('OpenAI Analysis:', analysis);
 
-      // Allow testing coverage by checking environment variable
-      const testOffensive = process.env.TEST_REPORT_OFFENSIVE === 'true';
+      // TODO CHANGE LATER TO USE OPENAI ANALYSIS
+      const forceOffensive = process.env.TEST_REPORT_OFFENSIVE === 'true';
       const analysis = {
-          isOffensive: testOffensive || false  // Temporary: always return non-offensive to avoid breaking the feature
+        // Default to non-offensive unless explicitly forced (e.g., in tests)
+        isOffensive: forceOffensive
       };
 
       // If the message is offensive, mark the user as offensive
@@ -105,6 +107,10 @@ export const UserReporter = {
         reportedUser.isOffensive = true;
         await reportedUser.save();
         actionTaken = 'User has been marked as offensive';
+        
+        console.log(`User ${reportedUserId} marked as offensive`);
+      } else {
+        console.log(`User ${reportedUserId} not marked as offensive - messages deemed acceptable`);
       }
 
       return res.status(200).json({
@@ -112,7 +118,7 @@ export const UserReporter = {
         message: 'Report submitted successfully',
         data: {
           isOffensive: analysis.isOffensive,
-          actionTaken
+          actionTaken: actionTaken
         }
       });
 

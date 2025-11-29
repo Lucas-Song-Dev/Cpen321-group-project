@@ -19,6 +19,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.cpen321.roomsync.ui.theme.GlassColors
 
 @Composable
 fun AuthScreen(
@@ -125,17 +126,17 @@ private fun AuthScreenPart2(
     Spacer(Modifier.height(24.dp))
 
     authState?.let { state ->
-        if (state.success) {
-            Text(
-                "✅ ${state.message}",
-                color = MaterialTheme.colorScheme.primary
-            )
+        val (emoji, color) = if (state.success) {
+            Pair("✅", MaterialTheme.colorScheme.primary)
         } else {
-            Text(
-                "❌ ${state.message}",
-                color = MaterialTheme.colorScheme.error
-            )
+            Pair("⚠️", GlassColors.AlertRed)
         }
+        Text(
+            "$emoji ${state.message}",
+            color = color,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 

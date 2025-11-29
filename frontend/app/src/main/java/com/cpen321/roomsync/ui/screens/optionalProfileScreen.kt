@@ -4,8 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -13,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -21,7 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.cpen321.roomsync.data.models.User
+import com.cpen321.roomsync.ui.theme.GlassColors
 import com.cpen321.roomsync.ui.theme.GlassGradients
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileViewModel
 import com.cpen321.roomsync.ui.viewmodels.OptionalProfileState
@@ -70,6 +73,9 @@ fun OptionalProfileScreen(
     viewModel: OptionalProfileViewModel,
     onComplete: () -> Unit = {}
 ) {
+    BackHandler(enabled = true) {
+        // Block the system back button so the user deliberately finishes or skips
+    }
     var bio by remember { mutableStateOf(user.bio ?: "") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var hasNewImageSelected by remember { mutableStateOf(false) }
@@ -153,7 +159,7 @@ fun OptionalProfileScreen(
                 text = "Optional Profile",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+                color = Color.White,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -165,7 +171,7 @@ fun OptionalProfileScreen(
                 Text(
                     text = "Profile Picture:",
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
@@ -173,10 +179,10 @@ fun OptionalProfileScreen(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .background(Color.White.copy(alpha = 0.1f))
                         .border(
                             width = 2.dp,
-                            color = MaterialTheme.colorScheme.outline,
+                            color = Color.White.copy(alpha = 0.8f),
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -221,7 +227,7 @@ fun OptionalProfileScreen(
                             Icon(
                                 Icons.Default.Add,
                                 contentDescription = "Add Profile Picture",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = Color.White
                             )
                         }
                     }
@@ -233,7 +239,12 @@ fun OptionalProfileScreen(
                 ) {
                     OutlinedButton(
                         onClick = { imagePickerLauncher.launch("image/*") },
-                        modifier = Modifier.height(40.dp)
+                        modifier = Modifier.height(40.dp),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.7f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = Color.White,
+                            containerColor = Color.Transparent
+                        )
                     ) {
                         Icon(
                             Icons.Default.Add,
@@ -241,7 +252,7 @@ fun OptionalProfileScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Gallery", fontSize = 12.sp)
+                            Text("Gallery", fontSize = 12.sp, color = Color.White)
                     }
 
                     if (selectedImageUri != null || user.profilePicture != null) {
@@ -253,7 +264,7 @@ fun OptionalProfileScreen(
                             },
                             modifier = Modifier.height(40.dp)
                         ) {
-                            Text("Remove", fontSize = 12.sp)
+                            Text("Remove", fontSize = 12.sp, color = Color.White)
                         }
                     }
                 }
@@ -264,7 +275,7 @@ fun OptionalProfileScreen(
                 Text(
                     text = "Bio:",
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 OutlinedTextField(
@@ -274,8 +285,19 @@ fun OptionalProfileScreen(
                         .fillMaxWidth()
                         .height(100.dp),
                     maxLines = 4,
-                    placeholder = { Text("Tell us about yourself...") },
-                    supportingText = { Text("${bio.length}/500") }
+                    placeholder = { Text("Tell us about yourself...", color = Color.White.copy(alpha = 0.6f)) },
+                    supportingText = { Text("${bio.length}/500", color = Color.White.copy(alpha = 0.6f)) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.6f),
+                        cursorColor = Color.White,
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.8f),
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    )
                 )
             }
 
@@ -283,7 +305,7 @@ fun OptionalProfileScreen(
                 text = "Living Preferences:",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
+                color = Color.White,
                 modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
             )
             
@@ -321,7 +343,17 @@ fun OptionalProfileScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .height(54.dp)
+                        .border(
+                            width = 1.dp,
+                            color = Color.White,
+                            shape = RoundedCornerShape(30.dp)
+                        ),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(30.dp)
                 ) {
                     Text(
                         text = "Save & Continue",
@@ -334,7 +366,13 @@ fun OptionalProfileScreen(
                     onClick = onComplete,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .height(54.dp),
+                    shape = RoundedCornerShape(30.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White
+                    ),
+                    border = BorderStroke(1.dp, Color.White)
                 ) {
                     Text(
                         text = "Skip for Now",
@@ -367,16 +405,16 @@ private fun OptionalProfileScreenPart2Schedule(morningNight: String?, onChange: 
         Text(
             text = "Schedule:",
             fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = Color.White,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Row(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(onClick = { onChange("Morning") }, label = { Text("Morning") }, selected = morningNight == "Morning")
-            FilterChip(onClick = { onChange("Night") }, label = { Text("Night") }, selected = morningNight == "Night")
-            FilterChip(onClick = { onChange("Flexible") }, label = { Text("Flexible") }, selected = morningNight == "Flexible")
+            PreferenceChip("Morning", morningNight == "Morning") { onChange("Morning") }
+            PreferenceChip("Night", morningNight == "Night") { onChange("Night") }
+            PreferenceChip("Flexible", morningNight == "Flexible") { onChange("Flexible") }
         }
     }
 }
@@ -387,16 +425,16 @@ private fun OptionalProfileScreenPart2Drinking(drinking: String?, onChange: (Str
         Text(
             text = "Drinking:",
             fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = Color.White,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Row(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(onClick = { onChange("None") }, label = { Text("None") }, selected = drinking == "None")
-            FilterChip(onClick = { onChange("Occasional") }, label = { Text("Occasional") }, selected = drinking == "Occasional")
-            FilterChip(onClick = { onChange("Regular") }, label = { Text("Regular") }, selected = drinking == "Regular")
+            PreferenceChip("None", drinking == "None") { onChange("None") }
+            PreferenceChip("Occasional", drinking == "Occasional") { onChange("Occasional") }
+            PreferenceChip("Regular", drinking == "Regular") { onChange("Regular") }
         }
     }
 }
@@ -407,16 +445,16 @@ private fun OptionalProfileScreenPart2Partying(partying: String?, onChange: (Str
         Text(
             text = "Partying:",
             fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = Color.White,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Row(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(onClick = { onChange("None") }, label = { Text("None") }, selected = partying == "None")
-            FilterChip(onClick = { onChange("Occasional") }, label = { Text("Occasional") }, selected = partying == "Occasional")
-            FilterChip(onClick = { onChange("Regular") }, label = { Text("Regular") }, selected = partying == "Regular")
+            PreferenceChip("None", partying == "None") { onChange("None") }
+            PreferenceChip("Occasional", partying == "Occasional") { onChange("Occasional") }
+            PreferenceChip("Regular", partying == "Regular") { onChange("Regular") }
         }
     }
 }
@@ -432,16 +470,16 @@ private fun OptionalProfileScreenPart3(
         Text(
             text = "Noise Preference:",
             fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = Color.White,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Row(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(onClick = { onNoiseChange("Quiet") }, label = { Text("Quiet") }, selected = noise == "Quiet")
-            FilterChip(onClick = { onNoiseChange("Moderate") }, label = { Text("Moderate") }, selected = noise == "Moderate")
-            FilterChip(onClick = { onNoiseChange("Loud") }, label = { Text("Loud") }, selected = noise == "Loud")
+            PreferenceChip("Quiet", noise == "Quiet") { onNoiseChange("Quiet") }
+            PreferenceChip("Moderate", noise == "Moderate") { onNoiseChange("Moderate") }
+            PreferenceChip("Loud", noise == "Loud") { onNoiseChange("Loud") }
         }
     }
     
@@ -449,16 +487,45 @@ private fun OptionalProfileScreenPart3(
         Text(
             text = "Profession:",
             fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = Color.White,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Row(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(onClick = { onProfessionChange("Student") }, label = { Text("Student") }, selected = profession == "Student")
-            FilterChip(onClick = { onProfessionChange("Worker") }, label = { Text("Worker") }, selected = profession == "Worker")
-            FilterChip(onClick = { onProfessionChange("Unemployed") }, label = { Text("Unemployed") }, selected = profession == "Unemployed")
+            PreferenceChip("Student", profession == "Student") { onProfessionChange("Student") }
+            PreferenceChip("Worker", profession == "Worker") { onProfessionChange("Worker") }
+            PreferenceChip("Unemployed", profession == "Unemployed") { onProfessionChange("Unemployed") }
         }
     }
+}
+
+@Composable
+private fun PreferenceChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val borderColor = if (selected) Color.White else Color.White.copy(alpha = 0.6f)
+    FilterChip(
+        onClick = onClick,
+        label = { Text(label, color = Color.White) },
+        selected = selected,
+        shape = RoundedCornerShape(12.dp),
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = Color.Transparent,
+            selectedContainerColor = Color.White.copy(alpha = 0.15f),
+            labelColor = Color.White,
+            selectedLabelColor = Color.White
+        ),
+        border = FilterChipDefaults.filterChipBorder(
+            enabled = true,
+            selected = selected,
+            borderColor = borderColor,
+            selectedBorderColor = Color.White,
+            borderWidth = 1.dp,
+            selectedBorderWidth = 1.dp
+        )
+    )
 }

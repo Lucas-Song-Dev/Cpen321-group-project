@@ -5,7 +5,7 @@ data class Task(
     val name: String,
     val description: String?,
     val groupId: String,
-    val createdBy: User,
+    val createdBy: User?,
     val difficulty: Int,
     val recurrence: String,
     val requiredPeople: Int,
@@ -16,7 +16,7 @@ data class Task(
 )
 
 data class TaskAssignment(
-    val userId: User,
+    val userId: User?,
     val weekStart: String,
     val status: String,
     val completedAt: String? = null

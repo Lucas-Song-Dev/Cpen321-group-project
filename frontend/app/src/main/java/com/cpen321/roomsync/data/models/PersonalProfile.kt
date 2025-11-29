@@ -10,6 +10,8 @@ data class ProfileResponse(
 //FOR MANDATORY PROFILE
 data class ProfileSetRequest(
     val email: String,
+    val name: String,
+    val updatedEmail: String? = null,
     val dob: String,
     val gender: String
 )

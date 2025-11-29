@@ -24,7 +24,9 @@ val RoomSyncGreenDark = Color(0xFF388E3C)
 private val DarkColorScheme = darkColorScheme(
     primary = RoomSyncGreen,
     secondary = RoomSyncGreenDark,
-    tertiary = RoomSyncGreen
+    tertiary = RoomSyncGreen,
+    error = GlassColors.AlertRed,
+    onError = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -37,7 +39,9 @@ private val LightColorScheme = lightColorScheme(
     onSecondary = Color.White,
     onTertiary = Color.White,
     onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F)
+    onSurface = Color(0xFF1C1B1F),
+    error = GlassColors.AlertRed,
+    onError = Color.White
 )
 
 @Composable

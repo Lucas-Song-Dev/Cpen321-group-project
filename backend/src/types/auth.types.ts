@@ -1,18 +1,13 @@
 import { IUser } from './index.types';
 
 // Request types
-// ------------------------------------------------------------
-
-export interface AuthenticateUserResponse {
+export type AuthenticateUserResponse = {
   message: string;
   data?: AuthResult;
-}
+};
 
 // Generic types
-// ------------------------------------------------------------
-export interface AuthResult {
+export type AuthResult = {
   token: string;
   user: IUser;
-}
-
-// Remove duplicate declaration - already defined in express.d.ts
+};

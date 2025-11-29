@@ -36,8 +36,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.DatePickerDialog
-import com.cpen321.roomsync.ui.theme.GlassGradients
 import com.cpen321.roomsync.ui.theme.GlassColors
+import com.cpen321.roomsync.ui.theme.GlassGradients
 
 data class TaskItem(
     val id: String,
@@ -955,7 +955,7 @@ fun TaskCard(
             Text(
                 text = "Created by ${task.createdBy} • ${task.recurrence} • ${task.requiredPeople} people needed",
                 fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White
             )
             
             // Deadline info
@@ -988,7 +988,7 @@ fun TaskStatusChip(
     onClick: () -> Unit
 ) {
     val (text, color, icon) = when (status) {
-        TaskStatus.INCOMPLETE -> Triple("Incomplete", Color(0xFFFF6B6B), Icons.Default.Close)
+        TaskStatus.INCOMPLETE -> Triple("Incomplete", GlassColors.AlertRed, Icons.Default.Close)
         TaskStatus.IN_PROGRESS -> Triple("In Progress", MaterialTheme.colorScheme.primary, Icons.Default.PlayArrow)
         TaskStatus.COMPLETED -> Triple("Complete", Color(0xFF4CAF50), Icons.Default.CheckCircle)
     }
@@ -1023,6 +1023,15 @@ fun AddTaskDialog(
     var requiredPeople by remember { mutableStateOf(1) }
     var deadline by remember { mutableStateOf<Date?>(null) }
     var selectedMembers by remember { mutableStateOf<List<String>>(emptyList()) }
+    val maxSelectablePeople = remember(groupMembers.size) {
+        groupMembers.size.coerceAtLeast(1).coerceAtMost(10)
+    }
+
+    LaunchedEffect(maxSelectablePeople) {
+        if (requiredPeople > maxSelectablePeople) {
+            requiredPeople = maxSelectablePeople
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1133,15 +1142,14 @@ fun AddTaskDialog(
                 
                 // Required people selector
                 Text(
-                    text = "Required People: $requiredPeople",
+                    text = "Required People: $requiredPeople (max ${groupMembers.size.coerceAtLeast(1)})",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    repeat(10) { index ->
-                        val peopleCount = index + 1
+                    for (peopleCount in 1..maxSelectablePeople) {
                         Box(
                             modifier = Modifier
                                 .size(32.dp)

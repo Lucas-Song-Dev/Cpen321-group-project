@@ -92,8 +92,9 @@ fun HomeScreen(
                     }
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                val destructiveColor = MaterialTheme.colorScheme.error
                 NavigationDrawerItem(
-                    label = { Text("Leave Group", color = MaterialTheme.colorScheme.error) },
+                    label = { Text("Leave Group", color = destructiveColor) },
                     selected = false,
                     onClick = {
                         showLeaveGroupDialog = true
@@ -101,7 +102,7 @@ fun HomeScreen(
                     }
                 )
                 NavigationDrawerItem(
-                    label = { Text("Delete Account", color = MaterialTheme.colorScheme.error) },
+                    label = { Text("Delete Account", color = destructiveColor) },
                     selected = false,
                     onClick = {
                         showDeleteDialog = true
@@ -317,6 +318,7 @@ fun HomeScreen(
 
             // Leave group confirmation dialog
             if (showLeaveGroupDialog) {
+                val accentRed = Color(0xFFFF6B6B)
                 println("HomeScreen: Rendering Leave Group dialog")
                 AlertDialog(
                     onDismissRequest = {
@@ -333,15 +335,21 @@ fun HomeScreen(
                                 onLeaveGroup()
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
+                                containerColor = Color.Transparent,
+                                contentColor = accentRed
+                            ),
+                            modifier = Modifier.border(
+                                width = 1.dp,
+                                color = accentRed,
+                                shape = RoundedCornerShape(8.dp)
                             )
                         ) {
-                            Text("Leave")
+                            Text("Leave", color = accentRed)
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showLeaveGroupDialog = false }) {
-                            Text("Cancel")
+                            Text("Cancel", color = Color.White)
                         }
                     }
                 )
@@ -349,6 +357,7 @@ fun HomeScreen(
 
             // Delete account confirmation dialog
             if (showDeleteDialog) {
+                val accentRed = Color(0xFFFF6B6B)
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },
                     title = { Text("Delete Account") },
@@ -360,15 +369,21 @@ fun HomeScreen(
                                 onDeleteAccount()
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
+                                containerColor = Color.Transparent,
+                                contentColor = accentRed
+                            ),
+                            modifier = Modifier.border(
+                                width = 1.dp,
+                                color = accentRed,
+                                shape = RoundedCornerShape(8.dp)
                             )
                         ) {
-                            Text("Delete")
+                            Text("Delete", color = accentRed)
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showDeleteDialog = false }) {
-                            Text("Cancel")
+                            Text("Cancel", color = Color.White)
                         }
                     }
                 )

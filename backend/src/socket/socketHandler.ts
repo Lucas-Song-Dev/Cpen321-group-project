@@ -1,6 +1,6 @@
-import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import jwt from 'jsonwebtoken';
+import { Socket, Server as SocketIOServer } from 'socket.io';
 import { config } from '../config';
 
 interface AuthenticatedSocket extends Socket {

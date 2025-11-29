@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cpen321.roomsync.ui.theme.GlassColors
 import com.cpen321.roomsync.ui.theme.GlassGradients
 import com.cpen321.roomsync.ui.viewmodels.GroupViewModel
 import androidx.compose.ui.graphics.Color as ComposeColor
@@ -65,7 +66,7 @@ fun CreateGroupScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = error,
-                    color = ComposeColor(0xFFFF6B6B),
+                    color = GlassColors.AlertRed,
                     fontSize = 14.sp,
                     modifier = Modifier.testTag("errorMessage")
                 )

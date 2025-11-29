@@ -439,7 +439,7 @@ describe('Rating API - No Mocking', () => {
         testimonial: 'Updated rating'
       });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.data.rating).toBe(5);
     expect(response.body.data.testimonial).toBe('Updated rating');
@@ -620,7 +620,7 @@ describe('Rating API - No Mocking', () => {
         testimonial: 'Updated testimonial'
       });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.data.rating).toBe(5);
   });

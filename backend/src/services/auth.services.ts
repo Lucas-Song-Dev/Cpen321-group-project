@@ -1,6 +1,7 @@
-import { UserModel } from "../models/user.models";
 import jwt from "jsonwebtoken";
 import { config } from "../config";
+import { UserModel } from "../models/user.models";
+
 
 export const AuthService = {
   signup: async (email: string, name: string, googleId: string) => {
@@ -21,25 +22,41 @@ export const AuthService = {
           _id: String(user._id),
           email: user.email, 
           name: user.name,
-          dob: user.dob ?? null,
-          gender: user.gender ?? null,
+          dob: user.dob || null,
+          gender: user.gender || null,
           profileComplete: user.profileComplete,
-          bio: user.bio ?? null,
-          profilePicture: user.profilePicture ?? null,
-          livingPreferences: user.livingPreferences ?? null,
-          groupName: user.groupName ?? null
+          bio: user.bio || null,
+          profilePicture: user.profilePicture || null,
+          livingPreferences: user.livingPreferences || null,
+          groupName: user.groupName || null
         },
         token,
       };
-    } catch (err) {
-      console.error(err);
-      return { success: false, message: "Signup failed due to server error" };
+    } catch (err: any) {
+      console.error("AuthService.signup error:", err);
+
+      // Handle common Mongo duplicate key errors more clearly
+      if (err?.code === 11000) {
+        // Duplicate key on email or googleId
+        return {
+          success: false,
+          message: "User already exists. Please log in instead.",
+        };
+      }
+
+      // Surface the actual error message to help debugging instead of a generic one
+      const errorMessage =
+        typeof err?.message === "string" && err.message.trim().length > 0
+          ? err.message
+          : "Signup failed due to server error";
+
+      return { success: false, message: `Signup failed: ${errorMessage}` };
     }
   },
 
   login: async (email: string) => {
     try {
-          const user = await UserModel.findOne({ email });
+      const user = await UserModel.findOne({ email });
       if (!user) {
         return { success: false, message: "User does not exist. Please sign up first." };
       }
@@ -52,13 +69,13 @@ export const AuthService = {
           _id: String(user._id),
           email: user.email, 
           name: user.name,
-          dob: user.dob ?? null,
-          gender: user.gender ?? null,
+          dob: user.dob || null,
+          gender: user.gender || null,
           profileComplete: user.profileComplete,
-          bio: user.bio ?? null,
-          profilePicture: user.profilePicture ?? null,
-          livingPreferences: user.livingPreferences ?? null,
-          groupName: user.groupName ?? null
+          bio: user.bio || null,
+          profilePicture: user.profilePicture || null,
+          livingPreferences: user.livingPreferences || null,
+          groupName: user.groupName || null
         },
         token,
       };

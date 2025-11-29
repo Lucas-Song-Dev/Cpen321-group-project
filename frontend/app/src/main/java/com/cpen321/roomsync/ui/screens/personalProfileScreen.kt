@@ -1,14 +1,22 @@
 package com.cpen321.roomsync.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.BackHandler
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -19,14 +27,19 @@ import com.cpen321.roomsync.ui.theme.GlassGradients
 import com.cpen321.roomsync.ui.viewmodels.PersonalProfileViewModel
 import com.cpen321.roomsync.ui.viewmodels.ProfileSetState
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonalProfileScreen(
     user: User,
     viewModel: PersonalProfileViewModel,
     onProfileComplete: () -> Unit
 ) {
+    BackHandler(enabled = true) {
+        // Swallow system back presses on this screen to prevent leaving before completion
+    }
     // Initialize with existing user data if available
     val dateFormatter = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
     
@@ -41,16 +54,27 @@ fun PersonalProfileScreen(
         user.gender ?: ""
     }
     
+    var nameInput by remember(user._id) { mutableStateOf(user.name) }
+    var emailInput by remember(user._id) { mutableStateOf(user.email) }
     var dob by remember(user._id) { mutableStateOf(formattedDob) }
     var gender by remember(user._id) { mutableStateOf(userGender) }
     
     // Update local state when user data changes - this ensures persistence when coming back
     LaunchedEffect(user._id, user.dob, user.gender) {
+        nameInput = user.name
+        emailInput = user.email
         dob = user.dob?.let { dateFormatter.format(it) } ?: ""
         gender = user.gender ?: ""
     }
 
     val profileSetState by viewModel.profileSetState.collectAsState()
+    // Current time in millis, used to prevent selecting future dates
+    val todayMillis = remember { System.currentTimeMillis() }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = runCatching { dateFormatter.parse(dob)?.time }
+            .getOrNull() ?: todayMillis
+    )
+    var showDatePicker by remember { mutableStateOf(false) }
 
     //Navigate when profile update is successful
     LaunchedEffect(profileSetState) {
@@ -94,93 +118,145 @@ fun PersonalProfileScreen(
         )
     }
 
+    val scrollState = rememberScrollState()
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(brush = GlassGradients.MainBackground)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            modifier = Modifier.fillMaxSize()
         ) {
-            //Page title
+            // Glass top header
+            Box(
+            modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color.White.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.25f),
+                        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                    )
+            ) {
             Text(
                 text = "Personal Profile",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+                    color = Color.White,
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp, vertical = 32.dp)
+                        .align(Alignment.BottomStart)
+                )
+            }
 
-            //Name field (read-only: retrieved from google auth)
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 24.dp, bottom = 16.dp)
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Name field (read-only)
                 Text(
                     text = "Name:",
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 OutlinedTextField(
-                    value = user.name,
-                    onValueChange = { },
+                    value = nameInput,
+                    onValueChange = { nameInput = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    enabled = false,
                     colors = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.6f),
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
                     )
                 )
-            }
 
-            //Email field (read-only: retrieved from google auth)
-            Column {
+                // Email field (Google account email - not editable)
                 Text(
                     text = "Email:",
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 OutlinedTextField(
-                    value = user.email,
-                    onValueChange = { },
+                    value = emailInput,
+                    onValueChange = { /* read-only, do nothing */ },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     enabled = false,
                     colors = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        disabledTextColor = Color.White,
+                        disabledBorderColor = Color.White.copy(alpha = 0.6f),
+                        disabledContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.6f),
+                        cursorColor = Color.White,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
                     )
                 )
-            }
 
-            //DOB field
-            Column {
+                // DOB field
                 Text(
                     text = "Date of Birth:",
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 OutlinedTextField(
                     value = dob,
-                    onValueChange = { dob = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = { },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
                     singleLine = true,
-                    placeholder = { Text("YYYY-MM-DD") }
+                    readOnly = true,
+                    placeholder = { Text("YYYY-MM-DD", color = Color.White.copy(alpha = 0.6f)) },
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(
+                                imageVector = Icons.Filled.DateRange,
+                                contentDescription = "Select date",
+                                tint = Color.White
                 )
             }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.6f),
+                        cursorColor = Color.White,
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = Color.White.copy(alpha = 0.8f),
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    )
+                )
 
-            //Gender section
-            Column {
+                // Gender section
                 Text(
                     text = "Gender:",
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -190,36 +266,34 @@ fun PersonalProfileScreen(
                         .selectableGroup(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    FilterChip(
-                        onClick = { gender = "Male" },
-                        label = { Text("Male") },
-                        selected = gender == "Male",
-                        modifier = Modifier.selectable(
-                            selected = gender == "Male",
-                            onClick = { gender = "Male" },
-                            role = Role.RadioButton
-                        )
+                    val chipColors = FilterChipDefaults.filterChipColors(
+                        containerColor = Color.Transparent,
+                        selectedContainerColor = Color.White.copy(alpha = 0.2f),
+                        labelColor = Color.White,
+                        selectedLabelColor = Color.White
                     )
-
+                    listOf(
+                        "Male",
+                        "Female",
+                        "Prefer-not-to-say"
+                    ).forEach { option ->
                     FilterChip(
-                        onClick = { gender = "Female" },
-                        label = { Text("Female") },
-                        selected = gender == "Female",
+                            onClick = { gender = option },
+                            label = { Text(option) },
+                            selected = gender == option,
                         modifier = Modifier.selectable(
-                            selected = gender == "Female",
-                            onClick = { gender = "Female" },
+                                selected = gender == option,
+                                onClick = { gender = option },
                             role = Role.RadioButton
-                        )
-                    )
-
-                    FilterChip(
-                        onClick = { gender = "Prefer-not-to-say" },
-                        label = { Text("Prefer-not-to-say") },
-                        selected = gender == "Prefer-not-to-say",
-                        modifier = Modifier.selectable(
-                            selected = gender == "Prefer-not-to-say",
-                            onClick = { gender = "Prefer-not-to-say" },
-                            role = Role.RadioButton
+                            ),
+                            colors = chipColors,
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = gender == option,
+                                borderColor = Color.White.copy(alpha = 0.6f),
+                                selectedBorderColor = Color.White,
+                                selectedBorderWidth = 1.dp,
+                                borderWidth = 1.dp
                         )
                     )
                 }
@@ -227,15 +301,36 @@ fun PersonalProfileScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            //Continue button
+                // Continue button
             Button(
                 onClick = {
-                    viewModel.updateProfile(user.email, dob, gender)
+                    viewModel.updateProfile(
+                        originalEmail = user.email,
+                        name = nameInput,
+                        dob = dob,
+                        gender = gender,
+                        updatedEmail = emailInput
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                enabled = dob.isNotBlank() && gender.isNotBlank()
+                        .height(52.dp)
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = if (dob.isNotBlank() && gender.isNotBlank()) 1f else 0.5f),
+                            shape = RoundedCornerShape(30.dp)
+                        ),
+                    enabled = nameInput.isNotBlank() &&
+                        emailInput.isNotBlank() &&
+                        dob.isNotBlank() &&
+                        gender.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(alpha = 0.15f),
+                        contentColor = Color.White,
+                        disabledContainerColor = Color.White.copy(alpha = 0.08f),
+                        disabledContentColor = Color.White.copy(alpha = 0.4f)
+                    ),
+                    shape = RoundedCornerShape(30.dp)
             ) {
                 Text(
                     text = "Continue",
@@ -243,6 +338,37 @@ fun PersonalProfileScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
+            }
+        }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            // Prevent selecting a date later than today
+                            if (millis <= todayMillis) {
+                                dob = dateFormatter.format(Date(millis))
+                            }
+                        }
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            // Older Material3 DatePicker in your project doesn't support dateValidator,
+            // so we rely on the confirm-button check above to block future dates.
+            DatePicker(state = datePickerState)
         }
     }
 }

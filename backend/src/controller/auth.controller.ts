@@ -15,37 +15,28 @@ async function verifyGoogleToken(idToken: string) {
 }
 
 export const AuthController = {
-  signup: async (req: Request, res: Response): Promise<void> => {
+  signup: async (req: Request, res: Response) => {
     try {
-      //for debugging
-      // console.log('Signup request body:', req.body);
-      
       const { token } = req.body;
-      if (!token) {
-        res.status(400).json({ success: false, message: "Missing ID token" });
-        return;
-      }
+      if (!token) return res.status(400).json({ success: false, message: "Missing ID token" });
 
       const { email, name, googleId } = await verifyGoogleToken(token);
       const result = await AuthService.signup(email, name, googleId);  //added await for async service
-      res.json(result);
+      return res.json(result);
     } catch (err) {
       console.error(err);
       res.status(401).json({ success: false, message: "Signup failed: Invalid Google token" });
     }
   },
 
-  login: async (req: Request, res: Response): Promise<void> => {
+  login: async (req: Request, res: Response) => {
     try {
       const { token } = req.body;
-      if (!token) {
-        res.status(400).json({ success: false, message: "Missing ID token" });
-        return;
-      }
+      if (!token) return res.status(400).json({ success: false, message: "Missing ID token" });
 
       const { email } = await verifyGoogleToken(token);
       const result = await AuthService.login(email);  //added await for async service
-      res.json(result);
+      return res.json(result);
     } catch (err) {
       console.error(err);
       res.status(401).json({ success: false, message: "Login failed: Invalid Google token" });
