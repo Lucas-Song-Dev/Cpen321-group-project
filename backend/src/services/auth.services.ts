@@ -44,13 +44,8 @@ export const AuthService = {
         };
       }
 
-      // Surface the actual error message to help debugging instead of a generic one
-      const errorMessage =
-        typeof err?.message === "string" && err.message.trim().length > 0
-          ? err.message
-          : "Signup failed due to server error";
-
-      return { success: false, message: `Signup failed: ${errorMessage}` };
+      // For all other errors, return a generic server error message
+      return { success: false, message: "Signup failed due to server error" };
     }
   },
 
