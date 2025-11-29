@@ -5,9 +5,19 @@ import { UserModel } from "../models/user.models";
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const timestamp = new Date().toISOString();
+  
+  // Log all incoming requests to user endpoints (especially reports)
+  if (req.path.includes('report') || req.path.includes('users')) {
+    console.log(`[${timestamp}] AUTH MIDDLEWARE: ${req.method} ${req.path}`);
+    console.log(`[${timestamp}] AUTH MIDDLEWARE: Has auth header: ${!!req.headers.authorization}`);
+  }
+  
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (req.path.includes('report')) {
+      console.log(`[${timestamp}] AUTH MIDDLEWARE: No token provided for report endpoint`);
+    }
     return res.status(401).json({ success: false, message: "No token provided" });
   }
 

@@ -66,7 +66,14 @@ app.use("/api/group", (req, res, next) => { authenticate(req, res, next).catch((
 app.use("/api/task", (req, res, next) => { authenticate(req, res, next).catch((err: unknown) => { next(err); }); }, taskRouter);  //protected with auth middleware
 app.use("/api/chat", (req, res, next) => { authenticate(req, res, next).catch((err: unknown) => { next(err); }); }, chatRouter);  //protected with auth middleware
 app.use("/api/rating", ratingRouter);  //uses its own auth middleware
-app.use("/api", userRouter);  //protected with auth middleware
+app.use("/api", (req, res, next) => {
+  // Add logging for report requests before auth middleware
+  if (req.path.includes('report') || req.path.includes('users')) {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] ROUTE MOUNT: ${req.method} ${req.path} hit /api router`);
+  }
+  authenticate(req, res, next).catch((err: unknown) => { next(err); });
+}, userRouter);  //protected with auth middleware
 
 console.log("Attempting MongoDB connection...");
 mongoose.set('strictQuery', true);

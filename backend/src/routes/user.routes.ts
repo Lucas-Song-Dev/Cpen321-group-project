@@ -22,5 +22,11 @@ userRouter.put('/users/optionalProfile', UserController.updateProfile);
 userRouter.delete('/users/me', authenticate, UserController.deleteUser);
 
 // @desc    Report another user
-// @route   POST /users/report
-userRouter.put('/users/report', authenticate, UserReporter.report);
+// @route   PUT /users/report
+userRouter.put('/users/report', authenticate, async (req, res) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ROUTE: PUT /users/report endpoint hit`);
+  console.log(`[${timestamp}] ROUTE: Request body:`, JSON.stringify(req.body));
+  console.log(`[${timestamp}] ROUTE: Request headers:`, JSON.stringify(req.headers));
+  await UserReporter.report(req, res);
+});

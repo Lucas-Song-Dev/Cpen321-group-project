@@ -7,8 +7,8 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitInstance {
     // Production backend for normal app traffic (login, groups, chat, etc.)
-    private const val BASE_URL = "https://roomsync-backend-445076519627.us-central1.run.app/"
-    private const val REPORT_BASE_URL = "https://roomsync-backend-445076519627.us-central1.run.app/"
+    private const val BASE_URL = "https://roomsync-474705.uc.r.appspot.com/"
+    private const val REPORT_BASE_URL = "https://roomsync-474705.uc.r.appspot.com/"
 
     private val authInterceptor = AuthInterceptor()
 
