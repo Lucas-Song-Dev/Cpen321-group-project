@@ -25,7 +25,7 @@ The application targets university students, young professionals, and anyone see
 
 ### **3.1. List of Features**
 
-**User Authentication** - For secure user sign up or login using Google OAuth 2.0. Users must have an existing google account.
+**User Authentication** - For secure user sign up or login using Google OAuth 2.0. Users must have an existing google account. Users can also log out or delete their account. If they delete their account, the user can later create an account using the same google account but their previous data will not be restored.
 
 **User Profile Management** - A user must fill out all mandatory fields (listed in section a), upon user profile creation. If these fields are not filled out, the user's account isn't offically created yet and the user doesn't have access to the rest of our app's features. After filling out all mandatory fields, users can choose to fill out optional fields (listed in section b). Editable fields can be changed anytime in the user management page whereas non-editable fields can't be changed after account creation. User profiles are essential as they can be shared to access compatibility for housing and roommate applications.
 
